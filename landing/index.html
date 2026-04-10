@@ -59,6 +59,15 @@
       background-size: 32px 32px;
     }
 
+    /* ── Keyframes (defined here so inline style="animation:..." works) ── */
+    @keyframes slideUp   { 0%{opacity:0;transform:translateY(40px)} 100%{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn    { 0%{opacity:0} 100%{opacity:1} }
+    @keyframes float     { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-18px) rotate(.5deg)} }
+    @keyframes glowPulse { 0%,100%{box-shadow:0 0 24px rgba(137,180,250,.35)} 50%{box-shadow:0 0 60px rgba(137,180,250,.8),0 0 100px rgba(180,190,254,.3)} }
+    @keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    @keyframes marquee   { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    @keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:.4} }
+
     /* Gradient headline */
     .g-blue  { background:linear-gradient(135deg,#89b4fa,#b4befe,#cba6f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .g-green { background:linear-gradient(135deg,#a6e3a1,#94e2d5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
@@ -87,6 +96,9 @@
     .nav-link::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:2px; background:linear-gradient(90deg,#89b4fa,#b4befe); transition:width .3s; border-radius:1px; }
     .nav-link:hover { color:#cdd6f4; }
     .nav-link:hover::after { width:100%; }
+
+    /* Hero entrance animations — animation-fill-mode:both ensures opacity starts at 0 */
+    .hero-anim { animation-fill-mode: both; }
 
     /* Scroll reveal */
     .reveal { opacity:0; transform:translateY(28px); transition:opacity .7s ease,transform .7s ease; }
@@ -228,16 +240,16 @@
       <!-- ── Left: Copy ── -->
       <div>
         <!-- Badge -->
-        <div class="mb-6" style="animation:slideUp 0.6s 0.1s ease-out forwards;opacity:0">
+        <div class="mb-6 hero-anim" style="animation:slideUp 0.6s 0.05s ease-out both">
           <span class="badge" style="background:rgba(166,227,161,0.12);border:1px solid rgba(166,227,161,0.3);color:#a6e3a1">
-            <span class="w-2 h-2 rounded-full animate-pulse inline-block" style="background:#a6e3a1"></span>
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a6e3a1;animation:pulse 2s infinite"></span>
             v1.1.0 — Miễn phí 100%
           </span>
         </div>
 
         <!-- Headline -->
-        <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black leading-[1.1] mb-6"
-            style="animation:slideUp 0.8s 0.2s ease-out forwards;opacity:0">
+        <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black leading-[1.1] mb-6 hero-anim"
+            style="animation:slideUp 0.8s 0.15s ease-out both">
           <span class="g-blue">Tự Động Hóa</span><br />
           <span style="color:#cdd6f4">Mọi Thứ.</span><br />
           <span class="g-green">Hoàn Toàn</span>
@@ -245,8 +257,8 @@
         </h1>
 
         <!-- Sub-headline -->
-        <p class="text-base sm:text-lg leading-relaxed mb-8 max-w-lg"
-           style="color:#a6adc8;animation:slideUp 0.8s 0.35s ease-out forwards;opacity:0">
+        <p class="text-base sm:text-lg leading-relaxed mb-8 max-w-lg hero-anim"
+           style="color:#a6adc8;animation:slideUp 0.8s 0.28s ease-out both">
           Giải pháp <strong style="color:#94e2d5">Auto Click &amp; RPA</strong> thông minh tích hợp
           Vision AI, vượt qua mọi rào cản với công nghệ
           <strong style="color:#cba6f7">Stealth Engine</strong> chạy ngầm.
@@ -254,11 +266,11 @@
         </p>
 
         <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 mb-10"
-             style="animation:slideUp 0.8s 0.5s ease-out forwards;opacity:0">
+        <div class="flex flex-col sm:flex-row gap-4 mb-10 hero-anim"
+             style="animation:slideUp 0.8s 0.4s ease-out both">
           <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"
              class="btn-primary inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-base"
-             style="animation:glowPulse 3s 1s ease-in-out infinite">
+             style="animation:glowPulse 3s 1.5s ease-in-out infinite">
             <i class="fa-solid fa-download"></i>
             Tải về Miễn phí (v1.1.0)
           </a>
@@ -270,8 +282,8 @@
         </div>
 
         <!-- Trust stats -->
-        <div class="flex items-center gap-6 sm:gap-10"
-             style="animation:slideUp 0.8s 0.65s ease-out forwards;opacity:0">
+        <div class="flex items-center gap-6 sm:gap-10 hero-anim"
+             style="animation:slideUp 0.8s 0.52s ease-out both">
           <div>
             <div class="text-2xl font-black g-blue">0%</div>
             <div class="text-xs mt-0.5" style="color:#585b70">Chiếm chuột</div>
@@ -289,16 +301,16 @@
         </div>
 
         <!-- OS requirement note -->
-        <p class="mt-6 text-xs flex items-center gap-2"
-           style="color:#45475a;animation:fadeIn 1s 0.9s ease-out forwards;opacity:0">
+        <p class="mt-6 text-xs flex items-center gap-2 hero-anim"
+           style="color:#45475a;animation:fadeIn 0.8s 0.65s ease-out both">
           <i class="fa-brands fa-windows" style="color:#89b4fa"></i>
           Dành cho Windows 10 / 11 (64-bit) &nbsp;·&nbsp; Cài đặt nhanh ~2 phút
         </p>
       </div>
 
       <!-- ── Right: App Window Mockup ── -->
-      <div class="relative flex items-center justify-center"
-           style="animation:slideUp 0.9s 0.4s ease-out forwards,float 7s 1.4s ease-in-out infinite;opacity:0">
+      <div class="relative flex items-center justify-center hero-anim"
+           style="animation:slideUp 0.9s 0.3s ease-out both, float 7s 1.8s ease-in-out infinite">
 
         <!-- Glow behind window -->
         <div class="absolute inset-0 rounded-3xl opacity-30"
