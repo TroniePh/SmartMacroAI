@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartMacroAI – Tự Động Hóa Mọi Thứ. Hoàn Toàn Tàng Hình.</title>
-  <meta name="description" content="SmartMacroAI – Giải pháp Auto Click & RPA thông minh tích hợp Vision AI, Stealth Engine chạy ngầm. Miễn phí. Dành cho Windows 10/11." />
+  <meta name="description" content="SmartMacroAI – Giải pháp Auto Click & RPA thông minh tích hợp Vision AI, Stealth Engine chạy ngầm. Miễn phí. Windows 10/11." />
+  <link rel="icon" type="image/png" href="logo.png" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,239 +14,182 @@
       theme: {
         extend: {
           colors: {
-            base:      '#0d0d1a',
-            mantle:    '#11111f',
-            surface0:  '#1a1a2e',
-            surface1:  '#222240',
-            overlay:   '#6c7086',
-            subtext:   '#a6adc8',
-            text:      '#cdd6f4',
-            blue:      '#89b4fa',
-            lavender:  '#b4befe',
-            green:     '#a6e3a1',
-            teal:      '#94e2d5',
-            peach:     '#fab387',
-            red:       '#f38ba8',
-            yellow:    '#f9e2af',
-            mauve:     '#cba6f7',
-          },
-          fontFamily: {
-            sans: ['Inter', 'Segoe UI', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+            base:     '#0a0a14',
+            mantle:   '#0f0f1c',
+            surface0: '#16162a',
+            surface1: '#1e1e36',
+            overlay:  '#6c7086',
+            subtext:  '#a6adc8',
+            text:     '#cdd6f4',
           },
           animation: {
-            'float':       'float 6s ease-in-out infinite',
-            'glow-pulse':  'glowPulse 3s ease-in-out infinite',
-            'slide-up':    'slideUp 0.7s ease-out forwards',
-            'fade-in':     'fadeIn 0.8s ease-out forwards',
-            'spin-slow':   'spin 12s linear infinite',
+            'float':      'float 7s ease-in-out infinite',
+            'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+            'slide-up':   'slideUp 0.8s ease-out forwards',
+            'fade-in':    'fadeIn 0.8s ease-out forwards',
+            'shimmer':    'shimmer 2.5s linear infinite',
           },
           keyframes: {
-            float:      { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-16px)' } },
-            glowPulse:  { '0%,100%': { boxShadow: '0 0 20px rgba(137,180,250,0.3)' }, '50%': { boxShadow: '0 0 50px rgba(137,180,250,0.7), 0 0 80px rgba(180,190,254,0.3)' } },
-            slideUp:    { '0%': { opacity: '0', transform: 'translateY(40px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            fadeIn:     { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            float:     { '0%,100%':{ transform:'translateY(0) rotate(0deg)' }, '50%':{ transform:'translateY(-18px) rotate(0.5deg)' } },
+            glowPulse: { '0%,100%':{ boxShadow:'0 0 24px rgba(137,180,250,0.35)' }, '50%':{ boxShadow:'0 0 60px rgba(137,180,250,0.8), 0 0 100px rgba(180,190,254,0.3)' } },
+            slideUp:   { '0%':{ opacity:'0', transform:'translateY(40px)' }, '100%':{ opacity:'1', transform:'translateY(0)' } },
+            fadeIn:    { '0%':{ opacity:'0' }, '100%':{ opacity:'1' } },
+            shimmer:   { '0%':{ backgroundPosition:'-200% 0' }, '100%':{ backgroundPosition:'200% 0' } },
           },
         }
       }
     }
   </script>
 
-  <!-- FontAwesome CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" />
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── Base ───────────────────────────────────────────────── */
-    * { box-sizing: border-box; }
-    html { background: #0d0d1a; }
-    body { background: #0d0d1a; color: #cdd6f4; font-family: 'Inter', 'Segoe UI', sans-serif; overflow-x: hidden; }
-    ::selection { background: rgba(137,180,250,0.3); color: #cdd6f4; }
+    *  { box-sizing:border-box; }
+    html,body { background:#0a0a14; color:#cdd6f4; font-family:'Inter','Segoe UI',sans-serif; overflow-x:hidden; }
+    ::selection { background:rgba(137,180,250,0.25); }
 
-    /* ── Animated particle grid background ─────────────────── */
+    /* Grid dots background */
     .grid-bg {
       background-image:
-        linear-gradient(rgba(137,180,250,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(137,180,250,0.03) 1px, transparent 1px);
-      background-size: 60px 60px;
+        radial-gradient(rgba(137,180,250,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
 
-    /* ── Gradient text ──────────────────────────────────────── */
-    .gradient-text {
-      background: linear-gradient(135deg, #89b4fa 0%, #b4befe 40%, #cba6f7 70%, #f38ba8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    /* Gradient headline */
+    .g-blue  { background:linear-gradient(135deg,#89b4fa,#b4befe,#cba6f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .g-green { background:linear-gradient(135deg,#a6e3a1,#94e2d5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .g-warm  { background:linear-gradient(135deg,#fab387,#f9e2af); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    /* Glass */
+    .glass      { background:rgba(22,22,42,0.75); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(137,180,250,0.12); }
+    .glass-nav  { background:rgba(10,10,20,0.9);  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid rgba(137,180,250,0.08); }
+
+    /* Glow orb */
+    .orb { position:absolute; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0; }
+
+    /* Buttons */
+    .btn-primary {
+      background:linear-gradient(135deg,#89b4fa,#b4befe);
+      color:#0a0a14; font-weight:800;
+      transition:all 0.3s ease;
+      box-shadow:0 0 24px rgba(137,180,250,0.45), 0 4px 24px rgba(137,180,250,0.2);
     }
-    .gradient-text-green {
-      background: linear-gradient(135deg, #a6e3a1 0%, #94e2d5 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .btn-primary:hover { transform:translateY(-3px) scale(1.02); box-shadow:0 0 50px rgba(137,180,250,0.8),0 8px 40px rgba(137,180,250,0.3); }
+    .btn-ghost  { border:1.5px solid rgba(137,180,250,0.35); color:#89b4fa; background:rgba(137,180,250,0.07); transition:all 0.3s ease; }
+    .btn-ghost:hover { background:rgba(137,180,250,0.16); border-color:rgba(137,180,250,0.65); transform:translateY(-2px); }
+
+    /* Nav link */
+    .nav-link { position:relative; color:#a6adc8; font-size:.875rem; font-weight:500; transition:color .2s; }
+    .nav-link::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:2px; background:linear-gradient(90deg,#89b4fa,#b4befe); transition:width .3s; border-radius:1px; }
+    .nav-link:hover { color:#cdd6f4; }
+    .nav-link:hover::after { width:100%; }
+
+    /* Scroll reveal */
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity .7s ease,transform .7s ease; }
+    .reveal.visible { opacity:1; transform:none; }
+
+    /* Feature card */
+    .feat-card { transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease; cursor:default; }
+    .feat-card:hover { transform:translateY(-8px); box-shadow:0 24px 64px rgba(137,180,250,0.1); border-color:rgba(137,180,250,0.4) !important; }
+
+    /* App window mockup */
+    .app-window {
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:
+        0 0 0 1px rgba(137,180,250,0.18),
+        0 32px 80px rgba(0,0,0,0.7),
+        0 0 80px rgba(137,180,250,0.12);
+    }
+    .app-titlebar {
+      background:#111120;
+      padding: 10px 16px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      border-bottom:1px solid rgba(137,180,250,0.1);
+    }
+    .traffic-dot { width:12px; height:12px; border-radius:50%; }
+
+    /* Badge pill */
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:99px; font-size:.72rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:#0a0a14; }
+    ::-webkit-scrollbar-thumb { background:#313244; border-radius:3px; }
+
+    /* Step number ring */
+    .step-ring {
+      width:56px; height:56px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; font-weight:900;
+      position:relative; flex-shrink:0;
+    }
+    .step-ring::before {
+      content:'';
+      position:absolute; inset:-3px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#89b4fa,#cba6f7);
+      z-index:-1;
     }
 
-    /* ── Glass card ─────────────────────────────────────────── */
-    .glass {
-      background: rgba(26,26,46,0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(137,180,250,0.12);
-    }
-    .glass-dark {
-      background: rgba(13,13,26,0.85);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(137,180,250,0.08);
+    /* Shimmer loading bar (decorative) */
+    .shimmer-bar {
+      background: linear-gradient(90deg, transparent 0%, rgba(137,180,250,0.3) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2.5s linear infinite;
     }
 
-    /* ── Glow button ────────────────────────────────────────── */
-    .btn-glow {
-      background: linear-gradient(135deg, #89b4fa 0%, #b4befe 100%);
-      color: #11111f;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 20px rgba(137,180,250,0.4), 0 4px 20px rgba(137,180,250,0.2);
+    /* Ticker marquee */
+    .marquee-track {
+      display:flex;
+      gap:3rem;
+      animation: marquee 22s linear infinite;
+      width: max-content;
     }
-    .btn-glow:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 0 40px rgba(137,180,250,0.7), 0 8px 32px rgba(137,180,250,0.3);
-    }
-    .btn-outline {
-      border: 1.5px solid rgba(137,180,250,0.4);
-      color: #89b4fa;
-      background: rgba(137,180,250,0.06);
-      transition: all 0.3s ease;
-    }
-    .btn-outline:hover {
-      background: rgba(137,180,250,0.15);
-      border-color: rgba(137,180,250,0.7);
-      transform: translateY(-2px);
-    }
-
-    /* ── Feature card hover ─────────────────────────────────── */
-    .feature-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    }
-    .feature-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 20px 60px rgba(137,180,250,0.1);
-      border-color: rgba(137,180,250,0.35) !important;
-    }
-
-    /* ── Step connector ─────────────────────────────────────── */
-    .step-connector::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      right: -50%;
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(137,180,250,0.4), rgba(137,180,250,0.05));
-      transform: translateY(-50%);
-    }
-
-    /* ── Scrollbar ──────────────────────────────────────────── */
-    ::-webkit-scrollbar       { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0d0d1a; }
-    ::-webkit-scrollbar-thumb { background: #313244; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #585b70; }
-
-    /* ── Radial glow orbs ───────────────────────────────────── */
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ── Nav link ───────────────────────────────────────────── */
-    .nav-link {
-      position: relative;
-      color: #a6adc8;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      bottom: -4px; left: 0;
-      width: 0; height: 2px;
-      background: linear-gradient(90deg, #89b4fa, #b4befe);
-      transition: width 0.3s ease;
-      border-radius: 1px;
-    }
-    .nav-link:hover { color: #cdd6f4; }
-    .nav-link:hover::after { width: 100%; }
-
-    /* ── Section reveal (JS-powered) ───────────────────────── */
-    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .reveal.visible { opacity: 1; transform: none; }
-
-    /* ── Terminal code block ────────────────────────────────── */
-    .terminal {
-      background: #0d0d1a;
-      border: 1px solid rgba(137,180,250,0.15);
-      border-radius: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
-      line-height: 1.7;
-    }
-    .terminal .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
-
-    /* ── Badge ──────────────────────────────────────────────── */
-    .badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
+    @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
   </style>
 </head>
 <body class="grid-bg">
 
-<!-- ═══════════════════════════════════════════════════════════
-     NAVBAR
-════════════════════════════════════════════════════════════ -->
-<header id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-  <div class="glass-dark border-b border-white/5">
+<!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
+<header id="navbar" class="fixed top-0 inset-x-0 z-50 transition-all duration-300">
+  <div class="glass-nav">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
 
-        <!-- Logo -->
+        <!-- ── Logo (real image) ── -->
         <a href="#" class="flex items-center gap-3 group">
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black"
-               style="background:linear-gradient(135deg,#89b4fa,#cba6f7)">
-            <span style="-webkit-text-fill-color:#11111f">S</span>
-          </div>
+          <img src="logo.png" alt="SmartMacroAI"
+               class="w-9 h-9 rounded-xl object-cover shadow-lg"
+               style="box-shadow:0 0 16px rgba(137,180,250,0.35)"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+          <!-- Fallback gradient div if logo.png fails -->
+          <div style="display:none;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#89b4fa,#cba6f7);align-items:center;justify-content:center;font-weight:900;color:#0a0a14">S</div>
           <span class="text-lg font-bold tracking-tight" style="color:#cdd6f4">
-            Smart<span class="gradient-text">MacroAI</span>
+            Smart<span class="g-blue">MacroAI</span>
           </span>
         </a>
 
-        <!-- Desktop Nav -->
+        <!-- ── Desktop Nav ── -->
         <nav class="hidden md:flex items-center gap-8">
-          <a href="#features"  class="nav-link">Tính năng</a>
-          <a href="#howto"     class="nav-link">Cách dùng</a>
-          <a href="#support"   class="nav-link">Hỗ trợ</a>
+          <a href="#features" class="nav-link">Tính năng</a>
+          <a href="#howto"    class="nav-link">Cách dùng</a>
+          <a href="#support"  class="nav-link">Hỗ trợ</a>
         </nav>
 
-        <!-- CTA -->
+        <!-- ── CTA ── -->
         <div class="flex items-center gap-3">
-          <a href="https://github.com/TroniePh/SmartMacroAI/releases/download/v1.0.0/SmartMacroAI_Setup_v1.0.0.exe"
-             class="btn-glow hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
+          <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"
+             class="btn-primary hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
             <i class="fa-solid fa-download text-xs"></i>
             Tải về miễn phí
           </a>
-          <!-- Mobile hamburger -->
           <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg" style="color:#89b4fa">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
@@ -254,451 +198,458 @@
     </div>
 
     <!-- Mobile Menu -->
-    <div id="mobileMenu" class="hidden md:hidden px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+    <div id="mobileMenu" class="hidden md:hidden px-4 pb-4 pt-3 space-y-2 border-t border-white/5">
       <a href="#features" class="block py-2 text-sm nav-link">Tính năng</a>
       <a href="#howto"    class="block py-2 text-sm nav-link">Cách dùng</a>
       <a href="#support"  class="block py-2 text-sm nav-link">Hỗ trợ</a>
-      <a href="https://github.com/TroniePh/SmartMacroAI/releases/download/v1.0.0/SmartMacroAI_Setup_v1.0.0.exe"
-         class="btn-glow inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm mt-2">
-        <i class="fa-solid fa-download text-xs"></i>
-        Tải về miễn phí
+      <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"
+         class="btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm mt-2">
+        <i class="fa-solid fa-download text-xs"></i>Tải về miễn phí
       </a>
     </div>
   </div>
 </header>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     HERO
-════════════════════════════════════════════════════════════ -->
-<section class="relative min-h-screen flex items-center justify-center pt-20 pb-16 overflow-hidden">
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section class="relative min-h-screen flex items-center pt-16 pb-12 overflow-hidden">
 
   <!-- Orb lights -->
-  <div class="orb w-[600px] h-[600px] -top-40 -left-40 opacity-20"
-       style="background:radial-gradient(circle,#89b4fa,transparent 70%)"></div>
-  <div class="orb w-[400px] h-[400px] top-1/2 -right-20 opacity-15"
-       style="background:radial-gradient(circle,#cba6f7,transparent 70%)"></div>
-  <div class="orb w-[300px] h-[300px] bottom-0 left-1/3 opacity-10"
-       style="background:radial-gradient(circle,#f38ba8,transparent 70%)"></div>
+  <div class="orb w-[700px] h-[700px] -top-60 -left-60 opacity-20"
+       style="background:radial-gradient(circle,#89b4fa,transparent 65%)"></div>
+  <div class="orb w-[500px] h-[500px] top-1/3 -right-40 opacity-15"
+       style="background:radial-gradient(circle,#cba6f7,transparent 65%)"></div>
+  <div class="orb w-[400px] h-[400px] bottom-0 left-1/4 opacity-10"
+       style="background:radial-gradient(circle,#94e2d5,transparent 65%)"></div>
 
-  <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center">
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-    <!-- Top badge -->
-    <div class="inline-flex items-center gap-2 mb-8 animate-fade-in"
-         style="animation-delay:0.1s; opacity:0; animation-fill-mode:forwards">
-      <span class="badge" style="background:rgba(137,180,250,0.1);border:1px solid rgba(137,180,250,0.25);color:#89b4fa">
-        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
-        v1.0.0 — Miễn phí 100%
-      </span>
-    </div>
+      <!-- ── Left: Copy ── -->
+      <div>
+        <!-- Badge -->
+        <div class="mb-6" style="animation:slideUp 0.6s 0.1s ease-out forwards;opacity:0">
+          <span class="badge" style="background:rgba(166,227,161,0.12);border:1px solid rgba(166,227,161,0.3);color:#a6e3a1">
+            <span class="w-2 h-2 rounded-full animate-pulse inline-block" style="background:#a6e3a1"></span>
+            v1.1.0 — Miễn phí 100%
+          </span>
+        </div>
 
-    <!-- Headline -->
-    <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-6"
-        style="animation:slideUp 0.8s 0.2s ease-out forwards; opacity:0">
-      <span class="gradient-text">Tự Động Hóa</span><br />
-      <span style="color:#cdd6f4">Mọi Thứ.</span>
-      <span class="gradient-text-green"> Hoàn Toàn</span><br />
-      <span style="color:#cdd6f4">Tàng Hình.</span>
-    </h1>
+        <!-- Headline -->
+        <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black leading-[1.1] mb-6"
+            style="animation:slideUp 0.8s 0.2s ease-out forwards;opacity:0">
+          <span class="g-blue">Tự Động Hóa</span><br />
+          <span style="color:#cdd6f4">Mọi Thứ.</span><br />
+          <span class="g-green">Hoàn Toàn</span>
+          <span style="color:#cdd6f4"> Tàng Hình.</span>
+        </h1>
 
-    <!-- Sub-headline -->
-    <p class="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-       style="color:#a6adc8; animation:slideUp 0.8s 0.4s ease-out forwards; opacity:0">
-      Giải pháp Auto Click &amp; RPA thông minh tích hợp <strong style="color:#94e2d5">Vision AI</strong>,
-      vượt qua mọi rào cản với công nghệ <strong style="color:#cba6f7">Stealth Engine</strong> chạy ngầm độc quyền.
-      <br class="hidden sm:block" />
-      <span style="color:#6c7086">Không chiếm chuột. Không gián đoạn công việc.</span>
-    </p>
+        <!-- Sub-headline -->
+        <p class="text-base sm:text-lg leading-relaxed mb-8 max-w-lg"
+           style="color:#a6adc8;animation:slideUp 0.8s 0.35s ease-out forwards;opacity:0">
+          Giải pháp <strong style="color:#94e2d5">Auto Click &amp; RPA</strong> thông minh tích hợp
+          Vision AI, vượt qua mọi rào cản với công nghệ
+          <strong style="color:#cba6f7">Stealth Engine</strong> chạy ngầm.
+          <span style="color:#6c7086">Không chiếm chuột. Không gián đoạn công việc.</span>
+        </p>
 
-    <!-- CTA Buttons -->
-    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-14"
-         style="animation:slideUp 0.8s 0.6s ease-out forwards; opacity:0">
-      <a href="https://github.com/TroniePh/SmartMacroAI/releases/download/v1.0.0/SmartMacroAI_Setup_v1.0.0.exe"
-         class="btn-glow inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base animate-glow-pulse">
-        <i class="fa-solid fa-download"></i>
-        Tải về Miễn phí (v1.0.0)
-      </a>
-      <a href="#howto"
-         class="btn-outline inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base">
-        <i class="fa-solid fa-play-circle"></i>
-        Xem Hướng Dẫn
-      </a>
-    </div>
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-10"
+             style="animation:slideUp 0.8s 0.5s ease-out forwards;opacity:0">
+          <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"
+             class="btn-primary inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-base"
+             style="animation:glowPulse 3s 1s ease-in-out infinite">
+            <i class="fa-solid fa-download"></i>
+            Tải về Miễn phí (v1.1.0)
+          </a>
+          <a href="#howto"
+             class="btn-ghost inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-base">
+            <i class="fa-solid fa-circle-play"></i>
+            Xem Hướng Dẫn
+          </a>
+        </div>
 
-    <!-- Terminal preview -->
-    <div class="terminal max-w-lg mx-auto p-4 text-left animate-float"
-         style="animation:slideUp 0.8s 0.8s ease-out forwards, float 6s 1.6s ease-in-out infinite; opacity:0">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="dot" style="background:#f38ba8"></span>
-        <span class="dot" style="background:#f9e2af"></span>
-        <span class="dot" style="background:#a6e3a1"></span>
-        <span class="ml-2 text-xs" style="color:#585b70">SmartMacroAI — Stealth Log</span>
+        <!-- Trust stats -->
+        <div class="flex items-center gap-6 sm:gap-10"
+             style="animation:slideUp 0.8s 0.65s ease-out forwards;opacity:0">
+          <div>
+            <div class="text-2xl font-black g-blue">0%</div>
+            <div class="text-xs mt-0.5" style="color:#585b70">Chiếm chuột</div>
+          </div>
+          <div class="w-px h-10" style="background:rgba(137,180,250,0.15)"></div>
+          <div>
+            <div class="text-2xl font-black g-green">100%</div>
+            <div class="text-xs mt-0.5" style="color:#585b70">Chạy ngầm</div>
+          </div>
+          <div class="w-px h-10" style="background:rgba(137,180,250,0.15)"></div>
+          <div>
+            <div class="text-2xl font-black g-warm">∞</div>
+            <div class="text-xs mt-0.5" style="color:#585b70">Kịch bản song song</div>
+          </div>
+        </div>
+
+        <!-- OS requirement note -->
+        <p class="mt-6 text-xs flex items-center gap-2"
+           style="color:#45475a;animation:fadeIn 1s 0.9s ease-out forwards;opacity:0">
+          <i class="fa-brands fa-windows" style="color:#89b4fa"></i>
+          Dành cho Windows 10 / 11 (64-bit) &nbsp;·&nbsp; Cài đặt nhanh ~2 phút
+        </p>
       </div>
-      <div style="color:#585b70"><span style="color:#a6e3a1">✓</span> Target acquired: "Game Window" (HWND=0x2C4A)</div>
-      <div style="color:#585b70"><span style="color:#89b4fa">→</span> Vision: Template "button.png" found at (412, 287)</div>
-      <div style="color:#585b70"><span style="color:#cba6f7">→</span> ControlClickAsync(412, 287) — stealth mode</div>
-      <div style="color:#585b70"><span style="color:#f9e2af">⏱</span> Wait 1200ms...</div>
-      <div><span style="color:#a6e3a1">✓</span> <span style="color:#a6e3a1">Iteration #1/∞ — OK</span> <span class="animate-pulse" style="color:#89b4fa">█</span></div>
-    </div>
 
-    <!-- Stats row -->
-    <div class="grid grid-cols-3 gap-4 sm:gap-8 max-w-xl mx-auto mt-12 reveal">
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-black gradient-text">0%</div>
-        <div class="text-xs mt-1" style="color:#6c7086">Chiếm dụng chuột</div>
-      </div>
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-black gradient-text-green">100%</div>
-        <div class="text-xs mt-1" style="color:#6c7086">Chạy ngầm</div>
-      </div>
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-black" style="color:#fab387">∞</div>
-        <div class="text-xs mt-1" style="color:#6c7086">Kịch bản song song</div>
-      </div>
-    </div>
+      <!-- ── Right: App Window Mockup ── -->
+      <div class="relative flex items-center justify-center"
+           style="animation:slideUp 0.9s 0.4s ease-out forwards,float 7s 1.4s ease-in-out infinite;opacity:0">
 
+        <!-- Glow behind window -->
+        <div class="absolute inset-0 rounded-3xl opacity-30"
+             style="background:radial-gradient(ellipse at center,rgba(137,180,250,0.4),transparent 70%);filter:blur(40px)"></div>
+
+        <!-- App window frame -->
+        <div class="app-window w-full max-w-2xl relative z-10">
+
+          <!-- Fake Windows title bar -->
+          <div class="app-titlebar">
+            <span class="traffic-dot" style="background:#f38ba8"></span>
+            <span class="traffic-dot" style="background:#f9e2af"></span>
+            <span class="traffic-dot" style="background:#a6e3a1"></span>
+            <div class="flex-1 flex items-center justify-center gap-2">
+              <img src="logo.png" class="w-4 h-4 rounded object-cover" alt=""
+                   onerror="this.style.display='none'" />
+              <span class="text-xs font-medium" style="color:#585b70">SmartMacroAI v1.1.0</span>
+            </div>
+            <!-- Fake window controls -->
+            <div class="flex items-center gap-4">
+              <span style="color:#45475a;font-size:10px">─</span>
+              <span style="color:#45475a;font-size:10px">□</span>
+              <span style="color:#45475a;font-size:10px">✕</span>
+            </div>
+          </div>
+
+          <!-- Shimmer loading bar (decorative) -->
+          <div class="h-0.5 shimmer-bar" style="background:linear-gradient(90deg,transparent,rgba(137,180,250,0.5),transparent);background-size:200% 100%"></div>
+
+          <!-- Dashboard screenshot -->
+          <div style="background:#0d0d1a;line-height:0">
+            <img src="dashboard_preview.png"
+                 alt="SmartMacroAI Dashboard"
+                 class="w-full object-cover object-top"
+                 style="max-height:440px;object-fit:cover;object-position:top"
+                 onerror="this.parentElement.innerHTML='<div style=\'padding:60px;text-align:center;color:#45475a;font-size:0.85rem\'><i class=\'fa-solid fa-display\' style=\'font-size:3rem;margin-bottom:16px;display:block\'></i>Dashboard Preview</div>'" />
+          </div>
+
+          <!-- Fake status bar overlay at bottom -->
+          <div class="px-4 py-2 flex items-center gap-4 text-xs"
+               style="background:#0d0d1a;border-top:1px solid rgba(137,180,250,0.08);color:#45475a">
+            <span class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+              Active: 0 macros running
+            </span>
+            <span>|</span>
+            <span>Hidden: 0 window(s)</span>
+            <span class="ml-auto" style="color:#313244">SmartMacroAI v1.1.0 · .NET 8.0</span>
+          </div>
+        </div>
+
+        <!-- Floating badges around the window -->
+        <div class="absolute -left-4 top-1/4 glass rounded-xl px-3 py-2 hidden lg:flex items-center gap-2 text-xs font-semibold"
+             style="color:#a6e3a1;border-color:rgba(166,227,161,0.2);animation:float 5s 0.5s ease-in-out infinite">
+          <i class="fa-solid fa-ghost" style="color:#a6e3a1"></i>
+          Stealth Mode ON
+        </div>
+        <div class="absolute -right-4 bottom-1/4 glass rounded-xl px-3 py-2 hidden lg:flex items-center gap-2 text-xs font-semibold"
+             style="color:#89b4fa;border-color:rgba(137,180,250,0.2);animation:float 6s 1s ease-in-out infinite">
+          <i class="fa-solid fa-brain" style="color:#89b4fa"></i>
+          Vision AI Active
+        </div>
+        <div class="absolute -top-4 right-1/4 glass rounded-xl px-3 py-2 hidden lg:flex items-center gap-2 text-xs font-semibold"
+             style="color:#cba6f7;border-color:rgba(203,166,247,0.2);animation:float 5.5s 1.5s ease-in-out infinite">
+          <i class="fa-solid fa-check-circle" style="color:#cba6f7"></i>
+          0% CPU Overhead
+        </div>
+      </div>
+
+    </div>
   </div>
 </section>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     FEATURES
-════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════ TECH MARQUEE ═══════════════════════════ -->
+<div class="py-8 overflow-hidden" style="border-top:1px solid rgba(137,180,250,0.06);border-bottom:1px solid rgba(137,180,250,0.06);background:rgba(10,10,20,0.6)">
+  <p class="text-center text-xs font-semibold uppercase tracking-widest mb-5" style="color:#313244">
+    Nền tảng công nghệ
+  </p>
+  <div class="relative overflow-hidden">
+    <div class="marquee-track">
+      <!-- Set 1 -->
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-brands fa-microsoft" style="color:#89b4fa"></i>.NET 8 / WPF</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-eye" style="color:#94e2d5"></i>Emgu.CV (OpenCV)</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-font" style="color:#fab387"></i>Tesseract OCR 5.x</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-globe" style="color:#cba6f7"></i>Microsoft Playwright</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-brands fa-windows" style="color:#89b4fa"></i>Win32 API P/Invoke</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-ghost" style="color:#a6e3a1"></i>Stealth Engine</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-layer-group" style="color:#f9e2af"></i>Multi-threading Async</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-shield-halved" style="color:#f38ba8"></i>UAC Administrator</span>
+      <!-- Set 2 (duplicate for seamless loop) -->
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-brands fa-microsoft" style="color:#89b4fa"></i>.NET 8 / WPF</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-eye" style="color:#94e2d5"></i>Emgu.CV (OpenCV)</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-font" style="color:#fab387"></i>Tesseract OCR 5.x</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-globe" style="color:#cba6f7"></i>Microsoft Playwright</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-brands fa-windows" style="color:#89b4fa"></i>Win32 API P/Invoke</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-ghost" style="color:#a6e3a1"></i>Stealth Engine</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-layer-group" style="color:#f9e2af"></i>Multi-threading Async</span>
+      <span class="flex items-center gap-2 text-sm whitespace-nowrap" style="color:#45475a"><i class="fa-solid fa-shield-halved" style="color:#f38ba8"></i>UAC Administrator</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ FEATURES ═══════════════════════════ -->
 <section id="features" class="py-24 px-4 sm:px-6 relative overflow-hidden">
-  <div class="orb w-[500px] h-[500px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10"
+  <div class="orb w-[500px] h-[500px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-8"
        style="background:radial-gradient(circle,#cba6f7,transparent 70%)"></div>
 
   <div class="relative z-10 max-w-7xl mx-auto">
-
-    <!-- Section label -->
     <div class="text-center mb-16 reveal">
-      <span class="badge mb-4" style="background:rgba(203,166,247,0.1);border:1px solid rgba(203,166,247,0.25);color:#cba6f7">
-        <i class="fa-solid fa-stars text-xs"></i>
-        Tính năng nổi bật
+      <span class="badge mb-5 inline-flex" style="background:rgba(203,166,247,0.1);border:1px solid rgba(203,166,247,0.25);color:#cba6f7">
+        <i class="fa-solid fa-star text-xs"></i>Tính năng nổi bật
       </span>
-      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black mt-4" style="color:#cdd6f4">
+      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black mt-2" style="color:#cdd6f4">
         Công nghệ vượt trội.<br />
-        <span class="gradient-text">Thiết kế cho kẻ thắng.</span>
+        <span class="g-blue">Thiết kế cho kẻ thắng.</span>
       </h2>
-      <p class="mt-4 text-base max-w-xl mx-auto" style="color:#6c7086">
-        Kết hợp Win32 API độc quyền, Computer Vision và OCR thành một nền tảng tự động hóa mạnh mẽ.
+      <p class="mt-4 text-base max-w-lg mx-auto" style="color:#585b70">
+        Kết hợp Win32 API, Computer Vision và OCR thành một nền tảng RPA mạnh mẽ nhất.
       </p>
     </div>
 
-    <!-- Feature grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
-      <!-- Card 1: Stealth Engine -->
-      <div class="feature-card glass rounded-2xl p-7 flex flex-col gap-4 reveal"
-           style="border:1px solid rgba(137,180,250,0.12)">
+      <!-- Stealth Engine -->
+      <div class="feat-card glass rounded-2xl p-7 flex flex-col gap-5 reveal"
+           style="border:1px solid rgba(137,180,250,0.1)">
         <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-             style="background:linear-gradient(135deg,rgba(137,180,250,0.2),rgba(137,180,250,0.05));border:1px solid rgba(137,180,250,0.2)">
+             style="background:linear-gradient(135deg,rgba(137,180,250,0.18),rgba(137,180,250,0.04));border:1px solid rgba(137,180,250,0.2)">
           <i class="fa-solid fa-ghost" style="color:#89b4fa"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold mb-2" style="color:#cdd6f4">Stealth Engine</h3>
-          <p class="text-sm leading-relaxed" style="color:#6c7086">
-            Chạy ngầm 100%, ẩn cửa sổ hoàn toàn, trả lại chuột cho bạn làm việc khác.
-            Phím tắt toàn cục, hệ thống tray icon.
-          </p>
+          <h3 class="text-base font-bold mb-2" style="color:#cdd6f4">Stealth Engine</h3>
+          <p class="text-sm leading-relaxed" style="color:#6c7086">Ẩn cửa sổ 100%, chạy hoàn toàn nền. Hotkey toàn cục, tray icon, Stealth Manager quản lý danh sách cửa sổ đang ẩn.</p>
         </div>
-        <div class="mt-auto flex items-center gap-2 text-xs font-semibold" style="color:#89b4fa">
-          <i class="fa-solid fa-shield-halved text-xs"></i>
-          Win32 PostMessage API
+        <div class="mt-auto text-xs font-semibold flex items-center gap-2" style="color:#89b4fa">
+          <i class="fa-solid fa-shield-halved"></i>Win32 PostMessage API
         </div>
       </div>
 
-      <!-- Card 2: Vision AI & OCR -->
-      <div class="feature-card glass rounded-2xl p-7 flex flex-col gap-4 reveal"
-           style="border:1px solid rgba(148,226,213,0.12); animation-delay:0.1s">
+      <!-- Vision AI & OCR -->
+      <div class="feat-card glass rounded-2xl p-7 flex flex-col gap-5 reveal"
+           style="border:1px solid rgba(148,226,213,0.1);animation-delay:.1s">
         <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-             style="background:linear-gradient(135deg,rgba(148,226,213,0.2),rgba(148,226,213,0.05));border:1px solid rgba(148,226,213,0.2)">
+             style="background:linear-gradient(135deg,rgba(148,226,213,0.18),rgba(148,226,213,0.04));border:1px solid rgba(148,226,213,0.2)">
           <i class="fa-solid fa-brain" style="color:#94e2d5"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold mb-2" style="color:#cdd6f4">Vision AI &amp; OCR</h3>
-          <p class="text-sm leading-relaxed" style="color:#6c7086">
-            Nhận diện hình ảnh và đọc chữ trên màn hình để click chính xác,
-            không cần tọa độ tĩnh. Powered by Emgu.CV &amp; Tesseract.
-          </p>
+          <h3 class="text-base font-bold mb-2" style="color:#cdd6f4">Vision AI &amp; OCR</h3>
+          <p class="text-sm leading-relaxed" style="color:#6c7086">Nhận diện hình ảnh bằng Emgu.CV và đọc text bằng Tesseract từ cửa sổ nền. Auto-click chính xác vào đúng vị trí tìm thấy.</p>
         </div>
-        <div class="mt-auto flex items-center gap-2 text-xs font-semibold" style="color:#94e2d5">
-          <i class="fa-solid fa-eye text-xs"></i>
-          OpenCV + Tesseract OCR
+        <div class="mt-auto text-xs font-semibold flex items-center gap-2" style="color:#94e2d5">
+          <i class="fa-solid fa-eye"></i>OpenCV + Tesseract OCR
         </div>
       </div>
 
-      <!-- Card 3: Smart Record -->
-      <div class="feature-card glass rounded-2xl p-7 flex flex-col gap-4 reveal"
-           style="border:1px solid rgba(250,179,135,0.12); animation-delay:0.2s">
+      <!-- Smart Record -->
+      <div class="feat-card glass rounded-2xl p-7 flex flex-col gap-5 reveal"
+           style="border:1px solid rgba(250,179,135,0.1);animation-delay:.2s">
         <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-             style="background:linear-gradient(135deg,rgba(250,179,135,0.2),rgba(250,179,135,0.05));border:1px solid rgba(250,179,135,0.2)">
-          <i class="fa-solid fa-circle-dot" style="color:#fab387; animation:pulse 2s infinite"></i>
+             style="background:linear-gradient(135deg,rgba(250,179,135,0.18),rgba(250,179,135,0.04));border:1px solid rgba(250,179,135,0.2)">
+          <i class="fa-solid fa-circle-dot" style="color:#fab387"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold mb-2" style="color:#cdd6f4">Smart Record</h3>
-          <p class="text-sm leading-relaxed" style="color:#6c7086">
-            Ghi hình thao tác chuột &amp; phím toàn cục, tự động tính toán delay
-            y như người thật. Bắt đầu chỉ với 1 phím tắt.
-          </p>
+          <h3 class="text-base font-bold mb-2" style="color:#cdd6f4">Smart Recorder</h3>
+          <p class="text-sm leading-relaxed" style="color:#6c7086">Ghi toàn bộ thao tác chuột &amp; phím, tự tính delay y như người thật. Bắt đầu bằng một phím tắt duy nhất.</p>
         </div>
-        <div class="mt-auto flex items-center gap-2 text-xs font-semibold" style="color:#fab387">
-          <i class="fa-solid fa-microchip text-xs"></i>
-          Low-Level WH_MOUSE_LL Hook
+        <div class="mt-auto text-xs font-semibold flex items-center gap-2" style="color:#fab387">
+          <i class="fa-solid fa-microchip"></i>WH_MOUSE_LL Hook
         </div>
       </div>
 
-      <!-- Card 4: Dashboard Đa Nhiệm -->
-      <div class="feature-card glass rounded-2xl p-7 flex flex-col gap-4 reveal"
-           style="border:1px solid rgba(203,166,247,0.12); animation-delay:0.3s">
+      <!-- Dashboard Đa Nhiệm -->
+      <div class="feat-card glass rounded-2xl p-7 flex flex-col gap-5 reveal"
+           style="border:1px solid rgba(203,166,247,0.1);animation-delay:.3s">
         <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-             style="background:linear-gradient(135deg,rgba(203,166,247,0.2),rgba(203,166,247,0.05));border:1px solid rgba(203,166,247,0.2)">
+             style="background:linear-gradient(135deg,rgba(203,166,247,0.18),rgba(203,166,247,0.04));border:1px solid rgba(203,166,247,0.2)">
           <i class="fa-solid fa-server" style="color:#cba6f7"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold mb-2" style="color:#cdd6f4">Dashboard Đa Nhiệm</h3>
-          <p class="text-sm leading-relaxed" style="color:#6c7086">
-            Cắm auto nhiều cửa sổ, nhiều kịch bản song song cùng lúc.
-            Mỗi macro chạy trên thread riêng, không giật lag.
-          </p>
+          <h3 class="text-base font-bold mb-2" style="color:#cdd6f4">Dashboard Đa Nhiệm</h3>
+          <p class="text-sm leading-relaxed" style="color:#6c7086">Chạy nhiều macro song song trên các cửa sổ khác nhau. Mỗi script có thread riêng, Start/Stop độc lập, không lag.</p>
         </div>
-        <div class="mt-auto flex items-center gap-2 text-xs font-semibold" style="color:#cba6f7">
-          <i class="fa-solid fa-infinity text-xs"></i>
-          Async / Multi-threading
+        <div class="mt-auto text-xs font-semibold flex items-center gap-2" style="color:#cba6f7">
+          <i class="fa-solid fa-infinity"></i>Async / Multi-threading
         </div>
       </div>
 
     </div>
 
-    <!-- Extra feature pills -->
-    <div class="mt-12 flex flex-wrap justify-center gap-3 reveal">
-      <span class="badge" style="background:rgba(26,26,46,0.8);border:1px solid rgba(137,180,250,0.15);color:#a6adc8"><i class="fa-solid fa-web-awesome mr-1" style="color:#89b4fa"></i> Playwright Web Automation</span>
-      <span class="badge" style="background:rgba(26,26,46,0.8);border:1px solid rgba(137,180,250,0.15);color:#a6adc8"><i class="fa-solid fa-scissors mr-1" style="color:#94e2d5"></i> Snipping Tool tích hợp</span>
-      <span class="badge" style="background:rgba(26,26,46,0.8);border:1px solid rgba(137,180,250,0.15);color:#a6adc8"><i class="fa-solid fa-floppy-disk mr-1" style="color:#fab387"></i> Lưu kịch bản JSON</span>
-      <span class="badge" style="background:rgba(26,26,46,0.8);border:1px solid rgba(137,180,250,0.15);color:#a6adc8"><i class="fa-solid fa-keyboard mr-1" style="color:#cba6f7"></i> Global Hotkey</span>
-      <span class="badge" style="background:rgba(26,26,46,0.8);border:1px solid rgba(137,180,250,0.15);color:#a6adc8"><i class="fa-solid fa-eye-slash mr-1" style="color:#f38ba8"></i> Ẩn cửa sổ mục tiêu</span>
-      <span class="badge" style="background:rgba(26,26,46,0.8);border:1px solid rgba(137,180,250,0.15);color:#a6adc8"><i class="fa-brands fa-windows mr-1" style="color:#89b4fa"></i> Windows 10/11 x64</span>
+    <!-- Extra pills -->
+    <div class="mt-10 flex flex-wrap justify-center gap-3 reveal">
+      <span class="badge" style="background:rgba(22,22,42,0.9);border:1px solid rgba(137,180,250,0.12);color:#6c7086"><i class="fa-solid fa-globe mr-1" style="color:#89b4fa"></i>Playwright Web Automation</span>
+      <span class="badge" style="background:rgba(22,22,42,0.9);border:1px solid rgba(137,180,250,0.12);color:#6c7086"><i class="fa-solid fa-scissors mr-1" style="color:#94e2d5"></i>Snipping Tool tích hợp</span>
+      <span class="badge" style="background:rgba(22,22,42,0.9);border:1px solid rgba(137,180,250,0.12);color:#6c7086"><i class="fa-solid fa-floppy-disk mr-1" style="color:#fab387"></i>Lưu kịch bản JSON</span>
+      <span class="badge" style="background:rgba(22,22,42,0.9);border:1px solid rgba(137,180,250,0.12);color:#6c7086"><i class="fa-solid fa-keyboard mr-1" style="color:#cba6f7"></i>Global Hotkey</span>
+      <span class="badge" style="background:rgba(22,22,42,0.9);border:1px solid rgba(137,180,250,0.12);color:#6c7086"><i class="fa-solid fa-arrow-up-right-dots mr-1" style="color:#a6e3a1"></i>Auto Update Checker</span>
+      <span class="badge" style="background:rgba(22,22,42,0.9);border:1px solid rgba(137,180,250,0.12);color:#6c7086"><i class="fa-brands fa-windows mr-1" style="color:#89b4fa"></i>Windows 10/11 x64</span>
     </div>
-
   </div>
 </section>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     HOW IT WORKS
-════════════════════════════════════════════════════════════ -->
-<section id="howto" class="py-24 px-4 sm:px-6 relative overflow-hidden">
-  <div class="orb w-[400px] h-[400px] -top-20 -right-20 opacity-10"
-       style="background:radial-gradient(circle,#89b4fa,transparent 70%)"></div>
+<!-- ═══════════════════════════ HOW IT WORKS ═══════════════════════════ -->
+<section id="howto" class="py-24 px-4 sm:px-6 relative overflow-hidden"
+         style="background:linear-gradient(180deg,transparent,rgba(137,180,250,0.03) 50%,transparent)">
 
   <div class="relative z-10 max-w-5xl mx-auto">
-
     <div class="text-center mb-16 reveal">
-      <span class="badge mb-4" style="background:rgba(166,227,161,0.1);border:1px solid rgba(166,227,161,0.25);color:#a6e3a1">
-        <i class="fa-solid fa-bolt text-xs"></i>
-        Cực kỳ đơn giản
+      <span class="badge mb-5 inline-flex" style="background:rgba(166,227,161,0.1);border:1px solid rgba(166,227,161,0.25);color:#a6e3a1">
+        <i class="fa-solid fa-bolt text-xs"></i>Cực kỳ đơn giản
       </span>
-      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black mt-4" style="color:#cdd6f4">
-        3 bước. Không cần <span class="gradient-text">lập trình.</span>
+      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black mt-2" style="color:#cdd6f4">
+        3 bước. Không cần <span class="g-blue">lập trình.</span>
       </h2>
-      <p class="mt-4 text-base max-w-lg mx-auto" style="color:#6c7086">
-        Giao diện kéo-thả trực quan, ai cũng dùng được trong vòng 5 phút.
-      </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-
-      <!-- Connector lines (desktop only) -->
-      <div class="hidden md:block absolute top-12 left-1/3 right-1/3 h-px"
-           style="background:linear-gradient(90deg,rgba(137,180,250,0.4),rgba(137,180,250,0.05),rgba(137,180,250,0.4))"></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
       <!-- Step 1 -->
-      <div class="glass rounded-2xl p-8 text-center reveal group"
-           style="border:1px solid rgba(137,180,250,0.15)">
-        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-black relative"
-             style="background:linear-gradient(135deg,#89b4fa,#b4befe);color:#11111f">
-          1
-          <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-               style="box-shadow:0 0 30px rgba(137,180,250,0.6)"></div>
+      <div class="glass rounded-2xl p-8 text-center group reveal"
+           style="border:1px solid rgba(137,180,250,0.12)">
+        <div class="step-ring mx-auto mb-6" style="background:linear-gradient(135deg,#89b4fa,#b4befe);color:#0a0a14">1</div>
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+             style="background:rgba(137,180,250,0.1)">
+          <i class="fa-solid fa-crosshairs text-xl" style="color:#89b4fa"></i>
         </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl"
-             style="background:rgba(137,180,250,0.1);color:#89b4fa">
-          <i class="fa-solid fa-crosshairs"></i>
-        </div>
-        <h3 class="text-xl font-bold mb-3" style="color:#cdd6f4">Chọn mục tiêu</h3>
-        <p class="text-sm leading-relaxed" style="color:#6c7086">
-          Chọn <strong style="color:#89b4fa">cửa sổ ứng dụng</strong> từ dropdown hoặc dùng
-          <strong style="color:#94e2d5">hình ảnh mẫu</strong> để nhận diện tự động qua Vision AI.
+        <h3 class="text-lg font-bold mb-3" style="color:#cdd6f4">Chọn mục tiêu</h3>
+        <p class="text-sm leading-relaxed mb-5" style="color:#6c7086">
+          Chọn <strong style="color:#89b4fa">cửa sổ ứng dụng</strong> từ dropdown
+          hoặc dùng <strong style="color:#94e2d5">hình ảnh mẫu</strong> để Vision AI nhận diện.
         </p>
-        <div class="mt-6 glass rounded-xl p-3 text-xs font-mono text-left" style="color:#585b70">
-          <span style="color:#a6e3a1">TARGET</span> → "Game.exe" (HWND 0x3A1F)
+        <div class="glass rounded-xl p-3 text-xs text-left font-mono" style="color:#45475a">
+          <span style="color:#a6e3a1">TARGET</span> → "Game.exe" <span style="color:#585b70">(HWND 0x3A1F)</span>
         </div>
       </div>
 
       <!-- Step 2 -->
-      <div class="glass rounded-2xl p-8 text-center reveal group"
-           style="border:1px solid rgba(148,226,213,0.15); animation-delay:0.15s">
-        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-black relative"
-             style="background:linear-gradient(135deg,#94e2d5,#a6e3a1);color:#11111f">
-          2
-          <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-               style="box-shadow:0 0 30px rgba(148,226,213,0.6)"></div>
+      <div class="glass rounded-2xl p-8 text-center group reveal"
+           style="border:1px solid rgba(148,226,213,0.12);animation-delay:.15s">
+        <div class="step-ring mx-auto mb-6" style="background:linear-gradient(135deg,#94e2d5,#a6e3a1);color:#0a0a14">2</div>
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+             style="background:rgba(148,226,213,0.1)">
+          <i class="fa-solid fa-puzzle-piece text-xl" style="color:#94e2d5"></i>
         </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl"
-             style="background:rgba(148,226,213,0.1);color:#94e2d5">
-          <i class="fa-solid fa-puzzle-piece"></i>
-        </div>
-        <h3 class="text-xl font-bold mb-3" style="color:#cdd6f4">Xây dựng kịch bản</h3>
-        <p class="text-sm leading-relaxed" style="color:#6c7086">
-          <strong style="color:#94e2d5">Kéo & thả</strong> các khối hành động:
-          Click, Type, Wait, IF Image Found, IF Text Found, Web Navigate…
+        <h3 class="text-lg font-bold mb-3" style="color:#cdd6f4">Xây dựng kịch bản</h3>
+        <p class="text-sm leading-relaxed mb-5" style="color:#6c7086">
+          <strong style="color:#94e2d5">Kéo &amp; thả</strong> khối hành động:
+          Click, Type, Wait, IF Image, IF Text, Web Navigate…
         </p>
-        <div class="mt-6 glass rounded-xl p-3 text-xs font-mono text-left" style="color:#585b70">
+        <div class="glass rounded-xl p-3 text-xs text-left font-mono" style="color:#45475a">
           <span style="color:#89b4fa">[0]</span> IF Image Found: btn.png<br/>
-          <span style="color:#a6e3a1">[1]</span> Click (412, 287)<br/>
+          <span style="color:#a6e3a1">[1]</span> ControlClick (412, 287)<br/>
           <span style="color:#f9e2af">[2]</span> Wait 500ms
         </div>
       </div>
 
       <!-- Step 3 -->
-      <div class="glass rounded-2xl p-8 text-center reveal group"
-           style="border:1px solid rgba(203,166,247,0.15); animation-delay:0.3s">
-        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-black relative"
-             style="background:linear-gradient(135deg,#cba6f7,#f38ba8);color:#11111f">
-          3
-          <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-               style="box-shadow:0 0 30px rgba(203,166,247,0.6)"></div>
+      <div class="glass rounded-2xl p-8 text-center group reveal"
+           style="border:1px solid rgba(203,166,247,0.12);animation-delay:.3s">
+        <div class="step-ring mx-auto mb-6" style="background:linear-gradient(135deg,#cba6f7,#f38ba8);color:#0a0a14">3</div>
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+             style="background:rgba(203,166,247,0.1)">
+          <i class="fa-solid fa-ghost text-xl" style="color:#cba6f7"></i>
         </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl"
-             style="background:rgba(203,166,247,0.1);color:#cba6f7">
-          <i class="fa-solid fa-ghost"></i>
-        </div>
-        <h3 class="text-xl font-bold mb-3" style="color:#cdd6f4">Bật Stealth &amp; Tận hưởng</h3>
-        <p class="text-sm leading-relaxed" style="color:#6c7086">
-          Bật <strong style="color:#cba6f7">Stealth Mode</strong>, ẩn cửa sổ, nhấn ▶ Start.
-          Chuột &amp; bàn phím hoàn toàn tự do. Bot chạy, bạn làm việc khác.
+        <h3 class="text-lg font-bold mb-3" style="color:#cdd6f4">Bật Stealth &amp; Tận hưởng</h3>
+        <p class="text-sm leading-relaxed mb-5" style="color:#6c7086">
+          Ẩn cửa sổ mục tiêu, nhấn <strong style="color:#cba6f7">▶ Start</strong>.
+          Bot chạy ngầm, chuột tự do làm việc khác.
         </p>
-        <div class="mt-6 glass rounded-xl p-3 text-xs font-mono text-left" style="color:#585b70">
+        <div class="glass rounded-xl p-3 text-xs text-left font-mono" style="color:#45475a">
           <span style="color:#a6e3a1">✓</span> Stealth ON — cửa sổ đã ẩn<br/>
-          <span style="color:#cba6f7">∞</span> Running: Iteration #1847…
+          <span style="color:#cba6f7">∞</span> Iteration #1847…&nbsp;<span class="animate-pulse" style="color:#89b4fa">█</span>
         </div>
       </div>
 
     </div>
-
   </div>
 </section>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     TECH STACK  (social proof)
-════════════════════════════════════════════════════════════ -->
-<section class="py-16 px-4 sm:px-6">
-  <div class="max-w-4xl mx-auto">
-    <p class="text-center text-xs font-semibold uppercase tracking-widest mb-8 reveal" style="color:#45475a">
-      Được xây dựng trên nền tảng công nghệ mạnh mẽ
-    </p>
-    <div class="flex flex-wrap justify-center items-center gap-8 sm:gap-12 reveal">
-      <div class="flex items-center gap-2 text-sm font-semibold" style="color:#45475a">
-        <i class="fa-brands fa-microsoft text-xl" style="color:#89b4fa"></i>.NET 8 / WPF
-      </div>
-      <div class="flex items-center gap-2 text-sm font-semibold" style="color:#45475a">
-        <i class="fa-solid fa-eye text-xl" style="color:#94e2d5"></i>Emgu.CV (OpenCV)
-      </div>
-      <div class="flex items-center gap-2 text-sm font-semibold" style="color:#45475a">
-        <i class="fa-solid fa-font text-xl" style="color:#fab387"></i>Tesseract OCR
-      </div>
-      <div class="flex items-center gap-2 text-sm font-semibold" style="color:#45475a">
-        <i class="fa-solid fa-globe text-xl" style="color:#cba6f7"></i>Playwright
-      </div>
-      <div class="flex items-center gap-2 text-sm font-semibold" style="color:#45475a">
-        <i class="fa-brands fa-windows text-xl" style="color:#89b4fa"></i>Win32 API
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════
-     DOWNLOAD CTA + SUPPORT / COFFEE
-════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════ DOWNLOAD CTA + SUPPORT ═══════════════════════════ -->
 <section id="support" class="py-24 px-4 sm:px-6 relative overflow-hidden">
   <div class="orb w-[500px] h-[500px] -bottom-40 -left-20 opacity-15"
        style="background:radial-gradient(circle,#89b4fa,transparent 70%)"></div>
-  <div class="orb w-[300px] h-[300px] top-0 right-0 opacity-10"
-       style="background:radial-gradient(circle,#f38ba8,transparent 70%)"></div>
 
-  <div class="relative z-10 max-w-4xl mx-auto text-center">
+  <div class="relative z-10 max-w-4xl mx-auto">
 
-    <!-- Main CTA block -->
-    <div class="glass rounded-3xl p-8 sm:p-14 mb-12 reveal"
+    <!-- Download block -->
+    <div class="glass rounded-3xl p-8 sm:p-14 mb-10 text-center reveal"
          style="border:1px solid rgba(137,180,250,0.15)">
-      <div class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl"
-           style="background:linear-gradient(135deg,rgba(137,180,250,0.2),rgba(203,166,247,0.1));border:1px solid rgba(137,180,250,0.2)">
-        <i class="fa-solid fa-rocket" style="color:#89b4fa"></i>
+      <div class="w-20 h-20 mx-auto mb-6 rounded-3xl overflow-hidden"
+           style="border:2px solid rgba(137,180,250,0.25);box-shadow:0 0 30px rgba(137,180,250,0.25)">
+        <img src="logo.png" alt="SmartMacroAI" class="w-full h-full object-cover"
+             onerror="this.parentElement.style.background='linear-gradient(135deg,#89b4fa,#cba6f7)';this.outerHTML='<span style=\'font-size:2rem;font-weight:900;color:#0a0a14;display:flex;align-items:center;justify-content:center;height:100%\'>S</span>'" />
       </div>
-      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black mb-4" style="color:#cdd6f4">
-        Sẵn sàng tự động hóa?
-      </h2>
+      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black mb-4" style="color:#cdd6f4">Sẵn sàng tự động hóa?</h2>
       <p class="text-base sm:text-lg mb-8 max-w-lg mx-auto" style="color:#6c7086">
-        Tải xuống ngay, hoàn toàn miễn phí. Không cần đăng ký, không watermark, không quảng cáo.
+        Hoàn toàn miễn phí. Không đăng ký. Không watermark. Không quảng cáo.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="https://github.com/TroniePh/SmartMacroAI/releases/download/v1.0.0/SmartMacroAI_Setup_v1.0.0.exe"
-           class="btn-glow inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl text-lg animate-glow-pulse">
+        <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"
+           class="btn-primary inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl text-lg"
+           style="animation:glowPulse 3s ease-in-out infinite">
           <i class="fa-solid fa-download"></i>
-          Tải về Miễn phí (v1.0.0)
+          Tải về Miễn phí (v1.1.0)
         </a>
         <a href="https://www.facebook.com/neull" target="_blank" rel="noopener"
-           class="btn-outline inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl text-lg">
+           class="btn-ghost inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl text-lg">
           <i class="fa-brands fa-facebook"></i>
           Liên hệ hỗ trợ
         </a>
       </div>
-      <!-- OS badge -->
-      <div class="mt-6 flex items-center justify-center gap-2 text-sm" style="color:#45475a">
-        <i class="fa-brands fa-windows" style="color:#89b4fa"></i>
-        Yêu cầu: Windows 10/11 64-bit
-      </div>
+      <p class="mt-5 text-xs flex items-center justify-center gap-2" style="color:#313244">
+        <i class="fa-brands fa-windows" style="color:#585b70"></i>
+        Windows 10/11 64-bit &nbsp;·&nbsp;
+        <i class="fa-brands fa-github" style="color:#585b70"></i>
+        <a href="https://github.com/TroniePh/SmartMacroAI" target="_blank" style="color:#585b70;text-decoration:none" class="hover:text-blue-400 transition-colors">github.com/TroniePh/SmartMacroAI</a>
+      </p>
     </div>
 
-    <!-- Coffee / Support block -->
+    <!-- Coffee block -->
     <div class="glass rounded-3xl p-8 sm:p-12 reveal"
          style="border:1px solid rgba(250,179,135,0.2)">
       <div class="flex flex-col lg:flex-row items-center gap-10">
-
-        <div class="flex-1 text-left">
-          <div class="text-4xl mb-4">☕</div>
+        <div class="flex-1">
+          <div class="text-5xl mb-4">☕</div>
           <h3 class="text-2xl sm:text-3xl font-black mb-3" style="color:#cdd6f4">
-            Mời tác giả<br />
-            <span style="color:#fab387">một ly cà phê</span>
+            Mời tác giả<br /><span style="color:#fab387">một ly cà phê</span>
           </h3>
           <p class="text-base leading-relaxed mb-6" style="color:#6c7086">
-            Phần mềm được phát triển hoàn toàn miễn phí bởi một developer đam mê.
-            Nếu thấy hữu ích, hãy mời tác giả một ly cà phê nhé!
-            Mỗi sự ủng hộ là động lực để phát triển thêm nhiều tính năng mới. 💪
+            Phần mềm được phát triển hoàn toàn miễn phí. Nếu thấy hữu ích,
+            hãy ủng hộ để tác giả có thêm động lực phát triển tính năng mới! 💪
           </p>
           <div class="glass rounded-xl p-4 inline-block">
-            <p class="text-sm font-mono" style="color:#a6adc8">
+            <p class="text-sm font-mono leading-relaxed" style="color:#a6adc8">
               <span class="font-bold" style="color:#fab387">MB Bank</span><br />
               PHAM QUOC DUY<br />
-              <span style="color:#94e2d5">379997999</span>
+              <span style="color:#94e2d5;font-size:1.1em;font-weight:700">379997999</span>
             </p>
           </div>
         </div>
-
-        <!-- QR Code -->
         <div class="flex-shrink-0">
           <div class="rounded-2xl overflow-hidden p-3"
-               style="background:white;border:3px solid rgba(250,179,135,0.4);width:200px;height:200px">
-            <img src="../Assets/qr_bank.png"
-                 alt="QR Code chuyển khoản — MB Bank — PHAM QUOC DUY — 379997999"
-                 class="w-full h-full object-contain"
-                 onerror="this.outerHTML='<div class=\'w-full h-full flex items-center justify-center text-center\' style=\'color:#11111f;font-size:0.7rem;padding:8px\'><div><div style=\'font-size:2rem\'>☕</div><br/>MB Bank<br/><b>PHAM QUOC DUY</b><br/>379997999</div></div>'" />
+               style="background:white;border:3px solid rgba(250,179,135,0.4);width:190px;height:190px">
+            <img src="qr_bank.png" alt="QR MB Bank" class="w-full h-full object-contain"
+                 onerror="this.outerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:#11111f;font-size:.7rem;padding:8px\'><div><div style=\'font-size:2rem\'>☕</div><br/>MB Bank<br/><b>PHAM QUOC DUY</b><br/>379997999</div></div>'" />
           </div>
-          <p class="text-xs text-center mt-2" style="color:#585b70">Quét QR để ủng hộ</p>
+          <p class="text-xs text-center mt-2" style="color:#45475a">Quét QR để ủng hộ</p>
         </div>
-
       </div>
     </div>
 
@@ -706,56 +657,46 @@
 </section>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     FOOTER
-════════════════════════════════════════════════════════════ -->
-<footer class="border-t py-10 px-4 sm:px-6" style="border-color:rgba(137,180,250,0.08);background:rgba(10,10,20,0.9)">
-  <div class="max-w-5xl mx-auto">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer style="border-top:1px solid rgba(137,180,250,0.07);background:rgba(8,8,16,0.95)">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
 
       <!-- Brand -->
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black"
-             style="background:linear-gradient(135deg,#89b4fa,#cba6f7)">
-          <span style="-webkit-text-fill-color:#11111f">S</span>
-        </div>
+      <a href="#" class="flex items-center gap-3">
+        <img src="logo.png" alt="SmartMacroAI" class="w-9 h-9 rounded-xl object-cover"
+             style="box-shadow:0 0 12px rgba(137,180,250,0.3)"
+             onerror="this.style.display='none'" />
         <div>
           <div class="font-bold text-sm" style="color:#cdd6f4">SmartMacroAI</div>
-          <div class="text-xs" style="color:#45475a">Giải pháp tự động hóa thông minh.</div>
+          <div class="text-xs" style="color:#313244">Giải pháp tự động hóa thông minh.</div>
         </div>
-      </div>
+      </a>
 
       <!-- Links -->
       <div class="flex items-center gap-6">
         <a href="https://www.facebook.com/neull" target="_blank" rel="noopener"
-           class="flex items-center gap-2 text-sm transition-colors hover:text-blue-400"
-           style="color:#6c7086">
-          <i class="fa-brands fa-facebook text-base"></i>
-          Facebook
+           class="flex items-center gap-2 text-sm transition-colors" style="color:#45475a">
+          <i class="fa-brands fa-facebook text-base" style="color:#89b4fa"></i>Facebook
         </a>
-        <a href="https://github.com/TroniePh" target="_blank" rel="noopener"
-           class="flex items-center gap-2 text-sm transition-colors hover:text-blue-400"
-           style="color:#6c7086">
-          <i class="fa-brands fa-github text-base"></i>
-          GitHub
+        <a href="https://github.com/TroniePh/SmartMacroAI" target="_blank" rel="noopener"
+           class="flex items-center gap-2 text-sm transition-colors" style="color:#45475a">
+          <i class="fa-brands fa-github text-base"></i>GitHub
         </a>
-        <a href="https://github.com/TroniePh/SmartMacroAI/releases/download/v1.0.0/SmartMacroAI_Setup_v1.0.0.exe"
-           class="flex items-center gap-2 text-sm transition-colors hover:text-blue-400"
-           style="color:#6c7086">
-          <i class="fa-solid fa-download text-base"></i>
-          Download
+        <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"
+           class="flex items-center gap-2 text-sm transition-colors" style="color:#45475a">
+          <i class="fa-solid fa-download text-base" style="color:#a6e3a1"></i>Download
         </a>
       </div>
-
     </div>
 
-    <div class="border-t mt-6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2"
-         style="border-color:rgba(137,180,250,0.06)">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-6"
+         style="border-top:1px solid rgba(137,180,250,0.06)">
       <p class="text-xs" style="color:#313244">
         © 2026 SmartMacroAI. Created by <strong style="color:#89b4fa">Phạm Duy</strong>
         — Giải pháp tự động hóa thông minh.
       </p>
-      <p class="text-xs" style="color:#313244">
+      <p class="text-xs" style="color:#1e1e36">
         Built with ❤️ · .NET 8 · WPF · Win32 API
       </p>
     </div>
@@ -763,55 +704,35 @@
 </footer>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     JAVASCRIPT
-════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
 <script>
-  // ── Mobile menu toggle ───────────────────────────────────
+  // Mobile menu
   document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-    const menu = document.getElementById('mobileMenu');
-    menu.classList.toggle('hidden');
+    document.getElementById('mobileMenu').classList.toggle('hidden');
   });
+  document.querySelectorAll('#mobileMenu a').forEach(a =>
+    a.addEventListener('click', () => document.getElementById('mobileMenu').classList.add('hidden')));
 
-  // Close mobile menu when a link is clicked
-  document.querySelectorAll('#mobileMenu a').forEach(link => {
-    link.addEventListener('click', () => {
-      document.getElementById('mobileMenu').classList.add('hidden');
-    });
-  });
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-  // ── Scroll reveal ────────────────────────────────────────
-  const revealEls = document.querySelectorAll('.reveal');
-  const observer  = new IntersectionObserver((entries) => {
-    entries.forEach((entry, i) => {
-      if (entry.isIntersecting) {
-        const delay = parseFloat(getComputedStyle(entry.target).animationDelay) * 1000 || 0;
-        setTimeout(() => entry.target.classList.add('visible'), delay);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-  revealEls.forEach(el => observer.observe(el));
-
-  // ── Smooth scroll for anchor links ──────────────────────
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', e => {
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
       e.preventDefault();
-      const target = document.querySelector(anchor.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) t.scrollIntoView({ behavior:'smooth', block:'start' });
     });
   });
 
-  // ── Navbar blur on scroll ────────────────────────────────
+  // Navbar shadow on scroll
   window.addEventListener('scroll', () => {
-    const nb = document.getElementById('navbar');
-    if (window.scrollY > 40) {
-      nb.style.boxShadow = '0 4px 32px rgba(0,0,0,0.4)';
-    } else {
-      nb.style.boxShadow = 'none';
-    }
+    document.getElementById('navbar').style.boxShadow =
+      window.scrollY > 40 ? '0 4px 40px rgba(0,0,0,0.5)' : 'none';
   });
 </script>
-
 </body>
 </html>
