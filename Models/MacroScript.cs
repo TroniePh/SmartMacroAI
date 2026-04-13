@@ -11,6 +11,20 @@ public class MacroScript
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
+    /// Static key/value pairs merged into the runtime variable map each iteration (before CSV columns).
+    /// </summary>
+    public Dictionary<string, string>? Variables { get; set; }
+
+    /// <summary>
+    /// Optional CSV: each iteration maps row columns into runtime variables (requires a finite <see cref="RepeatCount"/>; infinite repeat is not allowed with CSV).
+    /// </summary>
+    public string? LoopCsvFilePath { get; set; }
+
+    public List<string> LoopCsvColumnNames { get; set; } = [];
+
+    public bool LoopCsvHasHeader { get; set; } = true;
+
+    /// <summary>
     /// The Win32 window title pattern used to locate the target HWND at runtime.
     /// Supports partial matching (e.g. "Notepad" will match "Untitled - Notepad").
     /// </summary>
@@ -23,6 +37,12 @@ public class MacroScript
     /// How many times the entire action list should loop. 0 = infinite.
     /// </summary>
     public int RepeatCount { get; set; } = 1;
+
+    /// <summary>
+    /// When greater than 0, execution stops after this many minutes (linked cancellation),
+    /// even when <see cref="RepeatCount"/> is 0 (infinite loop). 0 = no time limit.
+    /// </summary>
+    public int AutoStopMinutes { get; set; }
 
     /// <summary>
     /// Delay in minutes between each iteration. 0 = no delay (back-to-back).

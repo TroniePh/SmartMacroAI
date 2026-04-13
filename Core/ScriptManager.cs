@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using SmartMacroAI.Models;
 
@@ -77,6 +78,7 @@ public static class ScriptManager
             return null;
 
         string json = await File.ReadAllTextAsync(filePath);
+        json = ApplyLegacyWaitJsonPatches(json);
         return JsonSerializer.Deserialize<MacroScript>(json, JsonOptions);
     }
 
@@ -89,7 +91,61 @@ public static class ScriptManager
             return null;
 
         string json = File.ReadAllText(filePath);
+        json = ApplyLegacyWaitJsonPatches(json);
         return JsonSerializer.Deserialize<MacroScript>(json, JsonOptions);
+    }
+
+    /// <summary>
+    /// Older scripts stored a single <c>milliseconds</c> field on Wait actions. Map to <c>delayMin</c>/<c>delayMax</c> before deserialize.
+    /// </summary>
+    private static string ApplyLegacyWaitJsonPatches(string json)
+    {
+        try
+        {
+            JsonNode? root = JsonNode.Parse(json);
+            if (root is null)
+                return json;
+            PatchLegacyWaitActionsRecursive(root);
+            return root.ToJsonString(JsonOptions);
+        }
+        catch
+        {
+            return json;
+        }
+    }
+
+    private static void PatchLegacyWaitActionsRecursive(JsonNode? node)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                TryPatchLegacyWaitObject(obj);
+                foreach (KeyValuePair<string, JsonNode?> kv in obj)
+                    PatchLegacyWaitActionsRecursive(kv.Value);
+                break;
+            case JsonArray arr:
+                foreach (JsonNode? item in arr)
+                    PatchLegacyWaitActionsRecursive(item);
+                break;
+        }
+    }
+
+    private static void TryPatchLegacyWaitObject(JsonObject obj)
+    {
+        if (obj["$type"]?.GetValue<string>() is not string disc
+            || !disc.Equals("Wait", StringComparison.Ordinal))
+            return;
+
+        if (obj.ContainsKey("delayMin") || obj.ContainsKey("delayMax"))
+            return;
+
+        if (obj["milliseconds"] is not JsonValue msVal)
+            return;
+
+        int ms = msVal.GetValue<int>();
+        obj["delayMin"] = ms;
+        obj["delayMax"] = ms;
+        obj.Remove("milliseconds");
     }
 
     /// <summary>

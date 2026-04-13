@@ -39,7 +39,7 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
         set { if (_intervalMinutes != value) { _intervalMinutes = value; Notify(); } }
     }
 
-    private string _status = "Sẵn sàng";
+    private string _status = "Ready";
     public string Status
     {
         get => _status;
@@ -70,6 +70,13 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
     {
         get => _stealthMode;
         set { if (_stealthMode != value) { _stealthMode = value; Notify(); } }
+    }
+
+    private bool _hardwareMode;
+    public bool HardwareMode
+    {
+        get => _hardwareMode;
+        set { if (_hardwareMode != value) { _hardwareMode = value; Notify(); } }
     }
 
     // Runtime state (not bound to UI)

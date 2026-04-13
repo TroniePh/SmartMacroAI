@@ -18,14 +18,17 @@ public sealed class StealthWindowVm : INotifyPropertyChanged
             {
                 _isHidden = value;
                 Notify();
-                Notify(nameof(StatusText));
-                Notify(nameof(ToggleLabel));
+                Notify(nameof(StatusKey));
+                Notify(nameof(ToggleKey));
             }
         }
     }
 
-    public string StatusText => _isHidden ? "Ẩn" : "Hiện";
-    public string ToggleLabel => _isHidden ? "Show" : "Hide";
+    /// <summary>Localization key suffix for <c>ui_StealthStatus_*</c>.</summary>
+    public string StatusKey => _isHidden ? "Hidden" : "Visible";
+
+    /// <summary>Localization key suffix for <c>ui_StealthToggle_*</c>.</summary>
+    public string ToggleKey => _isHidden ? "Show" : "Hide";
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void Notify([CallerMemberName] string? name = null)

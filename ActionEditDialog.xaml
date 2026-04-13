@@ -1,7 +1,7 @@
 <Window x:Class="SmartMacroAI.ActionEditDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Edit Action" Height="400" Width="420"
+        Title="Chỉnh sửa thao tác" Height="520" Width="440"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1E1E2E"
@@ -14,7 +14,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TxtDialogTitle" Grid.Row="0" Text="Edit Action"
+        <TextBlock x:Name="TxtDialogTitle" Grid.Row="0" Text="Chỉnh sửa thao tác"
                    FontSize="18" FontWeight="SemiBold" Foreground="#CDD6F4" Margin="0,0,0,16" />
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -22,9 +22,9 @@
         </ScrollViewer>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" Click="BtnCancel_Click" Padding="16,8" Margin="0,0,8,0"
+            <Button Content="Hủy" Click="BtnCancel_Click" Padding="16,8" Margin="0,0,8,0"
                     Background="#313244" Foreground="#CDD6F4" BorderThickness="0" Cursor="Hand" />
-            <Button Content="Apply" Click="BtnApply_Click" Padding="16,8"
+            <Button Content="Áp dụng" Click="BtnApply_Click" Padding="16,8"
                     Background="#89B4FA" Foreground="#11111B" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
         </StackPanel>
     </Grid>

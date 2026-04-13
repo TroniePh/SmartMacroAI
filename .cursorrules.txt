@@ -1,0 +1,17 @@
+# SmartMacroAI Project Rules
+You are a Senior C# .NET 8 and WPF Expert Developer.
+
+## Core Rules
+1. DO NOT modify UI/XAML files unless explicitly asked. Focus on C# backend logic.
+2. ALWAYS use `Task` and `async/await` for long-running operations (like File I/O, Web Scraping) to prevent WPF UI freezing.
+3. NEVER remove existing classes, methods, or models when adding new features. Only append or modify what is necessary.
+4. When writing UI changes, always use `DynamicResource` for multi-language support instead of hardcoding strings.
+
+## Tech Stack
+- Web Automation: Use `Microsoft.Playwright` ONLY. Do not suggest Selenium.
+- UI Framework: WPF (.NET 8).
+- Data Processing: Use native C# `System.IO` and `string.Split` for CSV parsing unless specified otherwise.
+
+## Code Quality
+- Add XML comments (`/// <summary>`) to all new public methods.
+- If a compilation error is likely (e.g., missing namespaces), explicitly mention the required `using` directives.

@@ -5,12 +5,12 @@
         <ResourceDictionary Source="Colors.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
-    <!-- Sidebar Navigation Button -->
+    <!-- Sidebar — flat -->
     <Style x:Key="SidebarButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource SubtextBrush}" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="Padding" Value="14,10" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="13" />
@@ -20,8 +20,8 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Bd"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="8"
-                            Margin="8,2"
+                            CornerRadius="0"
+                            Margin="6,1"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="Center" />
@@ -40,7 +40,6 @@
         </Setter>
     </Style>
 
-    <!-- Active Sidebar Button -->
     <Style x:Key="SidebarButtonActiveStyle" TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
         <Setter Property="Background" Value="{StaticResource Surface0Brush}" />
         <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}" />
@@ -48,12 +47,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Bd"
-                            CornerRadius="8"
-                            Margin="8,2"
+                            Background="{StaticResource Surface0Brush}"
+                            CornerRadius="0"
+                            Margin="6,1"
                             Padding="{TemplateBinding Padding}">
-                        <Border.Background>
-                            <SolidColorBrush Color="{StaticResource Surface0Color}" />
-                        </Border.Background>
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="Center" />
                     </Border>
@@ -67,12 +64,11 @@
         </Setter>
     </Style>
 
-    <!-- Primary Action Button -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBlueBrush}" />
         <Setter Property="Foreground" Value="{StaticResource CrustBrush}" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="20,10" />
+        <Setter Property="Padding" Value="16,8" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
@@ -81,7 +77,7 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Bd"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="6"
+                            CornerRadius="0"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -101,27 +97,61 @@
         </Setter>
     </Style>
 
-    <!-- Danger Button -->
-    <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource AccentRedBrush}" />
+    <Style x:Key="DangerButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="#451E2A" />
+        <Setter Property="Foreground" Value="#F38BA8" />
+        <Setter Property="BorderBrush" Value="#F38BA8" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="0"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#6E2838" />
+                            <Setter Property="Foreground" Value="White" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#F9A8BA" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#F38BA8" />
+                            <Setter Property="Foreground" Value="#1E1E2E" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- Card Panel -->
+    <!-- Flat card / panel -->
     <Style x:Key="CardStyle" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource Surface0Brush}" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="16" />
-        <Setter Property="Margin" Value="4" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="2" />
     </Style>
 
-    <!-- Dark-themed TextBox -->
     <Style x:Key="DarkTextBoxStyle" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource BaseBrush}" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         <Setter Property="CaretBrush" Value="{StaticResource TextBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource Surface1Brush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="Padding" Value="8,6" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Template">
             <Setter.Value>
@@ -129,7 +159,7 @@
                     <Border x:Name="Bd" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            CornerRadius="0" Padding="{TemplateBinding Padding}">
                         <ScrollViewer x:Name="PART_ContentHost" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -145,23 +175,20 @@
         </Setter>
     </Style>
 
-    <!-- Small label above input fields -->
     <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{StaticResource SubtextBrush}" />
-        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Margin" Value="0,0,0,2" />
     </Style>
 
-    <!-- Toast / notification bar -->
     <Style x:Key="ToastStyle" TargetType="Border">
-        <Setter Property="CornerRadius" Value="6" />
-        <Setter Property="Padding" Value="12,8" />
-        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Margin" Value="0,6,0,0" />
         <Setter Property="Visibility" Value="Collapsed" />
     </Style>
 
-    <!-- ScrollBar Styles (slim modern) -->
     <Style TargetType="ScrollBar">
         <Setter Property="Width" Value="6" />
         <Setter Property="Background" Value="Transparent" />

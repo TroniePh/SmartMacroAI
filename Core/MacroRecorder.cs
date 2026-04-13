@@ -171,7 +171,8 @@ public sealed class MacroRecorder : IDisposable
 
         if (delay > MIN_WAIT_MS && _recordedActions.Count > 0)
         {
-            var wait = new WaitAction { Milliseconds = (int)delay };
+            int d = (int)delay;
+            var wait = new WaitAction { DelayMin = d, DelayMax = d, Milliseconds = d };
             _recordedActions.Add(wait);
         }
     }

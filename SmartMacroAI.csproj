@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**</DefaultItemExcludes>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
@@ -15,8 +16,9 @@
     <Product>SmartMacroAI</Product>
     <Company>Phạm Duy</Company>
     <Copyright>Created by Phạm Duy - Giải pháp tự động hóa thông minh.</Copyright>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Description>SmartMacroAI - RPA Automation Tool for Windows. Non-invasive macro automation with Image and OCR recognition.</Description>
   </PropertyGroup>
 
@@ -25,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\logo.ico" />
     <Resource Include="Assets\logo.png" />
     <Resource Include="Assets\qr_bank.png" />
   </ItemGroup>

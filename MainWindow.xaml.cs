@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +12,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using Microsoft.Win32;
 using SmartMacroAI.Core;
+using SmartMacroAI.Localization;
 using SmartMacroAI.Models;
 using SmartMacroAI.ViewModels;
 using WinForms = System.Windows.Forms;
@@ -26,6 +28,21 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _cts;
     private MacroRecorder? _recorder;
     private int _runsToday;
+    private IntPtr _editorTargetHwnd = IntPtr.Zero;
+
+    private Point _dragStartPoint;
+    private MacroAction? _potentialDragAction;
+
+    /// <summary>Identifies a step inside a <see cref="RepeatAction.LoopActions"/> list for edit/delete on the canvas.</summary>
+    private readonly record struct NestedLoopTag(RepeatAction Parent, int ChildIndex);
+
+    private readonly record struct NestedTryCatchChildTag(TryCatchAction Parent, int ChildIndex, bool IsTry);
+
+    private readonly record struct NestedIfVarChildTag(IfVariableAction Parent, int ChildIndex, bool IsThen);
+
+    private readonly record struct TryCatchInsertTag(TryCatchAction Parent, bool IsTry);
+
+    private readonly record struct IfVarInsertTag(IfVariableAction Parent, bool IsThen);
 
     private readonly ObservableCollection<DashboardRowVm> _dashboardRows = [];
 
@@ -41,29 +58,38 @@ public partial class MainWindow : Window
     private readonly Dictionary<IntPtr, string> _hiddenWindows = new();
     private readonly ObservableCollection<StealthWindowVm> _stealthRows = [];
 
+    private string _activeView = "Dashboard";
+    private bool _suppressLanguageCombo;
+
+    /// <summary>Last successful vision test match (client coords) for stealth click demo.</summary>
+    private Drawing.Point? _visionLastFoundClientPoint;
+    private IntPtr _visionLastFoundHwnd = IntPtr.Zero;
+
     // ── Update Checker ──
-    private const string CurrentVersion   = "v1.1.0";
+    /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
+    private const string CurrentVersion   = "v1.2.0";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
-    private static readonly HttpClient _httpClient = CreateHttpClient();
+    /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
+    private const string GitHubUserAgent  = "SmartMacroAI/UpdateChecker (+https://github.com/TroniePh/SmartMacroAI)";
 
-    private static HttpClient CreateHttpClient()
+    private static readonly HttpClient _httpClient = new()
     {
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("SmartMacroAI", "1.1.0"));
-        return client;
-    }
+        Timeout = TimeSpan.FromSeconds(15),
+    };
 
     public MainWindow()
     {
         InitializeComponent();
+        MacroCanvas.PreviewMouseLeftButtonUp += Workflow_PreviewMouseLeftButtonUp;
+        LanguageManager.UiLanguageChanged += OnUiLanguageChanged;
         DashboardGrid.ItemsSource = _dashboardRows;
         StealthGrid.ItemsSource = _stealthRows;
         _hotkeySettings = HotkeySettings.Load();
         InitializeTrayIcon();
         SyncScriptToUi();
         LoadDashboard();
+        UpdateProcessBar();
     }
 
     // ═══════════════════════════════════════════════════
@@ -324,6 +350,46 @@ public partial class MainWindow : Window
 
     private static Drawing.Icon CreateTrayIcon()
     {
+        try
+        {
+            var uri = new Uri("pack://application:,,,/Assets/logo.ico", UriKind.Absolute);
+            var sri = System.Windows.Application.GetResourceStream(uri);
+            if (sri?.Stream is not null)
+            {
+                using (sri.Stream)
+                {
+                    using var buf = new MemoryStream();
+                    sri.Stream.CopyTo(buf);
+                    byte[] data = buf.ToArray();
+                    return new Drawing.Icon(new MemoryStream(data));
+                }
+            }
+        }
+        catch
+        {
+            /* try fallbacks */
+        }
+
+        try
+        {
+            string? exe = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(exe) && File.Exists(exe))
+            {
+                using Drawing.Icon? embedded = Drawing.Icon.ExtractAssociatedIcon(exe);
+                if (embedded is not null)
+                    return (Drawing.Icon)embedded.Clone();
+            }
+        }
+        catch
+        {
+            /* last resort */
+        }
+
+        return CreateFallbackTrayIcon();
+    }
+
+    private static Drawing.Icon CreateFallbackTrayIcon()
+    {
         var bmp = new Drawing.Bitmap(16, 16);
         using var g = Drawing.Graphics.FromImage(bmp);
         g.Clear(Drawing.Color.FromArgb(137, 180, 250));
@@ -338,6 +404,7 @@ public partial class MainWindow : Window
 
     private void SetActiveView(string viewName)
     {
+        _activeView = viewName;
         DashboardView.Visibility = Visibility.Collapsed;
         MacroEditorView.Visibility = Visibility.Collapsed;
         ImageRecognitionView.Visibility = Visibility.Collapsed;
@@ -352,48 +419,67 @@ public partial class MainWindow : Window
             case "Dashboard":
                 DashboardView.Visibility = Visibility.Visible;
                 BtnDashboard.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "Dashboard";
-                TxtPageSubtitle.Text = "Multi-tasking hub — run multiple macros simultaneously";
                 LoadDashboard();
                 break;
             case "MacroEditor":
                 MacroEditorView.Visibility = Visibility.Visible;
                 BtnMacroEditor.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "Macro Editor";
-                TxtPageSubtitle.Text = "Design your automation workflow with drag & drop";
                 break;
             case "ImageRecognition":
                 ImageRecognitionView.Visibility = Visibility.Visible;
                 BtnImageRecognition.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "Image Recognition";
-                TxtPageSubtitle.Text = "Configure template matching for background windows";
                 break;
             case "OcrEngine":
                 OcrEngineView.Visibility = Visibility.Visible;
                 BtnOcrEngine.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "OCR Engine";
-                TxtPageSubtitle.Text = "Text recognition settings and testing";
                 break;
             case "StealthManager":
                 StealthManagerView.Visibility = Visibility.Visible;
                 BtnStealthManager.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "Stealth Manager";
-                TxtPageSubtitle.Text = "Ẩn/hiện cửa sổ — PostMessage vẫn hoạt động trên cửa sổ ẩn";
                 LoadStealthManager();
                 break;
             case "Settings":
                 SettingsView.Visibility = Visibility.Visible;
                 BtnSettingsNav.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "Settings";
-                TxtPageSubtitle.Text = "Global hotkeys and stealth configuration";
                 break;
             case "About":
                 AboutView.Visibility = Visibility.Visible;
                 BtnAbout.Style = (Style)FindResource("SidebarButtonActiveStyle");
-                TxtPageTitle.Text = "About";
-                TxtPageSubtitle.Text = "SmartMacroAI — Created by Phạm Duy";
                 break;
         }
+
+        ApplyPageChromeForView(viewName);
+    }
+
+    private void ApplyPageChromeForView(string viewName)
+    {
+        (string titleKey, string subKey) = viewName switch
+        {
+            "Dashboard" => ("ui_Page_Dashboard", "ui_PageSub_Dashboard"),
+            "MacroEditor" => ("ui_Page_MacroEditor", "ui_PageSub_MacroEditor"),
+            "ImageRecognition" => ("ui_Page_ImageRecognition", "ui_PageSub_ImageRecognition"),
+            "OcrEngine" => ("ui_Page_OcrEngine", "ui_PageSub_OcrEngine"),
+            "StealthManager" => ("ui_Page_StealthManager", "ui_PageSub_StealthManager"),
+            "Settings" => ("ui_Page_Settings", "ui_PageSub_Settings"),
+            "About" => ("ui_Page_About", "ui_PageSub_About"),
+            _ => ("ui_Page_Dashboard", "ui_PageSub_Dashboard"),
+        };
+        TxtPageTitle.Text = LanguageManager.GetString(titleKey);
+        TxtPageSubtitle.Text = LanguageManager.GetString(subKey);
+    }
+
+    private void OnUiLanguageChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ApplyPageChromeForView(_activeView);
+            InitLanguageCombo();
+            UpdateProcessBar();
+            if (BtnRunMacro is { IsEnabled: false } && BtnStopMacro is { IsEnabled: true })
+                TxtStatus.Text = LanguageManager.GetString("ui_Header_Running");
+            else
+                TxtStatus.Text = LanguageManager.GetString("ui_Header_Ready");
+        });
     }
 
     private void ResetSidebarButtons()
@@ -448,6 +534,171 @@ public partial class MainWindow : Window
         CmbToggleAppKey.SelectedItem = HotkeySettings.KeyToString(_hotkeySettings.ToggleAppKey);
         CmbToggleTargetMod.SelectedItem = HotkeySettings.ModifierToString(_hotkeySettings.ToggleTargetModifier);
         CmbToggleTargetKey.SelectedItem = HotkeySettings.KeyToString(_hotkeySettings.ToggleTargetKey);
+
+        InitLanguageCombo();
+        LoadVisionScaleSlidersFromSettings();
+        InitMouseSettingsUi();
+    }
+
+    private void InitMouseSettingsUi()
+    {
+        CmbMouseProfile.ItemsSource = new[] { "Relaxed", "Normal", "Fast", "Instant" };
+        LoadMouseSettingsFromDisk();
+        UpdateMouseJitterLabel();
+        UpdateMousePreviewPolyline();
+    }
+
+    private void LoadMouseSettingsFromDisk()
+    {
+        var app = AppSettings.Load();
+        string prof = string.IsNullOrWhiteSpace(app.MouseProfileName) ? "Normal" : app.MouseProfileName;
+        if (!CmbMouseProfile.Items.Cast<string>().Contains(prof, StringComparer.OrdinalIgnoreCase))
+            prof = "Normal";
+        CmbMouseProfile.SelectedItem = prof;
+        SldMouseJitter.Value = Math.Clamp(app.MouseJitterIntensity, (int)SldMouseJitter.Minimum, (int)SldMouseJitter.Maximum);
+        ChkMouseOvershoot.IsChecked = app.MouseOvershootEnabled;
+        ChkMouseMicroPause.IsChecked = app.MouseMicroPauseEnabled;
+        ChkMouseRawBypass.IsChecked = app.MouseRawInputBypass;
+        ChkMouseHwSim.IsChecked = app.MouseHardwareSimulationDriver;
+    }
+
+    private void BtnSaveMouseSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var app = AppSettings.Load();
+        app.MouseProfileName = (CmbMouseProfile.SelectedItem as string)?.Trim() ?? "Normal";
+        app.MouseJitterIntensity = (int)Math.Round(SldMouseJitter.Value);
+        app.MouseOvershootEnabled = ChkMouseOvershoot.IsChecked == true;
+        app.MouseMicroPauseEnabled = ChkMouseMicroPause.IsChecked == true;
+        app.MouseRawInputBypass = ChkMouseRawBypass.IsChecked == true;
+        app.MouseHardwareSimulationDriver = ChkMouseHwSim.IsChecked == true;
+        app.Save();
+        ShowToast(LanguageManager.GetString("ui_Toast_MouseSettingsSaved"), isError: false);
+    }
+
+    private void SldMouseJitter_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!IsLoaded) return;
+        UpdateMouseJitterLabel();
+        UpdateMousePreviewPolyline();
+    }
+
+    private void CmbMouseProfile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        UpdateMousePreviewPolyline();
+    }
+
+    private void ChkMousePreview_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        UpdateMousePreviewPolyline();
+    }
+
+    private void UpdateMouseJitterLabel()
+    {
+        if (TxtMouseJitterValue is null) return;
+        TxtMouseJitterValue.Text = $"{(int)Math.Round(SldMouseJitter.Value)}%";
+    }
+
+    /// <summary>Draws a sample Bézier path on the settings canvas (fixed seed, jitter from slider).</summary>
+    private void UpdateMousePreviewPolyline()
+    {
+        if (MousePreviewPolyline is null || !IsLoaded) return;
+
+        const float x0 = 28f, y0 = 165f, x1 = 320f, y1 = 28f;
+        var rng = new Random(42);
+        IReadOnlyList<Drawing.PointF> path = BezierCurveGenerator.BuildPath(
+            new Drawing.PointF(x0, y0),
+            new Drawing.PointF(x1, y1),
+            rng);
+
+        int jitterPct = (int)Math.Round(SldMouseJitter.Value);
+        var pc = new PointCollection();
+        if (jitterPct <= 0)
+        {
+            foreach (var p in path)
+                pc.Add(new System.Windows.Point(p.X, p.Y));
+        }
+        else
+        {
+            double sigmaBase = 0.55;
+            double sigma = sigmaBase * (jitterPct / 100.0);
+            for (int i = 0; i < path.Count; i++)
+            {
+                float jx = 0, jy = 0;
+                if (i > 0 && i < path.Count - 1)
+                {
+                    jx = (float)(NextGaussianPreview(rng) * sigma);
+                    jy = (float)(NextGaussianPreview(rng) * sigma);
+                }
+
+                pc.Add(new System.Windows.Point(path[i].X + jx, path[i].Y + jy));
+            }
+        }
+
+        MousePreviewPolyline.Points = pc;
+    }
+
+    private static double NextGaussianPreview(Random rng)
+    {
+        double u1 = 1.0 - rng.NextDouble();
+        double u2 = 1.0 - rng.NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2 * Math.PI * u2);
+    }
+
+    private void LoadVisionScaleSlidersFromSettings()
+    {
+        var app = AppSettings.Load();
+        SldVisionMinScale.Value = Math.Clamp(app.VisionMatchMinScale, SldVisionMinScale.Minimum, SldVisionMinScale.Maximum);
+        SldVisionMaxScale.Value = Math.Clamp(app.VisionMatchMaxScale, SldVisionMaxScale.Minimum, SldVisionMaxScale.Maximum);
+        UpdateVisionScaleLabelTexts();
+    }
+
+    private void UpdateVisionScaleLabelTexts()
+    {
+        TxtVisionMinScaleValue.Text = SldVisionMinScale.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + "×";
+        TxtVisionMaxScaleValue.Text = SldVisionMaxScale.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + "×";
+    }
+
+    private void SldVisionScale_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!IsLoaded) return;
+        UpdateVisionScaleLabelTexts();
+    }
+
+    private void BtnSaveVisionScales_Click(object sender, RoutedEventArgs e)
+    {
+        var s = AppSettings.Load();
+        double min = SldVisionMinScale.Value;
+        double max = SldVisionMaxScale.Value;
+        if (min > max)
+            (min, max) = (max, min);
+        s.VisionMatchMinScale = min;
+        s.VisionMatchMaxScale = max;
+        s.Save();
+        LoadVisionScaleSlidersFromSettings();
+        ShowToast(LanguageManager.GetString("ui_Toast_VisionScalesSaved"), isError: false);
+    }
+
+    private void InitLanguageCombo()
+    {
+        _suppressLanguageCombo = true;
+        CmbUiLanguage.ItemsSource = new[]
+        {
+            new { Code = "en", Display = LanguageManager.GetString("ui_Lang_English") },
+            new { Code = "vi", Display = LanguageManager.GetString("ui_Lang_Vietnamese") },
+        };
+        CmbUiLanguage.DisplayMemberPath = "Display";
+        CmbUiLanguage.SelectedValuePath = "Code";
+        CmbUiLanguage.SelectedValue = AppSettings.Load().LanguageCode;
+        _suppressLanguageCombo = false;
+    }
+
+    private void CmbUiLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressLanguageCombo) return;
+        if (CmbUiLanguage.SelectedValue is string code)
+            LanguageManager.ChangeLanguage(code);
     }
 
     private void BtnSaveHotkeys_Click(object sender, RoutedEventArgs e)
@@ -459,7 +710,7 @@ public partial class MainWindow : Window
 
         if (appMod is null || appKey is null || tgtMod is null || tgtKey is null)
         {
-            ShowToast("Please select all hotkey fields.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Toast_SelectHotkeys"), isError: true);
             return;
         }
 
@@ -472,7 +723,7 @@ public partial class MainWindow : Window
         _hotkeySettings.Save();
 
         RegisterHotkeys();
-        ShowToast($"Hotkeys saved: App={_hotkeySettings.ToggleAppDisplay}, Target={_hotkeySettings.ToggleTargetDisplay}", isError: false);
+        ShowToast(string.Format(LanguageManager.GetString("ui_Toast_HotkeysSavedFmt"), _hotkeySettings.ToggleAppDisplay, _hotkeySettings.ToggleTargetDisplay), isError: false);
     }
 
     // ═══════════════════════════════════════════════════
@@ -535,7 +786,7 @@ public partial class MainWindow : Window
         if (sender is ComboBox cmb)
         {
             string current = cmb.Text;
-            cmb.ItemsSource = GetWindowTitles();
+            cmb.ItemsSource = GetWindowEntries();
             cmb.Text = current;
         }
     }
@@ -550,17 +801,19 @@ public partial class MainWindow : Window
             return;
         }
 
-        row.Script.TargetWindowTitle = row.TargetWindow;
         row.Script.RepeatCount = row.RunCount;
         row.Script.IntervalMinutes = row.IntervalMinutes;
 
-        IntPtr targetHwnd = ResolveHwnd(row.TargetWindow);
+        IntPtr targetHwnd = (row.TargetHwnd != IntPtr.Zero && Win32Api.IsWindow(row.TargetHwnd))
+            ? row.TargetHwnd
+            : ResolveHwnd(row.TargetWindow);
         if (targetHwnd == IntPtr.Zero)
         {
             ShowToast($"Không tìm thấy cửa sổ: \"{row.TargetWindow}\"", isError: true);
             return;
         }
         row.TargetHwnd = targetHwnd;
+        row.Script.TargetWindowTitle = Win32Api.GetWindowTitle(targetHwnd);
 
         if (row.StealthMode && !_hiddenWindows.ContainsKey(targetHwnd))
         {
@@ -570,22 +823,22 @@ public partial class MainWindow : Window
         }
 
         row.Cts = new CancellationTokenSource();
-        row.Engine = new MacroEngine();
+        row.Engine = new MacroEngine { HardwareMode = row.HardwareMode };
         row.IsRunning = true;
-        row.Status = "Đang chạy";
+        row.Status = "Running";
         UpdateProcessBar();
 
         row.Engine.Log += msg => Dispatcher.Invoke(() =>
         {
             AppendLog($"[{row.MacroName}] {msg}");
-            if (msg.Contains("Waiting")) row.Status = "Đang chờ";
-            else if (msg.Contains("Iteration")) row.Status = "Đang chạy";
+            if (msg.Contains("Waiting")) row.Status = "Waiting";
+            else if (msg.Contains("Iteration")) row.Status = "Running";
         });
         row.Engine.ExecutionFinished += () => Dispatcher.Invoke(() =>
         {
             _runsToday++;
             row.IsRunning = false;
-            row.Status = "Sẵn sàng";
+            row.Status = "Ready";
             RestoreStealthWindow(row);
             UpdateProcessBar();
             AppendLog($"[{row.MacroName}] Hoàn tất.");
@@ -593,7 +846,7 @@ public partial class MainWindow : Window
         row.Engine.ExecutionFaulted += ex => Dispatcher.Invoke(() =>
         {
             row.IsRunning = false;
-            row.Status = "Lỗi";
+            row.Status = "Error";
             RestoreStealthWindow(row);
             UpdateProcessBar();
             AppendLog($"[{row.MacroName}] Lỗi: {ex.Message}");
@@ -606,7 +859,8 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            AppendLog($"[{row.MacroName}] Đã dừng.");
+            bool autoStop = row.Script.AutoStopMinutes > 0 && row.Cts is { Token.IsCancellationRequested: false };
+            AppendLog($"[{row.MacroName}] {(autoStop ? "Đã dừng (hẹn giờ tự động)." : "Đã dừng.")}");
         }
         catch (Exception ex)
         {
@@ -615,8 +869,8 @@ public partial class MainWindow : Window
         finally
         {
             row.IsRunning = false;
-            if (row.Status == "Đang chạy" || row.Status == "Đang chờ")
-                row.Status = "Đã dừng";
+            if (row.Status == "Running" || row.Status == "Waiting")
+                row.Status = "Stopped";
             RestoreStealthWindow(row);
             UpdateProcessBar();
         }
@@ -730,7 +984,7 @@ public partial class MainWindow : Window
     private void UpdateProcessBar()
     {
         int active = _dashboardRows.Count(r => r.IsRunning);
-        TxtActiveProcesses.Text = $"Active: {active} macro{(active == 1 ? "" : "s")} running  |  Hidden: {_hiddenWindows.Count} window(s)";
+        TxtActiveProcesses.Text = string.Format(LanguageManager.GetString("ui_ProcessBar_Fmt"), active, _hiddenWindows.Count);
         TxtActiveThreads.Text = active.ToString();
         ProcessDot.Fill = active > 0
             ? (Brush)FindResource("AccentYellowBrush")
@@ -764,7 +1018,12 @@ public partial class MainWindow : Window
 
     private void Canvas_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(DataFormats.StringFormat) ? DragDropEffects.Copy : DragDropEffects.None;
+        if (e.Data.GetDataPresent(DataFormats.StringFormat))
+            e.Effects = DragDropEffects.Copy;
+        else if (e.Data.GetData(typeof(MacroAction)) is MacroAction)
+            e.Effects = DragDropEffects.Move;
+        else
+            e.Effects = DragDropEffects.None;
         e.Handled = true;
     }
 
@@ -784,13 +1043,194 @@ public partial class MainWindow : Window
         "Click" => new ClickAction(),
         "TypeText" => new TypeAction(),
         "Wait" => new WaitAction(),
+        "Repeat" => new RepeatAction(),
+        "SetVariable" => new SetVariableAction(),
+        "IfVariable" => new IfVariableAction(),
+        "Log" => new LogAction(),
+        "TryCatch" => new TryCatchAction(),
         "IfImageFound" => new IfImageAction(),
         "IfTextFound" => new IfTextAction(),
+        "WebAction" => new WebAction(),
         "WebNavigate" => new WebNavigateAction(),
         "WebClick" => new WebClickAction(),
         "WebType" => new WebTypeAction(),
         _ => null,
     };
+
+    private void Workflow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _potentialDragAction = null;
+        ReleaseWorkflowCaptureIfNeeded();
+
+        if (e.OriginalSource is not DependencyObject src)
+            return;
+        if (IsDescendantOfType<Button>(src))
+            return;
+
+        MacroAction? action = FindMacroActionInWorkflowAncestors(src);
+        if (action is null)
+            return;
+        if (!_actions.Contains(action))
+            return;
+
+        _dragStartPoint = e.GetPosition(this);
+        _potentialDragAction = action;
+        Mouse.Capture(MacroCanvas);
+    }
+
+    private void Workflow_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (_potentialDragAction is null)
+            return;
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            ReleaseWorkflowCaptureIfNeeded();
+            _potentialDragAction = null;
+            return;
+        }
+
+        Point current = e.GetPosition(this);
+        Vector delta = current - _dragStartPoint;
+        if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        MacroAction action = _potentialDragAction;
+        _potentialDragAction = null;
+        ReleaseWorkflowCaptureIfNeeded();
+
+        DragDrop.DoDragDrop(MacroCanvas, new DataObject(typeof(MacroAction), action), DragDropEffects.Move);
+    }
+
+    private void Workflow_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        ReleaseWorkflowCaptureIfNeeded();
+        _potentialDragAction = null;
+    }
+
+    private void Workflow_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(MacroAction)) is not MacroAction dragged)
+            return;
+
+        int oldIndex = _actions.IndexOf(dragged);
+        if (oldIndex < 0)
+            return;
+
+        if (sender is not ItemsControl itemsControl)
+            return;
+
+        StackPanel? panel = FindItemsHostStackPanel(itemsControl);
+        if (panel is null || panel.Children.Count != _actions.Count)
+            return;
+
+        Point pos = e.GetPosition(panel);
+        int insertBefore = panel.Children.Count;
+        for (int i = 0; i < panel.Children.Count; i++)
+        {
+            if (panel.Children[i] is not FrameworkElement child)
+                continue;
+            Point topLeft = child.TranslatePoint(new Point(0, 0), panel);
+            double midY = topLeft.Y + child.ActualHeight * 0.5;
+            if (pos.Y < midY)
+            {
+                insertBefore = i;
+                break;
+            }
+        }
+
+        if (insertBefore == oldIndex)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (insertBefore > oldIndex)
+            insertBefore--;
+
+        _actions.RemoveAt(oldIndex);
+        _actions.Insert(insertBefore, dragged);
+
+        RebuildCanvas();
+        e.Handled = true;
+    }
+
+    private void ReleaseWorkflowCaptureIfNeeded()
+    {
+        if (ReferenceEquals(Mouse.Captured, MacroCanvas))
+            MacroCanvas.ReleaseMouseCapture();
+    }
+
+    private MacroAction? FindMacroActionInWorkflowAncestors(DependencyObject? src)
+    {
+        while (src is not null)
+        {
+            if (ReferenceEquals(src, MacroCanvas))
+                break;
+            if (src is FrameworkElement fe && fe.DataContext is MacroAction ma)
+                return ma;
+            src = VisualTreeHelper.GetParent(src);
+        }
+
+        return null;
+    }
+
+    private static bool IsDescendantOfType<T>(DependencyObject? src) where T : DependencyObject
+    {
+        while (src is not null)
+        {
+            if (src is T)
+                return true;
+            src = VisualTreeHelper.GetParent(src);
+        }
+
+        return false;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match)
+                return match;
+            T? nested = FindVisualChild<T>(child);
+            if (nested is not null)
+                return nested;
+        }
+
+        return null;
+    }
+
+    /// <summary>Finds the generated <see cref="StackPanel"/> that hosts <see cref="ItemsControl.Items"/> (not nested panels inside item templates).</summary>
+    private static StackPanel? FindItemsHostStackPanel(ItemsControl itemsControl)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(itemsControl); i++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(itemsControl, i);
+            StackPanel? found = FindItemsHostStackPanelRecursive(child);
+            if (found is not null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private static StackPanel? FindItemsHostStackPanelRecursive(DependencyObject o)
+    {
+        if (o is StackPanel sp && VisualTreeHelper.GetParent(sp) is ItemsPresenter)
+            return sp;
+
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+        {
+            StackPanel? nested = FindItemsHostStackPanelRecursive(VisualTreeHelper.GetChild(o, i));
+            if (nested is not null)
+                return nested;
+        }
+
+        return null;
+    }
 
     // ═══════════════════════════════════════════════════
     //  MACRO EDITOR — CANVAS RENDERING
@@ -801,19 +1241,457 @@ public partial class MainWindow : Window
         MacroCanvas.Items.Clear();
         CanvasPlaceholder.Visibility = _actions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         for (int i = 0; i < _actions.Count; i++)
-            MacroCanvas.Items.Add(BuildActionCard(_actions[i], i));
+            MacroCanvas.Items.Add(CreateRootWorkflowElement(_actions[i], i));
     }
 
-    private UIElement BuildActionCard(MacroAction action, int index)
+    private UIElement CreateRootWorkflowElement(MacroAction a, int i) => a switch
     {
+        RepeatAction r => BuildRepeatBlock(r, i),
+        TryCatchAction t => BuildTryCatchBlock(t, i),
+        IfVariableAction v => BuildIfVariableBlock(v, i),
+        _ => BuildActionCard(a, i, i),
+    };
+
+    private UIElement BuildWorkflowChildUniversal(MacroAction child, int displayIndex, object editDeleteTag) => child switch
+    {
+        RepeatAction r => BuildRepeatBlock(r, editDeleteTag),
+        TryCatchAction t => BuildTryCatchBlock(t, editDeleteTag),
+        IfVariableAction v => BuildIfVariableBlock(v, editDeleteTag),
+        _ => BuildActionCard(child, displayIndex, editDeleteTag),
+    };
+
+    private UIElement BuildTryCatchBlock(TryCatchAction tc, object headerTag)
+    {
+        var card = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(220, 100, 60)),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(8),
+            Margin = new Thickness(4, 2, 4, 2),
+            Padding = new Thickness(8),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A1810")),
+            DataContext = tc,
+        };
+
+        var rootStack = new StackPanel();
+        var headerRow = new DockPanel { LastChildFill = false };
+        var titleTb = new TextBlock
+        {
+            Text = $"🛡 {tc.DisplayName} — THỬ NGHIỆM ({tc.TryActions.Count}) / XỬ LÝ LỖI ({tc.CatchActions.Count})",
+            Foreground = new SolidColorBrush(Color.FromRgb(255, 180, 120)),
+            FontWeight = FontWeights.Bold,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+            TextWrapping = TextWrapping.Wrap,
+        };
+        DockPanel.SetDock(titleTb, Dock.Left);
+        headerRow.Children.Add(titleTb);
+
+        var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var btnEdit = new Button
+        {
+            Content = "Sửa",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(8, 2, 8, 2),
+            Cursor = Cursors.Hand,
+            Margin = new Thickness(0, 0, 6, 0),
+            Tag = headerTag,
+            ToolTip = "Chỉnh sửa cấu hình khối Try/Catch",
+        };
+        btnEdit.Click += BtnEditAction_Click;
+        var btnDel = new Button
+        {
+            Content = "X",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(6, 2, 6, 2),
+            Cursor = Cursors.Hand,
+            Tag = headerTag,
+            ToolTip = "Xoá khối Try/Catch khỏi luồng",
+        };
+        btnDel.Click += BtnDeleteAction_Click;
+        hdrButtons.Children.Add(btnEdit);
+        hdrButtons.Children.Add(btnDel);
+        DockPanel.SetDock(hdrButtons, Dock.Right);
+        headerRow.Children.Add(hdrButtons);
+        rootStack.Children.Add(headerRow);
+
+        var tryBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 180, 100)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(12, 6, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#152418")),
+        };
+        var tryPanel = new StackPanel();
+        for (int j = 0; j < tc.TryActions.Count; j++)
+            tryPanel.Children.Add(BuildWorkflowChildUniversal(tc.TryActions[j], j, new NestedTryCatchChildTag(tc, j, true)));
+
+        var btnAddTry = new Button
+        {
+            Content = "+ Thêm vào THỬ NGHIỆM (TRY)",
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(35, 80, 45)),
+            Foreground = Brushes.LightGreen,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = new TryCatchInsertTag(tc, true),
+            ToolTip = "Thêm thao tác con vào nhánh thử nghiệm",
+        };
+        btnAddTry.Click += BtnAddTryCatchBranch_Click;
+        tryPanel.Children.Add(btnAddTry);
+        tryBorder.Child = tryPanel;
+
+        var catchBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(200, 70, 70)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(12, 4, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#241010")),
+        };
+        var catchPanel = new StackPanel();
+        for (int j = 0; j < tc.CatchActions.Count; j++)
+            catchPanel.Children.Add(BuildWorkflowChildUniversal(tc.CatchActions[j], j, new NestedTryCatchChildTag(tc, j, false)));
+
+        var btnAddCatch = new Button
+        {
+            Content = "+ Thêm vào XỬ LÝ LỖI (CATCH)",
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(90, 35, 35)),
+            Foreground = Brushes.MistyRose,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = new TryCatchInsertTag(tc, false),
+            ToolTip = "Thêm thao tác con vào nhánh xử lý khi lỗi",
+        };
+        btnAddCatch.Click += BtnAddTryCatchBranch_Click;
+        catchPanel.Children.Add(btnAddCatch);
+        catchBorder.Child = catchPanel;
+
+        var expTry = new Expander
+        {
+            Header = "THỬ NGHIỆM (TRY)",
+            IsExpanded = true,
+            Foreground = Brushes.LightGreen,
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = tryBorder,
+            ToolTip = "Các bước chạy trước; nếu lỗi sẽ chuyển sang nhánh xử lý lỗi",
+        };
+        var expCatch = new Expander
+        {
+            Header = "XỬ LÝ LỖI (CATCH)",
+            IsExpanded = true,
+            Foreground = Brushes.IndianRed,
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = catchBorder,
+            ToolTip = "Chạy khi nhánh thử nghiệm báo lỗi (trừ khi bị hủy)",
+        };
+        rootStack.Children.Add(expTry);
+        rootStack.Children.Add(expCatch);
+
+        card.Child = rootStack;
+        return card;
+    }
+
+    private UIElement BuildIfVariableBlock(IfVariableAction iv, object headerTag)
+    {
+        var card = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(100, 150, 220)),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(8),
+            Margin = new Thickness(4, 2, 4, 2),
+            Padding = new Thickness(8),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#151F2A")),
+            DataContext = iv,
+        };
+
+        var rootStack = new StackPanel();
+        var headerRow = new DockPanel { LastChildFill = false };
+        var titleTb = new TextBlock
+        {
+            Text = $"❓ {iv.DisplayName}: {iv.VarName} {iv.CompareOp} {iv.Value}",
+            Foreground = new SolidColorBrush(Color.FromRgb(150, 190, 255)),
+            FontWeight = FontWeights.Bold,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+            TextWrapping = TextWrapping.Wrap,
+        };
+        DockPanel.SetDock(titleTb, Dock.Left);
+        headerRow.Children.Add(titleTb);
+
+        var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var btnEdit = new Button
+        {
+            Content = "Sửa",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(8, 2, 8, 2),
+            Cursor = Cursors.Hand,
+            Margin = new Thickness(0, 0, 6, 0),
+            Tag = headerTag,
+            ToolTip = "Chỉnh sửa điều kiện biến",
+        };
+        btnEdit.Click += BtnEditAction_Click;
+        var btnDel = new Button
+        {
+            Content = "X",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(6, 2, 6, 2),
+            Cursor = Cursors.Hand,
+            Tag = headerTag,
+            ToolTip = "Xoá khối điều kiện biến",
+        };
+        btnDel.Click += BtnDeleteAction_Click;
+        hdrButtons.Children.Add(btnEdit);
+        hdrButtons.Children.Add(btnDel);
+        DockPanel.SetDock(hdrButtons, Dock.Right);
+        headerRow.Children.Add(hdrButtons);
+        rootStack.Children.Add(headerRow);
+
+        var thenBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 120, 200)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(12, 6, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#121820")),
+        };
+        var thenPanel = new StackPanel();
+        for (int j = 0; j < iv.ThenActions.Count; j++)
+            thenPanel.Children.Add(BuildWorkflowChildUniversal(iv.ThenActions[j], j, new NestedIfVarChildTag(iv, j, true)));
+
+        var btnThen = new Button
+        {
+            Content = "+ Thêm vào THỎA MÃN (THEN)",
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(35, 55, 90)),
+            Foreground = Brushes.LightBlue,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = new IfVarInsertTag(iv, true),
+            ToolTip = "Thêm thao tác khi điều kiện đúng",
+        };
+        btnThen.Click += BtnAddIfVariableBranch_Click;
+        thenPanel.Children.Add(btnThen);
+        thenBorder.Child = thenPanel;
+
+        var elseBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(12, 4, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1A1A1A")),
+        };
+        var elsePanel = new StackPanel();
+        for (int j = 0; j < iv.ElseActions.Count; j++)
+            elsePanel.Children.Add(BuildWorkflowChildUniversal(iv.ElseActions[j], j, new NestedIfVarChildTag(iv, j, false)));
+
+        var btnElse = new Button
+        {
+            Content = "+ Thêm vào TRÁI LẠI (ELSE)",
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(55, 55, 55)),
+            Foreground = Brushes.LightGray,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = new IfVarInsertTag(iv, false),
+            ToolTip = "Thêm thao tác khi điều kiện sai",
+        };
+        btnElse.Click += BtnAddIfVariableBranch_Click;
+        elsePanel.Children.Add(btnElse);
+        elseBorder.Child = elsePanel;
+
+        rootStack.Children.Add(new Expander
+        {
+            Header = "THỎA MÃN (THEN)",
+            IsExpanded = true,
+            Foreground = Brushes.LightSkyBlue,
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = thenBorder,
+            ToolTip = "Nhánh khi biến thỏa mãn điều kiện",
+        });
+        rootStack.Children.Add(new Expander
+        {
+            Header = "TRÁI LẠI (ELSE)",
+            IsExpanded = true,
+            Foreground = Brushes.Gray,
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = elseBorder,
+            ToolTip = "Nhánh khi điều kiện không thỏa mãn",
+        });
+
+        card.Child = rootStack;
+        return card;
+    }
+
+    private UIElement BuildRepeatBlock(RepeatAction repeat, object headerTag)
+    {
+        var repeatCard = new Border
+        {
+            BorderBrush = Brushes.Orange,
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(8),
+            Margin = new Thickness(4, 2, 4, 2),
+            Padding = new Thickness(8),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2418")),
+            DataContext = repeat,
+        };
+
+        var rootStack = new StackPanel();
+
+        var headerRow = new DockPanel { LastChildFill = false };
+        var titleTb = new TextBlock
+        {
+            Text = BuildRepeatLabel(repeat),
+            Foreground = Brushes.Orange,
+            FontWeight = FontWeights.Bold,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+            TextWrapping = TextWrapping.Wrap,
+        };
+        DockPanel.SetDock(titleTb, Dock.Left);
+        headerRow.Children.Add(titleTb);
+
+        var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var btnEditRepeat = new Button
+        {
+            Content = "Sửa",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(8, 2, 8, 2),
+            Cursor = Cursors.Hand,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 6, 0),
+            Tag = headerTag,
+            ToolTip = "Chỉnh sửa số lần lặp, khoảng cách, ảnh thoát",
+        };
+        btnEditRepeat.Click += BtnEditAction_Click;
+        var btnDelRepeat = new Button
+        {
+            Content = "X",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(6, 2, 6, 2),
+            Cursor = Cursors.Hand,
+            VerticalAlignment = VerticalAlignment.Center,
+            Tag = headerTag,
+            ToolTip = "Xoá khối lặp lại",
+        };
+        btnDelRepeat.Click += BtnDeleteAction_Click;
+        hdrButtons.Children.Add(btnEditRepeat);
+        hdrButtons.Children.Add(btnDelRepeat);
+        DockPanel.SetDock(hdrButtons, Dock.Right);
+        headerRow.Children.Add(hdrButtons);
+        rootStack.Children.Add(headerRow);
+
+        var nestedBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(16, 6, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E1E2E")),
+        };
+
+        var nestedPanel = new StackPanel();
+        for (int j = 0; j < repeat.LoopActions.Count; j++)
+        {
+            MacroAction child = repeat.LoopActions[j];
+            nestedPanel.Children.Add(BuildWorkflowChildUniversal(child, j, new NestedLoopTag(repeat, j)));
+        }
+
+        var btnAddChild = new Button
+        {
+            Content = "+ Thêm thao tác vào vòng lặp",
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(40, 70, 45)),
+            Foreground = Brushes.LightGreen,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = repeat,
+            ToolTip = "Chèn thao tác mới vào cuối vòng lặp",
+        };
+        btnAddChild.Click += BtnAddChildAction_Click;
+        nestedPanel.Children.Add(btnAddChild);
+
+        nestedBorder.Child = nestedPanel;
+        var exp = new Expander
+        {
+            Header = "Thân vòng lặp",
+            IsExpanded = true,
+            Foreground = Brushes.Orange,
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = nestedBorder,
+            ToolTip = "Danh sách thao tác chạy lặp lại theo cấu hình phía trên",
+        };
+        rootStack.Children.Add(exp);
+
+        repeatCard.Child = rootStack;
+        return repeatCard;
+    }
+
+    private static string BuildRepeatLabel(RepeatAction r)
+    {
+        string count = r.RepeatCount == 0 ? "∞" : $"{r.RepeatCount}x";
+        string breakStr = string.IsNullOrEmpty(r.BreakIfImagePath)
+            ? ""
+            : $" | Thoát khi: {Path.GetFileName(r.BreakIfImagePath)}";
+        return $"🔁 LẶP LẠI {count} (mỗi {r.IntervalMs}ms){breakStr}";
+    }
+
+    private UIElement BuildActionCard(MacroAction action, int displayIndex, object editDeleteTag)
+    {
+        bool isNested = editDeleteTag is not int;
+        object buttonTag = editDeleteTag;
+        int bracketIndex = displayIndex;
+
         var (label, color, detail) = action switch
         {
             ClickAction c => ("Click", "#89B4FA", $"X={c.X}  Y={c.Y}"),
             TypeAction t => ("Type Text", "#A6E3A1", $"\"{Truncate(t.Text, 25)}\""),
-            WaitAction w => ("Wait", "#F9E2AF", $"{w.Milliseconds}ms"),
-            IfImageAction img => ("IF Image Found", "#FAB387",
-                Path.GetFileName(img.ImagePath) + (img.ClickOnFound ? " \U0001F3AF Auto-Click" : "")),
+            WaitAction w => (w.DisplayName, "#F9E2AF", FormatWaitCardDetail(w)),
+            SetVariableAction sv => ("📦 " + sv.DisplayName, "#CBA6F7", $"GÁN {sv.VarName} = {Truncate(sv.Value, 18)} [{sv.Operation}]"),
+            IfVariableAction iv => ("❓ " + iv.DisplayName, "#89B4FA", $"{iv.VarName} {iv.CompareOp} {Truncate(iv.Value, 20)}"),
+            LogAction lg => ("📝 " + lg.DisplayName, "#9399B2", $"GHI: {Truncate(lg.Message, 40)}"),
+            TryCatchAction tc => ("🛡 " + tc.DisplayName, "#FE640B", $"THỬ ({tc.TryActions.Count}) / BẮT ({tc.CatchActions.Count})"),
+            IfImageAction img => ("IF Image Found", "#FAB387", FormatIfImageCardDetail(img)),
             IfTextAction txt => ("IF Text Found", "#B4BEFE", $"\"{Truncate(txt.Text, 25)}\""),
+            WebAction wa => ("\U0001F310 Web Action", "#94E2D5", wa.ActionType switch
+            {
+                WebActionType.Navigate => $"Navigate → {Truncate(wa.Url, 35)}",
+                WebActionType.Click => $"Click → {Truncate(wa.Selector, 35)}",
+                WebActionType.Type => $"Type → {Truncate(wa.Selector, 18)} ← \"{Truncate(wa.TextToType, 15)}\"",
+                WebActionType.Scrape => $"Scrape → {Truncate(wa.Selector, 35)}",
+                _ => wa.ActionType.ToString(),
+            }),
             WebNavigateAction wn => ("Web: Navigate", "#94E2D5", Truncate(wn.Url, 40)),
             WebClickAction wc => ("Web: Click", "#94E2D5", Truncate(wc.CssSelector, 35)),
             WebTypeAction wt => ("Web: Type", "#94E2D5", $"{Truncate(wt.CssSelector, 20)} ← \"{Truncate(wt.TextToType, 15)}\""),
@@ -823,25 +1701,27 @@ public partial class MainWindow : Window
         var card = new Border
         {
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#313244")),
-            CornerRadius = new CornerRadius(6), Padding = new Thickness(12, 8, 12, 8),
-            Margin = new Thickness(0, 3, 0, 3), Tag = index,
+            CornerRadius = new CornerRadius(0),
+            Padding = new Thickness(8, 6, 8, 6),
+            Margin = isNested ? new Thickness(8, 2, 2, 2) : new Thickness(0, 2, 0, 2),
+            DataContext = action,
         };
 
         var outer = new DockPanel();
 
-        var btnDel = new Button { Content = "X", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")), BorderThickness = new Thickness(0), Padding = new Thickness(6, 2, 6, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Tag = index };
+        var btnDel = new Button { Content = "X", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")), BorderThickness = new Thickness(0), Padding = new Thickness(6, 2, 6, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Tag = buttonTag, ToolTip = "Xoá thao tác" };
         btnDel.Click += BtnDeleteAction_Click;
         DockPanel.SetDock(btnDel, Dock.Right);
         outer.Children.Add(btnDel);
 
-        var btnEdit = new Button { Content = "Edit", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")), BorderThickness = new Thickness(0), Padding = new Thickness(8, 2, 8, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0), Tag = index };
+        var btnEdit = new Button { Content = "Sửa", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")), BorderThickness = new Thickness(0), Padding = new Thickness(8, 2, 8, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0), Tag = buttonTag, ToolTip = "Chỉnh sửa thao tác" };
         btnEdit.Click += BtnEditAction_Click;
         DockPanel.SetDock(btnEdit, Dock.Right);
         outer.Children.Add(btnEdit);
 
         var cs = new StackPanel { Orientation = Orientation.Horizontal };
         cs.Children.Add(new System.Windows.Shapes.Ellipse { Width = 8, Height = 8, Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)), Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
-        cs.Children.Add(new TextBlock { Text = $"[{index}] {label}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CDD6F4")), FontSize = 13, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) });
+        cs.Children.Add(new TextBlock { Text = $"[{bracketIndex}] {label}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CDD6F4")), FontSize = 13, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) });
         if (!string.IsNullOrEmpty(detail))
             cs.Children.Add(new TextBlock { Text = detail, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A6ADC8")), FontSize = 11, VerticalAlignment = VerticalAlignment.Center });
 
@@ -852,21 +1732,154 @@ public partial class MainWindow : Window
 
     private void BtnDeleteAction_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is int idx && idx >= 0 && idx < _actions.Count)
+        if (sender is not Button btn) return;
+
+        switch (btn.Tag)
         {
-            string name = _actions[idx].DisplayName;
-            _actions.RemoveAt(idx);
-            RebuildCanvas();
-            AppendLog($"Removed action [{idx}]: {name}");
+            case NestedLoopTag nl:
+                if (nl.ChildIndex < 0 || nl.ChildIndex >= nl.Parent.LoopActions.Count)
+                    return;
+                RemoveAtAndLog(nl.Parent.LoopActions, nl.ChildIndex, "Đã xoá khỏi vòng lặp");
+                return;
+            case NestedTryCatchChildTag tc:
+                if (tc.IsTry)
+                {
+                    if (tc.ChildIndex < 0 || tc.ChildIndex >= tc.Parent.TryActions.Count) return;
+                    RemoveAtAndLog(tc.Parent.TryActions, tc.ChildIndex, "Đã xoá khỏi THỬ NGHIỆM");
+                }
+                else
+                {
+                    if (tc.ChildIndex < 0 || tc.ChildIndex >= tc.Parent.CatchActions.Count) return;
+                    RemoveAtAndLog(tc.Parent.CatchActions, tc.ChildIndex, "Đã xoá khỏi XỬ LÝ LỖI");
+                }
+
+                return;
+            case NestedIfVarChildTag iv:
+                if (iv.IsThen)
+                {
+                    if (iv.ChildIndex < 0 || iv.ChildIndex >= iv.Parent.ThenActions.Count) return;
+                    RemoveAtAndLog(iv.Parent.ThenActions, iv.ChildIndex, "Đã xoá khỏi THỎA MÃN");
+                }
+                else
+                {
+                    if (iv.ChildIndex < 0 || iv.ChildIndex >= iv.Parent.ElseActions.Count) return;
+                    RemoveAtAndLog(iv.Parent.ElseActions, iv.ChildIndex, "Đã xoá khỏi TRÁI LẠI");
+                }
+
+                return;
+            case int idx when idx >= 0 && idx < _actions.Count:
+                string name = _actions[idx].DisplayName;
+                _actions.RemoveAt(idx);
+                RebuildCanvas();
+                AppendLog($"Đã xoá thao tác [{idx}]: {name}");
+                return;
         }
+    }
+
+    private void RemoveAtAndLog(List<MacroAction> list, int index, string prefix)
+    {
+        string name = list[index].DisplayName;
+        list.RemoveAt(index);
+        RebuildCanvas();
+        AppendLog($"{prefix}: {name}");
     }
 
     private void BtnEditAction_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button btn || btn.Tag is not int idx || idx < 0 || idx >= _actions.Count) return;
-        var action = _actions[idx];
+        if (sender is not Button btn) return;
+        MacroAction? action = FindActionForCanvasTag(btn.Tag);
+        if (action is null) return;
         var dlg = new ActionEditDialog(action) { Owner = this };
-        if (dlg.ShowDialog() == true) { RebuildCanvas(); AppendLog($"Edited action [{idx}]: {action.DisplayName}"); }
+        if (dlg.ShowDialog() == true)
+        {
+            RebuildCanvas();
+            AppendLog($"Đã sửa: {action.DisplayName}");
+        }
+    }
+
+    private MacroAction? FindActionForCanvasTag(object tag) => tag switch
+    {
+        int idx when idx >= 0 && idx < _actions.Count => _actions[idx],
+        NestedLoopTag nl when nl.ChildIndex >= 0 && nl.ChildIndex < nl.Parent.LoopActions.Count => nl.Parent.LoopActions[nl.ChildIndex],
+        NestedTryCatchChildTag tc when tc.IsTry && tc.ChildIndex >= 0 && tc.ChildIndex < tc.Parent.TryActions.Count => tc.Parent.TryActions[tc.ChildIndex],
+        NestedTryCatchChildTag tc when !tc.IsTry && tc.ChildIndex >= 0 && tc.ChildIndex < tc.Parent.CatchActions.Count => tc.Parent.CatchActions[tc.ChildIndex],
+        NestedIfVarChildTag iv when iv.IsThen && iv.ChildIndex >= 0 && iv.ChildIndex < iv.Parent.ThenActions.Count => iv.Parent.ThenActions[iv.ChildIndex],
+        NestedIfVarChildTag iv when !iv.IsThen && iv.ChildIndex >= 0 && iv.ChildIndex < iv.Parent.ElseActions.Count => iv.Parent.ElseActions[iv.ChildIndex],
+        _ => null,
+    };
+
+    private void BtnAddChildAction_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.Tag is not RepeatAction parentRepeat)
+            return;
+
+        var picker = new ActionTypePicker { Owner = this };
+        if (picker.ShowDialog() != true || string.IsNullOrEmpty(picker.SelectedType))
+            return;
+
+        MacroAction? newAction = CreateActionFromType(picker.SelectedType);
+        if (newAction is null)
+            return;
+
+        var dialog = new ActionEditDialog(newAction) { Owner = this };
+        if (dialog.ShowDialog() != true)
+            return;
+
+        parentRepeat.LoopActions.Add(newAction);
+        RebuildCanvas();
+        AppendLog($"Đã thêm {newAction.DisplayName} vào vòng lặp");
+    }
+
+    private void BtnAddTryCatchBranch_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.Tag is not TryCatchInsertTag marker)
+            return;
+
+        var picker = new ActionTypePicker { Owner = this };
+        if (picker.ShowDialog() != true || string.IsNullOrEmpty(picker.SelectedType))
+            return;
+
+        MacroAction? newAction = CreateActionFromType(picker.SelectedType);
+        if (newAction is null)
+            return;
+
+        var dialog = new ActionEditDialog(newAction) { Owner = this };
+        if (dialog.ShowDialog() != true)
+            return;
+
+        if (marker.IsTry)
+            marker.Parent.TryActions.Add(newAction);
+        else
+            marker.Parent.CatchActions.Add(newAction);
+
+        RebuildCanvas();
+        AppendLog($"Đã thêm {newAction.DisplayName} vào {(marker.IsTry ? "THỬ NGHIỆM" : "XỬ LÝ LỖI")}");
+    }
+
+    private void BtnAddIfVariableBranch_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.Tag is not IfVarInsertTag marker)
+            return;
+
+        var picker = new ActionTypePicker { Owner = this };
+        if (picker.ShowDialog() != true || string.IsNullOrEmpty(picker.SelectedType))
+            return;
+
+        MacroAction? newAction = CreateActionFromType(picker.SelectedType);
+        if (newAction is null)
+            return;
+
+        var dialog = new ActionEditDialog(newAction) { Owner = this };
+        if (dialog.ShowDialog() != true)
+            return;
+
+        if (marker.IsThen)
+            marker.Parent.ThenActions.Add(newAction);
+        else
+            marker.Parent.ElseActions.Add(newAction);
+
+        RebuildCanvas();
+        AppendLog($"Đã thêm {newAction.DisplayName} vào {(marker.IsThen ? "THỎA MÃN" : "TRÁI LẠI")}");
     }
 
     private void BtnClearCanvas_Click(object sender, RoutedEventArgs e) { _actions.Clear(); RebuildCanvas(); AppendLog("Canvas cleared."); }
@@ -932,14 +1945,22 @@ public partial class MainWindow : Window
         TxtMacroName.Text = _currentScript.Name;
         CmbTargetWindow.Text = _currentScript.TargetWindowTitle;
         TxtRepeatCount.Text = _currentScript.RepeatCount.ToString();
+        TxtAutoStopMinutes.Text = _currentScript.AutoStopMinutes.ToString();
+        _editorTargetHwnd = IntPtr.Zero;
     }
 
     private void SyncUiToScript()
     {
         _currentScript.Name = TxtMacroName.Text.Trim();
-        _currentScript.TargetWindowTitle = CmbTargetWindow.Text.Trim();
+
+        if (_editorTargetHwnd != IntPtr.Zero && Win32Api.IsWindow(_editorTargetHwnd))
+            _currentScript.TargetWindowTitle = Win32Api.GetWindowTitle(_editorTargetHwnd);
+        else
+            _currentScript.TargetWindowTitle = CmbTargetWindow.Text.Trim();
+
         _currentScript.Actions = [.. _actions];
         if (int.TryParse(TxtRepeatCount.Text.Trim(), out int repeat)) _currentScript.RepeatCount = repeat;
+        if (int.TryParse(TxtAutoStopMinutes.Text.Trim(), out int autoStop)) _currentScript.AutoStopMinutes = Math.Max(0, autoStop);
     }
 
     // ═══════════════════════════════════════════════════
@@ -960,10 +1981,74 @@ public partial class MainWindow : Window
         return Win32Api.FindWindowByPartialTitle(partialTitle);
     }
 
+    private List<WindowEntry> GetWindowEntries() =>
+        Win32Api.GetAllVisibleWindows()
+            .Where(w => w.Title != Title)
+            .Select(w =>
+            {
+                Win32Api.GetWindowThreadProcessId(w.Handle, out uint pid);
+                string procName;
+                try { using var p = Process.GetProcessById((int)pid); procName = p.ProcessName; }
+                catch { procName = "???"; }
+                return new WindowEntry
+                {
+                    Handle = w.Handle,
+                    ProcessId = (int)pid,
+                    ProcessName = procName,
+                    Title = w.Title,
+                };
+            })
+            .OrderBy(e => e.ProcessName)
+            .ThenBy(e => e.ProcessId)
+            .ToList();
+
     private List<string> GetWindowTitles() =>
         Win32Api.GetAllVisibleWindows()
             .Where(w => w.Title != Title)
             .Select(w => w.Title).ToList();
+
+    private void PopulateWindowCombo(ComboBox cmb)
+    {
+        string current = cmb.Text;
+        cmb.ItemsSource = GetWindowEntries();
+        cmb.Text = current;
+    }
+
+    /// <summary>
+    /// Resolves the Image Recognition tab target HWND from a <see cref="WindowEntry"/>
+    /// selection or from the editable title text (including legacy plain-title text).
+    /// </summary>
+    private bool TryResolveVisionTargetHwnd(out IntPtr hwnd)
+    {
+        hwnd = IntPtr.Zero;
+
+        if (CmbVisionWindowTitle.SelectedItem is WindowEntry entry && Win32Api.IsWindow(entry.Handle))
+        {
+            hwnd = entry.Handle;
+            return true;
+        }
+
+        string text = CmbVisionWindowTitle.Text.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        hwnd = ResolveHwnd(text);
+        if (hwnd != IntPtr.Zero)
+            return true;
+
+        int sep = text.LastIndexOf(" — ", StringComparison.Ordinal);
+        if (sep >= 0 && sep + 3 < text.Length)
+        {
+            string titleOnly = text[(sep + 3)..].Trim();
+            if (titleOnly.Length > 0)
+            {
+                hwnd = ResolveHwnd(titleOnly);
+                return hwnd != IntPtr.Zero;
+            }
+        }
+
+        return false;
+    }
 
     private void PopulateCombo(ComboBox cmb)
     {
@@ -972,14 +2057,61 @@ public partial class MainWindow : Window
         cmb.Text = current;
     }
 
-    private void BtnRefreshWindows_Click(object sender, RoutedEventArgs e) => PopulateCombo(CmbTargetWindow);
-    private void CmbTargetWindow_DropDownOpened(object sender, EventArgs e) => PopulateCombo(CmbTargetWindow);
+    private void BtnRefreshWindows_Click(object sender, RoutedEventArgs e) => PopulateWindowCombo(CmbTargetWindow);
+    private void CmbTargetWindow_DropDownOpened(object sender, EventArgs e) => PopulateWindowCombo(CmbTargetWindow);
 
-    private void BtnRefreshVisionWindows_Click(object sender, RoutedEventArgs e) => PopulateCombo(CmbVisionWindowTitle);
-    private void CmbVisionWindowTitle_DropDownOpened(object sender, EventArgs e) => PopulateCombo(CmbVisionWindowTitle);
+    private void CmbTargetWindow_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbTargetWindow.SelectedItem is WindowEntry entry)
+            _editorTargetHwnd = entry.Handle;
+    }
+
+    private void DashRowWindowCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox { SelectedItem: WindowEntry entry, DataContext: DashboardRowVm row })
+            row.TargetHwnd = entry.Handle;
+    }
+
+    private void BtnRefreshVisionWindows_Click(object sender, RoutedEventArgs e) => PopulateWindowCombo(CmbVisionWindowTitle);
+    private void CmbVisionWindowTitle_DropDownOpened(object sender, EventArgs e) => PopulateWindowCombo(CmbVisionWindowTitle);
 
     private void BtnRefreshOcrWindows_Click(object sender, RoutedEventArgs e) => PopulateCombo(CmbOcrWindowTitle);
     private void CmbOcrWindowTitle_DropDownOpened(object sender, EventArgs e) => PopulateCombo(CmbOcrWindowTitle);
+
+    // ═══════════════════════════════════════════════════
+    //  IDENTIFY WINDOW (🎯 flash + bring to front)
+    // ═══════════════════════════════════════════════════
+
+    private void BtnIdentifyWindow_Click(object sender, RoutedEventArgs e)
+    {
+        IntPtr hwnd = _editorTargetHwnd;
+        if (hwnd == IntPtr.Zero || !Win32Api.IsWindow(hwnd))
+        {
+            string text = CmbTargetWindow.Text.Trim();
+            if (!string.IsNullOrWhiteSpace(text))
+                hwnd = ResolveHwnd(text);
+        }
+        if (hwnd == IntPtr.Zero) { ShowToast("Select a window first.", isError: true); return; }
+        Win32Api.IdentifyWindow(hwnd);
+        AppendLog($"Identify → HWND=0x{hwnd:X} \"{Win32Api.GetWindowTitle(hwnd)}\"");
+    }
+
+    private void DashboardIdentify_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: DashboardRowVm row }) return;
+
+        IntPtr hwnd = row.TargetHwnd;
+        if (hwnd == IntPtr.Zero || !Win32Api.IsWindow(hwnd))
+        {
+            if (!string.IsNullOrWhiteSpace(row.TargetWindow))
+                hwnd = ResolveHwnd(row.TargetWindow);
+        }
+        if (hwnd == IntPtr.Zero) { ShowToast("Select a window first.", isError: true); return; }
+
+        row.TargetHwnd = hwnd;
+        Win32Api.IdentifyWindow(hwnd);
+        AppendLog($"[{row.MacroName}] Identify → HWND=0x{hwnd:X} \"{Win32Api.GetWindowTitle(hwnd)}\"");
+    }
 
     // ═══════════════════════════════════════════════════
     //  RUN / STOP MACRO (sidebar buttons — editor macro)
@@ -989,16 +2121,20 @@ public partial class MainWindow : Window
     {
         SyncUiToScript();
         if (_actions.Count == 0) { ShowToast("No actions to run.", isError: true); return; }
-        if (string.IsNullOrWhiteSpace(_currentScript.TargetWindowTitle)) { ShowToast("Set a Target Window Title.", isError: true); return; }
+        if (string.IsNullOrWhiteSpace(_currentScript.TargetWindowTitle) && _editorTargetHwnd == IntPtr.Zero)
+        { ShowToast("Set a Target Window Title.", isError: true); return; }
 
-        IntPtr editorHwnd = ResolveHwnd(_currentScript.TargetWindowTitle);
+        IntPtr editorHwnd = (_editorTargetHwnd != IntPtr.Zero && Win32Api.IsWindow(_editorTargetHwnd))
+            ? _editorTargetHwnd
+            : ResolveHwnd(_currentScript.TargetWindowTitle);
         if (editorHwnd == IntPtr.Zero) { ShowToast("Target window not found (even in hidden list).", isError: true); return; }
 
         SetRunningState(true);
         _cts = new CancellationTokenSource();
-        _macroEngine = new MacroEngine();
+        _macroEngine = new MacroEngine { HardwareMode = ChkHardwareMode.IsChecked == true };
         _macroEngine.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
-        _macroEngine.ActionStarted += (action, idx) => Dispatcher.Invoke(() => TxtStatus.Text = $"Running [{idx}] {action.DisplayName}");
+        _macroEngine.ActionStarted += (action, idx) => Dispatcher.Invoke(() =>
+            TxtStatus.Text = $"{LanguageManager.GetString("ui_Status_Running")} [{idx}] {action.DisplayName}");
         _macroEngine.ExecutionFinished += () => Dispatcher.Invoke(() => { _runsToday++; SetRunningState(false); ShowToast("Macro completed.", isError: false); UpdateProcessBar(); });
         _macroEngine.ExecutionFaulted += ex => Dispatcher.Invoke(() => { SetRunningState(false); ShowToast($"Error: {ex.Message}", isError: true); UpdateProcessBar(); });
 
@@ -1007,7 +2143,11 @@ public partial class MainWindow : Window
             AppendLog($"Starting macro \"{_currentScript.Name}\"...");
             await _macroEngine.ExecuteScriptAsync(_currentScript, editorHwnd, _cts.Token);
         }
-        catch (OperationCanceledException) { ShowToast("Macro stopped by user.", isError: false); }
+        catch (OperationCanceledException)
+        {
+            bool autoStop = _currentScript.AutoStopMinutes > 0 && _cts is { Token.IsCancellationRequested: false };
+            ShowToast(autoStop ? "Macro stopped (auto-stop timer)." : "Macro stopped by user.", isError: false);
+        }
         catch (Exception ex) { ShowToast($"Error: {ex.Message}", isError: true); }
         finally { SetRunningState(false); UpdateProcessBar(); }
     }
@@ -1019,7 +2159,7 @@ public partial class MainWindow : Window
         BtnRunMacro.IsEnabled = !running;
         BtnStopMacro.IsEnabled = running;
         StatusIndicator.Color = running ? (Color)FindResource("AccentYellowColor") : (Color)FindResource("AccentGreenColor");
-        TxtStatus.Text = running ? "Running..." : "Ready";
+        TxtStatus.Text = running ? LanguageManager.GetString("ui_Header_Running") : LanguageManager.GetString("ui_Header_Ready");
     }
 
     // ═══════════════════════════════════════════════════
@@ -1030,8 +2170,11 @@ public partial class MainWindow : Window
     {
         SyncUiToScript();
         string targetTitle = _currentScript.TargetWindowTitle;
-        if (string.IsNullOrWhiteSpace(targetTitle)) { ShowToast("Set a Target Window Title before recording.", isError: true); SetActiveView("MacroEditor"); return; }
-        IntPtr hwnd = Win32Api.FindWindowByPartialTitle(targetTitle);
+        if (string.IsNullOrWhiteSpace(targetTitle) && _editorTargetHwnd == IntPtr.Zero)
+        { ShowToast("Set a Target Window Title before recording.", isError: true); SetActiveView("MacroEditor"); return; }
+        IntPtr hwnd = (_editorTargetHwnd != IntPtr.Zero && Win32Api.IsWindow(_editorTargetHwnd))
+            ? _editorTargetHwnd
+            : Win32Api.FindWindowByPartialTitle(targetTitle);
         if (hwnd == IntPtr.Zero) { ShowToast($"Window not found: \"{targetTitle}\".", isError: true); return; }
 
         _recorder?.Dispose();
@@ -1063,51 +2206,160 @@ public partial class MainWindow : Window
 
     private void BtnBrowseTemplate_Click(object sender, RoutedEventArgs e)
     {
+        string filePath = TxtTemplatePath.Text.Trim();
+        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+        {
+            try
+            {
+                filePath = Path.GetFullPath(filePath);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"/select,\"{filePath}\"",
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception ex) { ShowToast($"Could not open Explorer: {ex.Message}", isError: true); }
+            return;
+        }
+
         var dlg = new OpenFileDialog { Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp|All|*.*" };
         if (dlg.ShowDialog() == true) TxtTemplatePath.Text = dlg.FileName;
     }
 
-    private void BtnSnipArea_Click(object sender, RoutedEventArgs e)
+    private async void BtnSnipArea_Click(object sender, RoutedEventArgs e)
     {
-        var snip = new SnippingToolWindow();
-        if (snip.ShowDialog() == true && !string.IsNullOrEmpty(snip.CapturedFilePath))
+        IntPtr targetHwnd = IntPtr.Zero;
+        if (TryResolveVisionTargetHwnd(out targetHwnd))
         {
-            TxtTemplatePath.Text = snip.CapturedFilePath;
-            AppendLog($"[Snip] Saved template: {snip.CapturedFilePath}");
+            Win32Api.ShowWindow(targetHwnd, Win32Api.SW_MAXIMIZE);
+            Win32Api.SetForegroundWindow(targetHwnd);
+            await Task.Delay(400);
+        }
+
+        try
+        {
+            var snip = new SnippingToolWindow();
+            if (snip.ShowDialog() == true && !string.IsNullOrEmpty(snip.CapturedFilePath))
+            {
+                TxtTemplatePath.Text = snip.CapturedFilePath;
+                AppendLog($"[Snip] Saved template: {snip.CapturedFilePath}");
+            }
+        }
+        finally
+        {
+            if (targetHwnd != IntPtr.Zero && Win32Api.IsWindow(targetHwnd))
+                Win32Api.ShowWindow(targetHwnd, Win32Api.SW_RESTORE);
         }
     }
 
     private async void BtnTestVision_Click(object sender, RoutedEventArgs e)
     {
-        string windowTitle = CmbVisionWindowTitle.Text.Trim();
+        BtnVisionStealthClick.IsEnabled = false;
+        _visionLastFoundClientPoint = null;
+        _visionLastFoundHwnd = IntPtr.Zero;
+
         string templatePath = TxtTemplatePath.Text.Trim();
-        if (string.IsNullOrEmpty(windowTitle) || string.IsNullOrEmpty(templatePath))
+        if (string.IsNullOrEmpty(templatePath))
+        {
+            TxtVisionResult.Text = "Provide both a Window Title and Template Image Path.";
+            TxtVisionResult.Foreground = (Brush)FindResource("AccentRedBrush"); return;
+        }
+        if (!TryResolveVisionTargetHwnd(out IntPtr hWnd))
         {
             TxtVisionResult.Text = "Provide both a Window Title and Template Image Path.";
             TxtVisionResult.Foreground = (Brush)FindResource("AccentRedBrush"); return;
         }
         if (!double.TryParse(TxtThreshold.Text.Trim(), out double threshold)) threshold = 0.8;
 
+        Drawing.Rectangle? visionRoi = GetRoiFromInputs();
+
         TxtVisionResult.Text = "Searching...";
         TxtVisionResult.Foreground = (Brush)FindResource("SubtextBrush");
 
         try
         {
-            var result = await Task.Run(() =>
+            this.WindowState = WindowState.Minimized;
+            await Task.Delay(250);
+
+            Win32Api.ShowWindow(hWnd, Win32Api.SW_MAXIMIZE);
+            Win32Api.SetForegroundWindow(hWnd);
+            await Task.Delay(400);
+
+            (string msg, bool found, Drawing.Point? clickPoint, string visionLogLine) = await Task.Run(() =>
             {
-                IntPtr hwnd = Win32Api.FindWindowByPartialTitle(windowTitle);
-                if (hwnd == IntPtr.Zero) return ("Window not found.", false);
-                var detailed = VisionEngine.FindImageOnWindowDetailed(hwnd, templatePath);
-                if (detailed is null) return ("Template matching returned no data.", false);
-                var (loc, conf) = detailed.Value;
-                bool found = conf >= threshold;
-                return (found ? $"FOUND at ({loc.X}, {loc.Y}) — Confidence: {conf:P1}" : $"NOT FOUND — Best confidence: {conf:P1} (threshold: {threshold:P1})", found);
+                if (!Win32Api.IsWindow(hWnd))
+                    return ("Window not found.", false, (Drawing.Point?)null, string.Empty);
+                var detailed = VisionEngine.FindImageOnWindowDetailed(hWnd, templatePath, visionRoi);
+                if (detailed is null)
+                    return ("Template matching returned no data.", false, (Drawing.Point?)null, string.Empty);
+                var (loc, conf, scale, scanned) = detailed.Value;
+                bool ok = conf >= threshold;
+                string roiPart = scanned.IsEmpty ? "Full window" : scanned.ToString();
+                string logLine =
+                    $"[Vision] {(ok ? "FOUND" : "NOT FOUND")} | Conf: {conf * 100:F1}% " +
+                    $"| Scale: {scale:F2}x | Center: ({loc.X},{loc.Y}) | ROI: {roiPart}";
+                string m = ok
+                    ? $"FOUND at ({loc.X}, {loc.Y}) — {conf:P1} — Scale: {scale:F2}x (DPI compensated)"
+                    : $"NOT FOUND — Best: {conf:P1} — Scale: {scale:F2}x (threshold: {threshold:P1})";
+                return (m, ok, ok ? (Drawing.Point?)loc : null, logLine);
             });
-            TxtVisionResult.Text = result.Item1;
-            TxtVisionResult.Foreground = result.Item2 ? (Brush)FindResource("AccentGreenBrush") : (Brush)FindResource("AccentRedBrush");
-            AppendLog($"[Vision Test] {result.Item1}");
+            TxtVisionResult.Text = msg;
+            TxtVisionResult.Foreground = found ? (Brush)FindResource("AccentGreenBrush") : (Brush)FindResource("AccentRedBrush");
+            if (!string.IsNullOrEmpty(visionLogLine))
+                AppendLog(visionLogLine);
+
+            if (found && clickPoint.HasValue)
+            {
+                _visionLastFoundClientPoint = clickPoint;
+                _visionLastFoundHwnd = hWnd;
+                BtnVisionStealthClick.IsEnabled = true;
+            }
         }
         catch (Exception ex) { TxtVisionResult.Text = $"Error: {ex.Message}"; TxtVisionResult.Foreground = (Brush)FindResource("AccentRedBrush"); }
+        finally
+        {
+            this.WindowState = WindowState.Normal;
+            this.Activate();
+            this.Topmost = true;
+            await Task.Delay(100);
+            this.Topmost = false;
+        }
+    }
+
+    private Drawing.Rectangle? GetRoiFromInputs()
+    {
+        bool xOk = int.TryParse(RoiX.Text.Trim(), out int rx);
+        bool yOk = int.TryParse(RoiY.Text.Trim(), out int ry);
+        bool wOk = int.TryParse(RoiWidth.Text.Trim(), out int rw);
+        bool hOk = int.TryParse(RoiHeight.Text.Trim(), out int rh);
+
+        if (xOk && yOk && wOk && hOk && rw > 0 && rh > 0)
+            return new Drawing.Rectangle(rx, ry, rw, rh);
+
+        return null;
+    }
+
+    private void BtnClearRoi_Click(object sender, RoutedEventArgs e)
+    {
+        RoiX.Text = RoiY.Text = RoiWidth.Text = RoiHeight.Text = string.Empty;
+    }
+
+    private async void BtnVisionStealthClick_Click(object sender, RoutedEventArgs e)
+    {
+        if (_visionLastFoundClientPoint is not { } p || _visionLastFoundHwnd == IntPtr.Zero
+            || !Win32Api.IsWindow(_visionLastFoundHwnd))
+        {
+            AppendLog("[Vision] No valid match to click — run Test Capture & Match first.");
+            return;
+        }
+
+        try
+        {
+            await Win32Api.StealthClickOnFoundImage(_visionLastFoundHwnd, p, randomOffsetRange: 3);
+            AppendLog($"Click sent to ({p.X},{p.Y})");
+        }
+        catch (Exception ex) { AppendLog($"[Vision] Stealth click failed: {ex.Message}"); }
     }
 
     // ═══════════════════════════════════════════════════
@@ -1142,7 +2394,7 @@ public partial class MainWindow : Window
     // ═══════════════════════════════════════════════════
 
     /// <summary>
-    /// Fetches the latest GitHub release tag and compares it to CurrentVersion.
+    /// Fetches the latest GitHub release <c>tag_name</c> and compares it to the running assembly version (fallback: <see cref="CurrentVersion"/>).
     /// When silent=true (startup), shows a dialog only if a newer version exists.
     /// When silent=false (manual), always reports the result to the user.
     /// </summary>
@@ -1150,22 +2402,48 @@ public partial class MainWindow : Window
     {
         try
         {
-            string json = await _httpClient.GetStringAsync(GitHubApiUrl).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, GitHubApiUrl);
+            request.Headers.TryAddWithoutValidation("User-Agent", GitHubUserAgent);
+            request.Headers.TryAddWithoutValidation("Cache-Control", "no-cache");
+            request.Headers.TryAddWithoutValidation("Pragma", "no-cache");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+
+            using HttpResponseMessage response = await _httpClient
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             using JsonDocument doc = JsonDocument.Parse(json);
-            string latestTag = doc.RootElement
-                .GetProperty("tag_name")
-                .GetString() ?? string.Empty;
+            string latestTag = doc.RootElement.GetProperty("tag_name").GetString() ?? string.Empty;
 
-            bool isNewer = IsNewerVersion(latestTag, CurrentVersion);
+            if (!TryParseReleaseTag(latestTag, out Version remoteVersion))
+            {
+                await Dispatcher.InvokeAsync(() =>
+                    AppendLog($"[Update] Không đọc được tag_name từ GitHub: \"{latestTag}\""));
+                return;
+            }
+
+            if (!TryGetLocalReleaseVersion(out Version localVersion))
+            {
+                await Dispatcher.InvokeAsync(() =>
+                    AppendLog("[Update] Không xác định được phiên bản app để so sánh."));
+                return;
+            }
+
+            bool isNewer = CompareReleaseVersion(remoteVersion, localVersion) > 0;
+            string localDisplay = FormatVersionDisplay(localVersion);
 
             await Dispatcher.InvokeAsync(() =>
             {
                 if (isNewer)
                 {
+                    AppendLog($"Đã có bản cập nhật mới: {latestTag.Trim()}");
+
                     var result = MessageBox.Show(
-                        $"🎉 Phiên bản mới [{latestTag}] đã có sẵn!\n\n" +
-                        $"Phiên bản hiện tại của bạn: {CurrentVersion}\n\n" +
+                        $"Đã có bản cập nhật mới: {latestTag.Trim()}\n\n" +
+                        $"Phiên bản bạn đang dùng: {localDisplay}\n\n" +
                         "Bạn có muốn mở trang tải về để cập nhật không?",
                         "SmartMacroAI — Cập nhật mới",
                         MessageBoxButton.YesNo,
@@ -1177,15 +2455,15 @@ public partial class MainWindow : Window
                 else if (!silent)
                 {
                     MessageBox.Show(
-                        $"✅ Bạn đang dùng phiên bản mới nhất ({CurrentVersion}).",
+                        $"✅ Bạn đang dùng phiên bản mới nhất ({localDisplay}).",
                         "SmartMacroAI — Kiểm tra cập nhật",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
 
                 AppendLog(isNewer
-                    ? $"[Update] Phiên bản mới: {latestTag} (hiện tại: {CurrentVersion})"
-                    : $"[Update] Đang dùng phiên bản mới nhất: {CurrentVersion}");
+                    ? $"[Update] Phiên bản GitHub: {latestTag.Trim()} (đang chạy: {localDisplay})"
+                    : $"[Update] Đang dùng phiên bản mới nhất: {localDisplay} (GitHub: {latestTag.Trim()})");
             });
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
@@ -1203,22 +2481,56 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Returns true when <paramref name="remoteTag"/> is strictly greater than
-    /// <paramref name="localTag"/>. Strips the leading 'v' before comparison so
-    /// "v1.0.1" > "v1.0.0" works correctly.
-    /// </summary>
-    private static bool IsNewerVersion(string remoteTag, string localTag)
+    /// <summary>Parses a GitHub <c>tag_name</c> (e.g. <c>v1.1.1</c>, <c>1.2.0-rc1</c>) into <see cref="Version"/>.</summary>
+    private static bool TryParseReleaseTag(string? tagName, out Version version)
     {
-        static Version? Parse(string tag)
+        version = new Version(0, 0, 0, 0);
+        if (string.IsNullOrWhiteSpace(tagName))
+            return false;
+
+        string trimmed = tagName.Trim().TrimStart('v', 'V');
+        int dash = trimmed.IndexOf('-', StringComparison.Ordinal);
+        if (dash > 0)
+            trimmed = trimmed[..dash];
+
+        if (!Version.TryParse(trimmed, out Version? parsed) || parsed is null)
+            return false;
+
+        version = parsed;
+        return true;
+    }
+
+    /// <summary>Uses assembly version when set; otherwise parses <see cref="CurrentVersion"/>.</summary>
+    private static bool TryGetLocalReleaseVersion(out Version version)
+    {
+        Version av = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
+        if (av.Major != 0 || av.Minor != 0 || av.Build != 0 || av.Revision != 0)
         {
-            string clean = tag.TrimStart('v', 'V').Split('-')[0];
-            return Version.TryParse(clean, out var v) ? v : null;
+            version = av;
+            return true;
         }
 
-        Version? remote = Parse(remoteTag);
-        Version? local  = Parse(localTag);
-        return remote is not null && local is not null && remote > local;
+        return TryParseReleaseTag(CurrentVersion, out version);
+    }
+
+    /// <summary>Compares Major / Minor / Build only so tag <c>1.1.1</c> matches assembly <c>1.1.1.0</c>.</summary>
+    private static int CompareReleaseVersion(Version remote, Version local)
+    {
+        int c = remote.Major.CompareTo(local.Major);
+        if (c != 0)
+            return c;
+        c = remote.Minor.CompareTo(local.Minor);
+        if (c != 0)
+            return c;
+        int rb = remote.Build >= 0 ? remote.Build : 0;
+        int lb = local.Build >= 0 ? local.Build : 0;
+        return rb.CompareTo(lb);
+    }
+
+    private static string FormatVersionDisplay(Version v)
+    {
+        int build = v.Build >= 0 ? v.Build : 0;
+        return $"v{v.Major}.{v.Minor}.{build}";
     }
 
     private async void BtnCheckUpdates_Click(object sender, RoutedEventArgs e)
@@ -1234,7 +2546,7 @@ public partial class MainWindow : Window
         if (sender is Button b)
         {
             b.IsEnabled = true;
-            b.Content   = "🔄 Kiểm tra cập nhật";
+            b.Content   = LanguageManager.GetString("ui_About_CheckUpdates");
         }
     }
 
@@ -1270,7 +2582,7 @@ public partial class MainWindow : Window
         if (_cts is null or { IsCancellationRequested: true })
         {
             StatusIndicator.Color = (Color)FindResource("AccentGreenColor");
-            TxtStatus.Text = "Ready";
+            TxtStatus.Text = LanguageManager.GetString("ui_Header_Ready");
         }
     }
 
@@ -1280,6 +2592,7 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        LanguageManager.UiLanguageChanged -= OnUiLanguageChanged;
         UnregisterHotkeys();
         ShowAllHiddenWindows();
 
@@ -1292,6 +2605,24 @@ public partial class MainWindow : Window
         _trayIcon = null;
 
         VisionEngine.Shutdown();
+    }
+
+    private static string FormatWaitCardDetail(WaitAction w)
+    {
+        if (!string.IsNullOrWhiteSpace(w.WaitForImage))
+            return $"Chờ ảnh hiện ≤{w.WaitTimeoutMs}ms: {Path.GetFileName(w.WaitForImage)}";
+        if (w.DelayMin != w.DelayMax)
+            return $"{w.DelayMin}-{w.DelayMax}ms (random)";
+        return $"{w.Milliseconds}ms";
+    }
+
+    private static string FormatIfImageCardDetail(IfImageAction img)
+    {
+        string roiInfo = img.SearchRegion.HasValue
+            ? $" | ROI({img.RoiX},{img.RoiY},{img.RoiWidth}x{img.RoiHeight})"
+            : " | Full window";
+        string clickPart = img.ClickOnFound ? " \U0001F3AF Auto-Click" : " No-Click";
+        return Path.GetFileName(img.ImagePath) + clickPart + roiInfo;
     }
 
     private static string Truncate(string value, int maxLength) =>

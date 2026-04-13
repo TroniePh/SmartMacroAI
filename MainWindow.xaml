@@ -3,18 +3,180 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:loc="clr-namespace:SmartMacroAI.Localization"
         mc:Ignorable="d"
-        Title="SmartMacroAI"
+        Title="{DynamicResource ui_WindowTitle}"
+        Icon="pack://application:,,,/Assets/logo.ico"
         Height="720" Width="1200"
         MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BaseBrush}"
         FontFamily="Segoe UI"
         ResizeMode="CanResizeWithGrip"
+        TextOptions.TextFormattingMode="Display"
+        RenderOptions.ClearTypeHint="Enabled"
         Closing="Window_Closing"
         Loaded="Window_Loaded">
 
     <Window.Resources>
+        <!-- ── System-color overrides: force dark popup / highlight for ALL ComboBoxes ── -->
+        <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#1E1E2E" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#CDD6F4" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#45475A" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#585B70" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#CDD6F4" />
+
+        <!-- ── Dark ComboBoxItem ControlTemplate ── -->
+        <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#CDD6F4" />
+            <Setter Property="Background" Value="#1E1E2E" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                BorderThickness="0"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#45475A" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#585B70" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── Dark ComboBox ToggleButton (arrow area) ── -->
+        <ControlTemplate x:Key="DarkComboBoxToggleButton" TargetType="ToggleButton">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="20" />
+                </Grid.ColumnDefinitions>
+                <Border x:Name="Bd" Grid.ColumnSpan="2" CornerRadius="0"
+                        Background="#1A1A2E" BorderBrush="#45475A" BorderThickness="1"
+                        SnapsToDevicePixels="True" />
+                <Border Grid.Column="0" CornerRadius="0" Margin="1"
+                        Background="Transparent" />
+                <Path x:Name="Arrow" Grid.Column="1"
+                      Fill="#A6ADC8" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Data="M 0 0 L 4 4 L 8 0 Z" />
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Bd" Property="BorderBrush" Value="#585B70" />
+                    <Setter TargetName="Arrow" Property="Fill" Value="#CDD6F4" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Bd" Property="BorderBrush" Value="#89B4FA" />
+                    <Setter TargetName="Arrow" Property="Fill" Value="#89B4FA" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter TargetName="Bd" Property="Opacity" Value="0.6" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- ── Full dark-themed ComboBox Style ── -->
+        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#CDD6F4" />
+            <Setter Property="Background" Value="#1A1A2E" />
+            <Setter Property="BorderBrush" Value="#45475A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItemStyle}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid SnapsToDevicePixels="True">
+                            <ToggleButton x:Name="ToggleButton"
+                                          Template="{StaticResource DarkComboBoxToggleButton}"
+                                          Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay,
+                                                      RelativeSource={RelativeSource TemplatedParent}}" />
+                            <ContentPresenter x:Name="ContentSite"
+                                              IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="8,3,28,3"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4" />
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Style="{x:Null}"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Center"
+                                     Margin="4,3,28,3"
+                                     Focusable="True"
+                                     Background="Transparent"
+                                     Foreground="#CDD6F4"
+                                     CaretBrush="#CDD6F4"
+                                     Visibility="Hidden"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}" />
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown"
+                                      SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="#1E1E2E"
+                                            BorderBrush="#45475A"
+                                            BorderThickness="1"
+                                            CornerRadius="0"
+                                            Margin="0,1,0,0">
+                                        <ScrollViewer SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True"
+                                                        KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="95" />
+                            </Trigger>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter Property="IsTabStop" Value="False" />
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#6C7086" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Geometry x:Key="DashboardIcon">M4 13h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1zm-1 7h6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1zm10 0h6a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1zM13 4v4a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1z</Geometry>
         <Geometry x:Key="MacroIcon">M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM9 13l2 2-2 2M15 13l-2 2 2 2</Geometry>
         <Geometry x:Key="ImageIcon">M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM8.5 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM21 15l-5-5L5 21</Geometry>
@@ -24,6 +186,11 @@
         <Geometry x:Key="StealthIcon">M13.875 18.825A10.05 10.05 0 0 1 12 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 0 1 4.02-5.272M6.61 6.61A9.97 9.97 0 0 1 12 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 0 1-4.132 5.411m-5.154-.776a3 3 0 0 1-4.243-4.243M2 2l20 20</Geometry>
         <Geometry x:Key="PlayIcon">M5 3l14 9-14 9V3z</Geometry>
         <Geometry x:Key="StopIcon">M6 4h4v16H6zM14 4h4v16h-4z</Geometry>
+
+        <loc:ResourceKeyConcatConverter x:Key="StatusLocConverter" Prefix="ui_Status_" />
+        <loc:ResourceKeyConcatConverter x:Key="StealthStatusLocConverter" Prefix="ui_StealthStatus_" />
+        <loc:ResourceKeyConcatConverter x:Key="StealthToggleLocConverter" Prefix="ui_StealthToggle_" />
+        <loc:ActionCountFormatConverter x:Key="ActionCountFmtConverter" />
     </Window.Resources>
 
     <Grid>
@@ -42,18 +209,18 @@
                 BorderBrush="{StaticResource Surface0Brush}"
                 BorderThickness="0,0,1,0">
             <DockPanel>
-                <Border DockPanel.Dock="Top" Padding="20,24,20,20">
+                <Border DockPanel.Dock="Top" Padding="14,14,14,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Border Width="36" Height="36" CornerRadius="8" Margin="0,0,10,0">
+                            <Border Width="36" Height="36" CornerRadius="0" Margin="0,0,10,0">
                                 <Border.Background>
                                     <ImageBrush ImageSource="/Assets/logo.png" Stretch="UniformToFill" />
                                 </Border.Background>
                             </Border>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="SmartMacroAI" FontSize="16" FontWeight="Bold"
+                                <TextBlock Text="{DynamicResource ui_WindowTitle}" FontSize="16" FontWeight="Bold"
                                            Foreground="{StaticResource TextBrush}" />
-                                <TextBlock Text="v1.1.0" FontSize="10"
+                                <TextBlock Text="v1.2.0" FontSize="10"
                                            Foreground="{StaticResource OverlayBrush}" Margin="0,-1,0,0" />
                             </StackPanel>
                         </StackPanel>
@@ -65,47 +232,47 @@
                     <Button x:Name="BtnAbout" Style="{StaticResource SidebarButtonStyle}" Click="BtnAbout_Click">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="{StaticResource AboutIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                            <TextBlock Text="About" VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource ui_About}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="BtnSettingsNav" Style="{StaticResource SidebarButtonStyle}" Click="BtnSettings_Click">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="{StaticResource SettingsIcon}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" Fill="Transparent" />
-                            <TextBlock Text="Settings" VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource ui_Settings}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
                 <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
                     <StackPanel>
-                        <TextBlock Text="NAVIGATION" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource OverlayBrush}" Margin="24,8,0,8" />
+                        <TextBlock Text="{DynamicResource ui_Navigation}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource OverlayBrush}" Margin="24,8,0,8" />
                         <Button x:Name="BtnDashboard" Style="{StaticResource SidebarButtonActiveStyle}" Click="BtnDashboard_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="{StaticResource DashboardIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                                <TextBlock Text="Dashboard" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource ui_Dashboard}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button x:Name="BtnMacroEditor" Style="{StaticResource SidebarButtonStyle}" Click="BtnMacroEditor_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="{StaticResource MacroIcon}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Fill="Transparent" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                                <TextBlock Text="Macro Editor" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource ui_MacroEditor}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button x:Name="BtnImageRecognition" Style="{StaticResource SidebarButtonStyle}" Click="BtnImageRecognition_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="{StaticResource ImageIcon}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Fill="Transparent" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                                <TextBlock Text="Image Recognition" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource ui_ImageRecognition}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button x:Name="BtnOcrEngine" Style="{StaticResource SidebarButtonStyle}" Click="BtnOcrEngine_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="{StaticResource OcrIcon}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Fill="Transparent" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                                <TextBlock Text="OCR Engine" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource ui_OcrEngine}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button x:Name="BtnStealthManager" Style="{StaticResource SidebarButtonStyle}" Click="BtnStealthManager_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="{StaticResource StealthIcon}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Fill="Transparent" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                                <TextBlock Text="Stealth Manager" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource ui_StealthManager}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -119,37 +286,37 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="160" />
             </Grid.RowDefinitions>
 
             <!-- Top Header Bar -->
-            <Border Grid.Row="0" Background="{StaticResource BaseBrush}" Padding="24,16" BorderBrush="{StaticResource Surface0Brush}" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{StaticResource BaseBrush}" Padding="16,10" BorderBrush="{StaticResource Surface0Brush}" BorderThickness="0,0,0,1">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{StaticResource Surface0Brush}" CornerRadius="6" Padding="12,6" Margin="0,0,8,0">
+                        <Border Background="{StaticResource Surface0Brush}" CornerRadius="0" Padding="8,4" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="8" Height="8" Margin="0,0,8,0">
                                     <Ellipse.Fill>
                                         <SolidColorBrush x:Name="StatusIndicator" Color="{StaticResource AccentGreenColor}" />
                                     </Ellipse.Fill>
                                 </Ellipse>
-                                <TextBlock x:Name="TxtStatus" Text="Ready" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
+                                <TextBlock x:Name="TxtStatus" Text="{DynamicResource ui_Header_Ready}" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
                             </StackPanel>
                         </Border>
-                        <Button x:Name="BtnRecordMacro" Style="{StaticResource DangerButtonStyle}" Click="BtnRecordMacro_Click" Margin="0,0,8,0" Padding="16,10">
-                            <TextBlock><Run Text="&#x23FA;" /><Run Text=" Record" /></TextBlock>
+                        <Button x:Name="BtnRecordMacro" Style="{StaticResource DangerButtonStyle}" Click="BtnRecordMacro_Click" Margin="0,0,8,0" Padding="12,6">
+                            <TextBlock><Run Text="&#x23FA;" /><Run Text="{DynamicResource ui_RecordSuffix}" /></TextBlock>
                         </Button>
-                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="+ New Macro" Click="BtnNewMacro_Click" />
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_NewMacro}" Click="BtnNewMacro_Click" />
                     </StackPanel>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock x:Name="TxtPageTitle" Text="Dashboard" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock x:Name="TxtPageSubtitle" Text="Multi-tasking hub — run multiple macros simultaneously" FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,2,0,0" />
+                        <TextBlock x:Name="TxtPageTitle" Text="{DynamicResource ui_Page_Dashboard}" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock x:Name="TxtPageSubtitle" Text="{DynamicResource ui_PageSub_Dashboard}" FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,2,0,0" />
                     </StackPanel>
                 </DockPanel>
             </Border>
 
             <!-- Content Frame -->
-            <Border Grid.Row="1" Padding="24,16,24,8">
+            <Border Grid.Row="1" Padding="12,8,12,6">
                 <Grid x:Name="ContentArea">
 
                     <!-- ────── Dashboard View (Trạm điều hành đa nhiệm) ────── -->
@@ -160,22 +327,22 @@
                         </Grid.RowDefinitions>
 
                         <!-- Stats Row -->
-                        <UniformGrid Grid.Row="0" Columns="3" Margin="0,0,0,12">
+                        <UniformGrid Grid.Row="0" Columns="3" Margin="0,0,0,8">
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="Saved Macros" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
+                                    <TextBlock Text="{DynamicResource ui_SavedMacros}" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
                                     <TextBlock x:Name="TxtTotalMacros" Text="0" FontSize="32" FontWeight="Bold" Foreground="{StaticResource AccentBlueBrush}" Margin="0,4,0,0" />
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource CardStyle}" Margin="4,0">
                                 <StackPanel>
-                                    <TextBlock Text="Runs Today" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
+                                    <TextBlock Text="{DynamicResource ui_RunsToday}" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
                                     <TextBlock x:Name="TxtRunsToday" Text="0" FontSize="32" FontWeight="Bold" Foreground="{StaticResource AccentGreenBrush}" Margin="0,4,0,0" />
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource CardStyle}" Margin="8,0,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Active Threads" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
+                                    <TextBlock Text="{DynamicResource ui_ActiveThreads}" FontSize="12" Foreground="{StaticResource SubtextBrush}" />
                                     <TextBlock x:Name="TxtActiveThreads" Text="0" FontSize="32" FontWeight="Bold" Foreground="{StaticResource AccentPeachBrush}" Margin="0,4,0,0" />
                                 </StackPanel>
                             </Border>
@@ -184,16 +351,16 @@
                         <!-- DataGrid Multi-tasking Hub -->
                         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0" Padding="0">
                             <DockPanel>
-                                <DockPanel DockPanel.Dock="Top" Margin="16,12,16,8">
+                                <DockPanel DockPanel.Dock="Top" Margin="8,8,8,6">
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Button Style="{StaticResource DangerButtonStyle}" Content="&#x23F9; STOP ALL" Click="BtnStopAllMacros_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
-                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="&#x21BB; Refresh" Click="BtnRefreshDashboard_Click" Padding="12,6" FontSize="11" />
+                                        <Button Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_StopAll}" Click="BtnStopAllMacros_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
+                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Refresh}" Click="BtnRefreshDashboard_Click" Padding="12,6" FontSize="11" />
                                     </StackPanel>
-                                    <TextBlock Text="Trạm điều hành đa nhiệm" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource ui_Dashboard_HubTitle}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <Grid>
                                     <TextBlock x:Name="DashboardEmptyHint"
-                                               Text="Chưa có kịch bản nào. Hãy tạo và lưu macro trong Macro Editor."
+                                               Text="{DynamicResource ui_Dashboard_EmptyHint}"
                                                FontSize="13" Foreground="{StaticResource OverlayBrush}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Margin="0,40,0,0" Visibility="Collapsed" />
@@ -259,50 +426,70 @@
 
                                         <DataGrid.Columns>
                                             <!-- Tên kịch bản -->
-                                            <DataGridTemplateColumn Header="Tên kịch bản" Width="*">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_MacroName}" Width="*">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <DockPanel VerticalAlignment="Center" LastChildFill="True">
                                                             <Button DockPanel.Dock="Right" Content="✎" Click="DashboardRename_Click"
-                                                                    ToolTip="Rename Macro" FontSize="12" Padding="8,4" Margin="8,0,0,0"
-                                                                    Cursor="Hand" VerticalAlignment="Center"
-                                                                    Background="#45475A" Foreground="#CDD6F4" BorderThickness="0" FontWeight="SemiBold" />
+                                                                    ToolTip="{DynamicResource ui_Tooltip_RenameMacro}"
+                                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                                    Background="#45475A" Foreground="#CDD6F4"
+                                                                    FontSize="12" Padding="8,4" Margin="8,0,0,0"
+                                                                    VerticalAlignment="Center" />
                                                             <StackPanel VerticalAlignment="Center">
                                                                 <TextBlock Text="{Binding MacroName}" FontWeight="SemiBold" FontSize="12" Foreground="#CDD6F4" />
-                                                                <TextBlock Text="{Binding ActionCount, StringFormat='{}{0} actions'}" FontSize="10" Foreground="#6C7086" />
+                                                                <TextBlock Text="{Binding ActionCount, Converter={StaticResource ActionCountFmtConverter}}" FontSize="10" Foreground="#6C7086" />
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
-                                            <!-- Cửa sổ mục tiêu -->
-                                            <DataGridTemplateColumn Header="Cửa sổ mục tiêu" Width="200">
+                                            <!-- Cửa sổ mục tiêu + Identify -->
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_TargetWindow}" Width="260">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <ComboBox Text="{Binding TargetWindow, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                                                  IsEditable="True" FontSize="11"
-                                                                  Background="#313244" Foreground="#CDD6F4"
-                                                                  BorderThickness="1" BorderBrush="#45475A"
-                                                                  Padding="4,2" Margin="2"
-                                                                  DropDownOpened="DashRowWindowCombo_DropDownOpened" />
+                                                        <DockPanel>
+                                                            <Button DockPanel.Dock="Right" Content="🎯" Click="DashboardIdentify_Click"
+                                                                    ToolTip="{DynamicResource ui_Tooltip_FlashWindow}"
+                                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                                    Background="#45475A" Foreground="#CDD6F4"
+                                                                    FontSize="12" Padding="6,2" Margin="4,0,0,0" />
+                                                            <ComboBox Text="{Binding TargetWindow, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                                      IsEditable="True" FontSize="10"
+                                                                      Style="{StaticResource DarkComboBoxStyle}"
+                                                                      Margin="2"
+                                                                      DropDownOpened="DashRowWindowCombo_DropDownOpened"
+                                                                      SelectionChanged="DashRowWindowCombo_SelectionChanged" />
+                                                        </DockPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
                                             <!-- Stealth Mode -->
-                                            <DataGridTemplateColumn Header="Stealth" Width="60">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_Stealth}" Width="55">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <CheckBox IsChecked="{Binding StealthMode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                  ToolTip="Ẩn cửa sổ mục tiêu khi chạy" />
+                                                                  ToolTip="{DynamicResource ui_Tooltip_StealthRun}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <!-- Hardware Mode (DirectInput bypass) -->
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_HW}" Width="42">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox IsChecked="{Binding HardwareMode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                  ToolTip="{DynamicResource ui_Tooltip_HWMode}" />
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
                                             <!-- Số lần chạy -->
-                                            <DataGridTemplateColumn Header="Số lần chạy" Width="85">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_RunCount}" Width="85">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <TextBox Text="{Binding RunCount, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
@@ -310,13 +497,13 @@
                                                                  Background="#313244" Foreground="#CDD6F4"
                                                                  BorderThickness="1" BorderBrush="#45475A"
                                                                  Padding="4,3" Margin="2"
-                                                                 ToolTip="0 = vô hạn" />
+                                                                 ToolTip="{DynamicResource ui_Tooltip_RunCount}" />
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
                                             <!-- Giãn cách -->
-                                            <DataGridTemplateColumn Header="Giãn cách (phút)" Width="100">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_Interval}" Width="100">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <TextBox Text="{Binding IntervalMinutes, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
@@ -324,30 +511,30 @@
                                                                  Background="#313244" Foreground="#CDD6F4"
                                                                  BorderThickness="1" BorderBrush="#45475A"
                                                                  Padding="4,3" Margin="2"
-                                                                 ToolTip="0 = không giãn cách" />
+                                                                 ToolTip="{DynamicResource ui_Tooltip_Interval}" />
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
                                             <!-- Trạng thái -->
-                                            <DataGridTemplateColumn Header="Trạng thái" Width="100">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_Status}" Width="100">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Status, Converter={StaticResource StatusLocConverter}}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="Foreground" Value="#A6E3A1" />
                                                                     <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Status}" Value="Đang chạy">
+                                                                        <DataTrigger Binding="{Binding Status}" Value="Running">
                                                                             <Setter Property="Foreground" Value="#F9E2AF" />
                                                                         </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding Status}" Value="Đang chờ">
+                                                                        <DataTrigger Binding="{Binding Status}" Value="Waiting">
                                                                             <Setter Property="Foreground" Value="#89B4FA" />
                                                                         </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding Status}" Value="Đã dừng">
+                                                                        <DataTrigger Binding="{Binding Status}" Value="Stopped">
                                                                             <Setter Property="Foreground" Value="#F38BA8" />
                                                                         </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding Status}" Value="Lỗi">
+                                                                        <DataTrigger Binding="{Binding Status}" Value="Error">
                                                                             <Setter Property="Foreground" Value="#F38BA8" />
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
@@ -359,27 +546,24 @@
                                             </DataGridTemplateColumn>
 
                                             <!-- Điều khiển -->
-                                            <DataGridTemplateColumn Header="Điều khiển" Width="160">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Col_Controls}" Width="160">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Button Content="▶ Start" Click="DashboardStart_Click"
+                                                            <Button Content="{DynamicResource ui_Start}" Click="DashboardStart_Click"
                                                                     IsEnabled="{Binding CanStart}"
-                                                                    FontSize="11" Padding="8,4" Cursor="Hand"
+                                                                    Style="{StaticResource PrimaryButtonStyle}"
                                                                     Background="#A6E3A1" Foreground="#1E1E2E"
-                                                                    BorderThickness="0" Margin="0,0,4,0"
-                                                                    FontWeight="SemiBold" />
+                                                                    FontSize="11" Padding="8,4" Margin="0,0,4,0" />
                                                             <Button Content="⏹" Click="DashboardStop_Click"
                                                                     IsEnabled="{Binding CanStop}"
-                                                                    FontSize="11" Padding="8,4" Cursor="Hand"
-                                                                    Background="#F38BA8" Foreground="White"
-                                                                    BorderThickness="0" Margin="0,0,4,0"
-                                                                    FontWeight="SemiBold" />
+                                                                    Style="{StaticResource DangerButtonStyle}"
+                                                                    FontSize="11" Padding="8,4" Margin="0,0,4,0" />
                                                             <Button Content="🗑" Click="DashboardDelete_Click"
-                                                                    FontSize="11" Padding="8,4" Cursor="Hand"
+                                                                    Style="{StaticResource PrimaryButtonStyle}"
                                                                     Background="#585B70" Foreground="White"
-                                                                    BorderThickness="0" FontWeight="SemiBold"
-                                                                    ToolTip="Xóa kịch bản" />
+                                                                    FontSize="11" Padding="8,4"
+                                                                    ToolTip="{DynamicResource ui_Tooltip_DeleteMacro}" />
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -400,31 +584,65 @@
                         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="12">
                             <WrapPanel>
                                 <StackPanel Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="MACRO NAME" />
+                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_MacroName}" />
                                     <TextBox x:Name="TxtMacroName" Style="{StaticResource DarkTextBoxStyle}" Width="180" Text="Untitled Macro" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="TARGET WINDOW TITLE" />
+                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_TargetWindowPid}" />
                                     <DockPanel>
-                                        <Button DockPanel.Dock="Right" Content="&#x21BB;" Click="BtnRefreshWindows_Click" ToolTip="Refresh window list" FontSize="14" Cursor="Hand" Margin="4,0,0,0" Background="{StaticResource Surface0Brush}" Foreground="{StaticResource TextBrush}" BorderThickness="0" Padding="8,6" />
-                                        <ComboBox x:Name="CmbTargetWindow" Width="220" IsEditable="True" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" ToolTip="Select or type a window title" DropDownOpened="CmbTargetWindow_DropDownOpened" />
+                                        <Button DockPanel.Dock="Right" Content="🎯" Click="BtnIdentifyWindow_Click"
+                                                ToolTip="{DynamicResource ui_Tooltip_FlashSelected}" FontSize="14" Cursor="Hand"
+                                                Margin="4,0,0,0" Padding="8,6"
+                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                Background="#45475A" Foreground="{StaticResource TextBrush}" />
+                                        <Button DockPanel.Dock="Right" Content="&#x21BB;" Click="BtnRefreshWindows_Click"
+                                                ToolTip="{DynamicResource ui_Tooltip_RefreshWindows}" FontSize="14" Cursor="Hand"
+                                                Margin="4,0,0,0" Padding="8,6"
+                                                Background="{StaticResource Surface0Brush}" Foreground="{StaticResource TextBrush}" BorderThickness="0" />
+                                        <ComboBox x:Name="CmbTargetWindow" Width="280" IsEditable="True"
+                                                 Style="{StaticResource DarkComboBoxStyle}"
+                                                 FontSize="11" ToolTip="{DynamicResource ui_Tooltip_SelectPid}"
+                                                 DropDownOpened="CmbTargetWindow_DropDownOpened"
+                                                 SelectionChanged="CmbTargetWindow_SelectionChanged" />
                                     </DockPanel>
                                 </StackPanel>
                                 <StackPanel Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="REPEAT" />
-                                    <TextBox x:Name="TxtRepeatCount" Style="{StaticResource DarkTextBoxStyle}" Width="60" Text="1" ToolTip="0 = infinite loop" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <StackPanel Margin="0,0,14,0">
+                                            <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_Repeat}" />
+                                            <TextBox x:Name="TxtRepeatCount" Style="{StaticResource DarkTextBoxStyle}" Width="56" Text="1" ToolTip="{DynamicResource ui_Tooltip_Repeat}" />
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_AutoStopMinutes}" />
+                                            <TextBox x:Name="TxtAutoStopMinutes" Style="{StaticResource DarkTextBoxStyle}" Width="56" Text="0" ToolTip="{DynamicResource ui_Tooltip_AutoStopMinutes}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Bottom" Margin="0,0,12,0">
+                                    <CheckBox x:Name="ChkHardwareMode"
+                                              Foreground="{StaticResource TextBrush}" FontSize="11"
+                                              VerticalAlignment="Center"
+                                              ToolTip="{DynamicResource ui_Tooltip_HWCheckbox}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="⚡" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="{DynamicResource ui_HwMode}" FontSize="11" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                                 <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal">
-                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="Save" Click="BtnSaveMacro_Click" Margin="0,0,6,0" Padding="16,8" />
-                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="Load" Click="BtnLoadMacro_Click" Margin="0,0,6,0" Padding="16,8" />
-                                    <Button Style="{StaticResource DangerButtonStyle}" Content="Clear" Click="BtnClearCanvas_Click" Margin="0,0,6,0" Padding="16,8" />
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Save}" Click="BtnSaveMacro_Click" Margin="0,0,6,0" Padding="16,8" />
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Load}" Click="BtnLoadMacro_Click" Margin="0,0,6,0" Padding="16,8" />
+                                    <Button Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_Clear}" Click="BtnClearCanvas_Click" Margin="0,0,6,0" Padding="16,8" />
                                     <Border Width="1" Background="{StaticResource Surface1Brush}" Margin="4,2,10,2" />
-                                    <Button x:Name="BtnRunMacro" Click="BtnRunMacro_Click" Padding="16,8" Cursor="Hand"
-                                            Background="#A6E3A1" Foreground="#1E1E2E" BorderThickness="0" FontWeight="SemiBold" FontSize="12"
-                                            Content="▶ Run" />
-                                    <Button x:Name="BtnStopMacro" Click="BtnStopMacro_Click" IsEnabled="False" Padding="16,8" Cursor="Hand" Margin="6,0,0,0"
-                                            Background="#F38BA8" Foreground="White" BorderThickness="0" FontWeight="SemiBold" FontSize="12"
-                                            Content="⏹ Stop" />
+                                    <Button x:Name="BtnRunMacro" Click="BtnRunMacro_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Background="#A6E3A1" Foreground="#1E1E2E"
+                                            Padding="16,8" FontSize="12"
+                                            Content="{DynamicResource ui_Run}" />
+                                    <Button x:Name="BtnStopMacro" Click="BtnStopMacro_Click" IsEnabled="False" Margin="6,0,0,0"
+                                            Style="{StaticResource DangerButtonStyle}"
+                                            Padding="16,8" FontSize="12"
+                                            Content="{DynamicResource ui_Stop}" />
                                 </StackPanel>
                             </WrapPanel>
                         </Border>
@@ -435,28 +653,36 @@
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,8,0">
                                 <DockPanel>
-                                    <TextBlock DockPanel.Dock="Top" Text="Actions" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
-                                    <StackPanel>
-                                        <Border Background="{StaticResource BaseBrush}" CornerRadius="6" Padding="10,8" Margin="0,2" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Click"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentBlueBrush}" Margin="0,0,10,0" /><TextBlock Text="Click" Foreground="{StaticResource TextBrush}" FontSize="12" /></StackPanel></Border>
-                                        <Border Background="{StaticResource BaseBrush}" CornerRadius="6" Padding="10,8" Margin="0,2" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="TypeText"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentGreenBrush}" Margin="0,0,10,0" /><TextBlock Text="Type Text" Foreground="{StaticResource TextBrush}" FontSize="12" /></StackPanel></Border>
-                                        <Border Background="{StaticResource BaseBrush}" CornerRadius="6" Padding="10,8" Margin="0,2" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Wait"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentYellowBrush}" Margin="0,0,10,0" /><TextBlock Text="Wait" Foreground="{StaticResource TextBrush}" FontSize="12" /></StackPanel></Border>
-                                        <Border Background="{StaticResource BaseBrush}" CornerRadius="6" Padding="10,8" Margin="0,2" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfImageFound"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentPeachBrush}" Margin="0,0,10,0" /><TextBlock Text="IF Image Found" Foreground="{StaticResource TextBrush}" FontSize="12" /></StackPanel></Border>
-                                        <Border Background="{StaticResource BaseBrush}" CornerRadius="6" Padding="10,8" Margin="0,2" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfTextFound"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentLavenderBrush}" Margin="0,0,10,0" /><TextBlock Text="IF Text Found" Foreground="{StaticResource TextBrush}" FontSize="12" /></StackPanel></Border>
-                                        <TextBlock Text="WEB (Playwright)" FontSize="10" FontWeight="SemiBold" Foreground="#94E2D5" Margin="0,14,0,6" />
-                                        <Border Background="#1A3D3A" CornerRadius="6" Padding="10,8" Margin="0,2" BorderBrush="#94E2D5" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="WebNavigate"><TextBlock Text="&#x1F310;" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Web: Navigate" Foreground="#94E2D5" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel></Border>
-                                        <Border Background="#1A3D3A" CornerRadius="6" Padding="10,8" Margin="0,2" BorderBrush="#94E2D5" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="WebClick"><TextBlock Text="&#x1F310;" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Web: Click" Foreground="#94E2D5" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel></Border>
-                                        <Border Background="#1A3D3A" CornerRadius="6" Padding="10,8" Margin="0,2" BorderBrush="#94E2D5" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="WebType"><TextBlock Text="&#x1F310;" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Web: Type" Foreground="#94E2D5" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel></Border>
-                                    </StackPanel>
+                                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource ui_ActionsPanel}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <StackPanel>
+                                            <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Click"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentBlueBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_Click}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="TypeText"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentGreenBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_TypeText}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Wait"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentYellowBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_Wait}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#2A2418" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#FFA500" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Repeat"><Ellipse Width="8" Height="8" Fill="#FFA500" Margin="0,0,10,0" /><TextBlock Text="Lặp lại" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#2A1F30" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#CBA6F7" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="SetVariable"><TextBlock Text="&#x1F4E6;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Gán biến" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#152030" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#89B4FA" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfVariable"><TextBlock Text="&#x2753;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Nếu biến thỏa mãn" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#252528" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#6C7086" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Log"><TextBlock Text="&#x1F4DD;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Ghi nhật ký" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#301818" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#FE640B" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="TryCatch"><TextBlock Text="&#x1F6E1;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Bẫy lỗi (Try/Catch)" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfImageFound"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentPeachBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_IfImage}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfTextFound"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentLavenderBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_IfText}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#1A3D3A" CornerRadius="0" Padding="8,4" Margin="0,4,0,1" BorderBrush="#94E2D5" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="WebAction"><TextBlock Text="&#x1F310;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_WebAction}" Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel></Border>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </DockPanel>
                             </Border>
                             <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,0">
                                 <DockPanel>
-                                    <TextBlock DockPanel.Dock="Top" Text="Macro Workflow" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
-                                    <Border CornerRadius="8" Background="{StaticResource BaseBrush}" BorderBrush="{StaticResource Surface1Brush}" BorderThickness="2" AllowDrop="True" DragOver="Canvas_DragOver" Drop="Canvas_Drop">
+                                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource ui_MacroWorkflow}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                    <Border CornerRadius="0" Background="{StaticResource BaseBrush}" BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1" AllowDrop="True" DragOver="Canvas_DragOver" Drop="Canvas_Drop">
                                         <Grid>
-                                            <TextBlock x:Name="CanvasPlaceholder" Text="Drag actions here to build your macro" FontSize="14" Foreground="{StaticResource OverlayBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="CanvasPlaceholder" Text="{DynamicResource ui_CanvasPlaceholder}" FontSize="14" Foreground="{StaticResource OverlayBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                                <ItemsControl x:Name="MacroCanvas" Margin="12">
+                                                <ItemsControl x:Name="MacroCanvas" Margin="8"
+                                                              AllowDrop="True"
+                                                              PreviewMouseLeftButtonDown="Workflow_PreviewMouseLeftButtonDown"
+                                                              MouseMove="Workflow_MouseMove"
+                                                              Drop="Workflow_Drop">
                                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                                 </ItemsControl>
                                             </ScrollViewer>
@@ -475,37 +701,58 @@
                         </Grid.RowDefinitions>
                         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="16">
                             <StackPanel>
-                                <TextBlock Text="Test Template Matching (Background Capture)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                <TextBlock Text="{DynamicResource ui_Vision_Title}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
                                 <WrapPanel>
                                     <StackPanel Margin="0,0,16,8">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="WINDOW TITLE" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_WindowTitle}" />
                                         <DockPanel>
-                                            <Button DockPanel.Dock="Right" Content="&#x21BB;" Click="BtnRefreshVisionWindows_Click" ToolTip="Refresh" FontSize="14" Cursor="Hand" Margin="4,0,0,0" Background="{StaticResource Surface0Brush}" Foreground="{StaticResource TextBrush}" BorderThickness="0" Padding="8,6" />
-                                            <ComboBox x:Name="CmbVisionWindowTitle" Width="220" IsEditable="True" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" DropDownOpened="CmbVisionWindowTitle_DropDownOpened" />
+                                            <Button DockPanel.Dock="Right" Content="&#x21BB;" Click="BtnRefreshVisionWindows_Click" ToolTip="{DynamicResource ui_Tooltip_Refresh}" FontSize="14" Cursor="Hand" Margin="4,0,0,0" Background="{StaticResource Surface0Brush}" Foreground="{StaticResource TextBrush}" BorderThickness="0" Padding="8,6" />
+                                            <ComboBox x:Name="CmbVisionWindowTitle" Width="220" IsEditable="True"
+                                                     Style="{StaticResource DarkComboBoxStyle}"
+                                                     FontSize="12"
+                                                     DropDownOpened="CmbVisionWindowTitle_DropDownOpened" />
                                         </DockPanel>
                                     </StackPanel>
-                                    <StackPanel Margin="0,0,16,8">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="TEMPLATE IMAGE PATH" />
+                                    <StackPanel Margin="0,0,16,8" MinWidth="280">
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_TemplatePath}" />
                                         <DockPanel>
-                                            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButtonStyle}" Content="Browse" Click="BtnBrowseTemplate_Click" Padding="12,8" Margin="4,0,0,0" />
-                                            <Button DockPanel.Dock="Right" Style="{StaticResource DangerButtonStyle}" Content="&#x2702; Snip" Click="BtnSnipArea_Click" Padding="12,8" Margin="4,0,0,0" />
+                                            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Browse}" Click="BtnBrowseTemplate_Click" Padding="12,8" Margin="4,0,0,0" />
+                                            <Button DockPanel.Dock="Right" Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_Snip}" Click="BtnSnipArea_Click" Padding="12,8" Margin="4,0,0,0" />
                                             <TextBox x:Name="TxtTemplatePath" Style="{StaticResource DarkTextBoxStyle}" Width="220" />
                                         </DockPanel>
+                                        <GroupBox Header="{DynamicResource ui_Vision_RoiHeader}" Margin="0,8,0,0" Padding="8,10,8,8" Foreground="{StaticResource TextBrush}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="RoiX" Grid.Column="0" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipX}" />
+                                                <TextBox x:Name="RoiY" Grid.Column="1" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipY}" />
+                                                <TextBox x:Name="RoiWidth" Grid.Column="2" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipW}" />
+                                                <TextBox x:Name="RoiHeight" Grid.Column="3" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipH}" />
+                                                <Button x:Name="BtnClearRoi" Grid.Column="4" Margin="4,2" Padding="10,6" Style="{StaticResource PrimaryButtonStyle}"
+                                                        Content="{DynamicResource ui_Vision_RoiClear}" Click="BtnClearRoi_Click" ToolTip="{DynamicResource ui_Vision_RoiClearTip}" />
+                                            </Grid>
+                                        </GroupBox>
                                     </StackPanel>
                                     <StackPanel Margin="0,0,16,8">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="THRESHOLD" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_Threshold}" />
                                         <TextBox x:Name="TxtThreshold" Style="{StaticResource DarkTextBoxStyle}" Width="60" Text="0.8" />
                                     </StackPanel>
                                     <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,8">
-                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="Test Capture &amp; Match" Click="BtnTestVision_Click" Padding="16,8" />
+                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_TestCaptureMatch}" Click="BtnTestVision_Click" Padding="16,8" />
+                                        <Button x:Name="BtnVisionStealthClick" Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Vision_ClickFound}" Click="BtnVisionStealthClick_Click" Padding="16,8" Margin="0,8,0,0" IsEnabled="False" />
                                     </StackPanel>
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
                         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0">
                             <DockPanel>
-                                <TextBlock DockPanel.Dock="Top" Text="Result" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
-                                <Border CornerRadius="8" Background="{StaticResource BaseBrush}" Padding="16">
+                                <TextBlock DockPanel.Dock="Top" Text="{DynamicResource ui_Result}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                <Border CornerRadius="0" Background="{StaticResource BaseBrush}" Padding="16">
                                     <TextBlock x:Name="TxtVisionResult" Text="Run a test to see results here..." FontSize="13" Foreground="{StaticResource SubtextBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </DockPanel>
@@ -520,25 +767,28 @@
                         </Grid.RowDefinitions>
                         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="16">
                             <StackPanel>
-                                <TextBlock Text="Test OCR Text Extraction (Background Capture)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                <TextBlock Text="{DynamicResource ui_Ocr_Title}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
                                 <WrapPanel>
                                     <StackPanel Margin="0,0,16,8">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="WINDOW TITLE" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Lbl_WindowTitle}" />
                                         <DockPanel>
-                                            <Button DockPanel.Dock="Right" Content="&#x21BB;" Click="BtnRefreshOcrWindows_Click" ToolTip="Refresh" FontSize="14" Cursor="Hand" Margin="4,0,0,0" Background="{StaticResource Surface0Brush}" Foreground="{StaticResource TextBrush}" BorderThickness="0" Padding="8,6" />
-                                            <ComboBox x:Name="CmbOcrWindowTitle" Width="280" IsEditable="True" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" DropDownOpened="CmbOcrWindowTitle_DropDownOpened" />
+                                            <Button DockPanel.Dock="Right" Content="&#x21BB;" Click="BtnRefreshOcrWindows_Click" ToolTip="{DynamicResource ui_Tooltip_Refresh}" FontSize="14" Cursor="Hand" Margin="4,0,0,0" Background="{StaticResource Surface0Brush}" Foreground="{StaticResource TextBrush}" BorderThickness="0" Padding="8,6" />
+                                            <ComboBox x:Name="CmbOcrWindowTitle" Width="280" IsEditable="True"
+                                                     Style="{StaticResource DarkComboBoxStyle}"
+                                                     FontSize="12"
+                                                     DropDownOpened="CmbOcrWindowTitle_DropDownOpened" />
                                         </DockPanel>
                                     </StackPanel>
                                     <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,8">
-                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="Extract Text" Click="BtnTestOcr_Click" Padding="16,8" />
+                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_ExtractText}" Click="BtnTestOcr_Click" Padding="16,8" />
                                     </StackPanel>
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
                         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0">
                             <DockPanel>
-                                <TextBlock DockPanel.Dock="Top" Text="Extracted Text" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
-                                <Border CornerRadius="8" Background="{StaticResource BaseBrush}" Padding="16">
+                                <TextBlock DockPanel.Dock="Top" Text="{DynamicResource ui_ExtractedText}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                <Border CornerRadius="0" Background="{StaticResource BaseBrush}" Padding="16">
                                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <TextBlock x:Name="TxtOcrResult" Text="Run a test to see OCR results here..." FontSize="13" Foreground="{StaticResource SubtextBrush}" TextWrapping="Wrap" />
                                     </ScrollViewer>
@@ -557,12 +807,12 @@
                         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="16">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Button Style="{StaticResource DangerButtonStyle}" Content="Show All" Click="BtnShowAllStealth_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
-                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="&#x21BB; Refresh" Click="BtnRefreshStealth_Click" Padding="12,6" FontSize="11" />
+                                    <Button Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_Stealth_ShowAll}" Click="BtnShowAllStealth_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Refresh}" Click="BtnRefreshStealth_Click" Padding="12,6" FontSize="11" />
                                 </StackPanel>
                                 <StackPanel>
-                                    <TextBlock Text="Quản lý Stealth" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                    <TextBlock Text="Ẩn/hiện bất kỳ cửa sổ nào. Macro vẫn gửi click vào cửa sổ đã ẩn." FontSize="11" Foreground="{StaticResource SubtextBrush}" Margin="0,2,0,0" />
+                                    <TextBlock Text="{DynamicResource ui_Stealth_Title}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                    <TextBlock Text="{DynamicResource ui_Stealth_Subtitle}" FontSize="11" Foreground="{StaticResource SubtextBrush}" Margin="0,2,0,0" />
                                 </StackPanel>
                             </DockPanel>
                         </Border>
@@ -626,7 +876,7 @@
                                 </DataGrid.CellStyle>
 
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="Cửa sổ" Width="*">
+                                    <DataGridTemplateColumn Header="{DynamicResource ui_Col_Window}" Width="*">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding WindowTitle}" FontSize="12" Foreground="#CDD6F4"
@@ -635,10 +885,10 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="Trạng thái" Width="80">
+                                    <DataGridTemplateColumn Header="{DynamicResource ui_Col_StealthStatus}" Width="80">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding StatusKey, Converter={StaticResource StealthStatusLocConverter}}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Foreground" Value="#A6E3A1" />
@@ -654,10 +904,10 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="Hành động" Width="90">
+                                    <DataGridTemplateColumn Header="{DynamicResource ui_Col_StealthAction}" Width="90">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="{Binding ToggleLabel}" Click="StealthToggle_Click"
+                                                <Button Content="{Binding ToggleKey, Converter={StaticResource StealthToggleLocConverter}}" Click="StealthToggle_Click"
                                                         FontSize="11" Padding="10,4" Cursor="Hand"
                                                         BorderThickness="0" FontWeight="SemiBold">
                                                     <Button.Style>
@@ -683,41 +933,118 @@
 
                     <!-- ────── Settings View ────── -->
                     <Grid x:Name="SettingsView" Visibility="Collapsed">
+                        <TabControl Background="Transparent" BorderThickness="0" Padding="0,4,0,0">
+                            <TabItem Header="{DynamicResource ui_Settings_Tab_General}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel MaxWidth="600">
+                                <!-- Language -->
+                                <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource ui_Settings_Language}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
+                                        <ComboBox x:Name="CmbUiLanguage" Width="220" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                                  Style="{StaticResource DarkComboBoxStyle}" FontSize="12"
+                                                  SelectionChanged="CmbUiLanguage_SelectionChanged" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Image recognition — template scale range -->
+                                <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource ui_Settings_VisionScaleTitle}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
+                                        <TextBlock Text="{DynamicResource ui_Settings_VisionScaleNote}" FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Settings_VisionScaleMin}" />
+                                        <DockPanel Margin="0,6,0,8">
+                                            <TextBlock x:Name="TxtVisionMinScaleValue" DockPanel.Dock="Right" MinWidth="48" TextAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextBrush}" />
+                                            <Slider x:Name="SldVisionMinScale" Minimum="0.50" Maximum="1.50" TickFrequency="0.01" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="SldVisionScale_ValueChanged" />
+                                        </DockPanel>
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Settings_VisionScaleMax}" />
+                                        <DockPanel Margin="0,6,0,12">
+                                            <TextBlock x:Name="TxtVisionMaxScaleValue" DockPanel.Dock="Right" MinWidth="48" TextAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextBrush}" />
+                                            <Slider x:Name="SldVisionMaxScale" Minimum="0.80" Maximum="2.00" TickFrequency="0.01" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="SldVisionScale_ValueChanged" />
+                                        </DockPanel>
+                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_SaveVisionScales}" Click="BtnSaveVisionScales_Click" Padding="20,10" HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- Global Hotkeys -->
                                 <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
                                     <StackPanel>
-                                        <TextBlock Text="Global Hotkeys" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
-                                        <TextBlock Text="Phím tắt toàn cục hoạt động ngay cả khi ứng dụng bị ẩn." FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,16" />
+                                        <TextBlock Text="{DynamicResource ui_Settings_GlobalHotkeys}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
+                                        <TextBlock Text="{DynamicResource ui_Settings_HotkeysBlurb}" FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
 
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="TOGGLE APP VISIBILITY (Ẩn/Hiện SmartMacroAI)" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Settings_ToggleApp}" />
                                         <StackPanel Orientation="Horizontal" Margin="0,6,0,16">
-                                            <ComboBox x:Name="CmbToggleAppMod" Width="130" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" />
-                                            <TextBlock Text="  +  " FontSize="14" Foreground="{StaticResource SubtextBrush}" VerticalAlignment="Center" />
-                                            <ComboBox x:Name="CmbToggleAppKey" Width="90" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" />
+                                            <ComboBox x:Name="CmbToggleAppMod" Width="130"
+                                                      Style="{StaticResource DarkComboBoxStyle}" FontSize="12" />
+                                            <TextBlock Text="{DynamicResource ui_Settings_Plus}" FontSize="14" Foreground="{StaticResource SubtextBrush}" VerticalAlignment="Center" />
+                                            <ComboBox x:Name="CmbToggleAppKey" Width="90"
+                                                      Style="{StaticResource DarkComboBoxStyle}" FontSize="12" />
                                         </StackPanel>
 
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="TOGGLE TARGET WINDOW (Ẩn/Hiện cửa sổ mục tiêu)" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Settings_ToggleTarget}" />
                                         <StackPanel Orientation="Horizontal" Margin="0,6,0,16">
-                                            <ComboBox x:Name="CmbToggleTargetMod" Width="130" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" />
-                                            <TextBlock Text="  +  " FontSize="14" Foreground="{StaticResource SubtextBrush}" VerticalAlignment="Center" />
-                                            <ComboBox x:Name="CmbToggleTargetKey" Width="90" Background="{StaticResource BaseBrush}" Foreground="{StaticResource TextBrush}" FontSize="12" />
+                                            <ComboBox x:Name="CmbToggleTargetMod" Width="130"
+                                                      Style="{StaticResource DarkComboBoxStyle}" FontSize="12" />
+                                            <TextBlock Text="{DynamicResource ui_Settings_Plus}" FontSize="14" Foreground="{StaticResource SubtextBrush}" VerticalAlignment="Center" />
+                                            <ComboBox x:Name="CmbToggleTargetKey" Width="90"
+                                                      Style="{StaticResource DarkComboBoxStyle}" FontSize="12" />
                                         </StackPanel>
 
-                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="Save Hotkeys" Click="BtnSaveHotkeys_Click" Padding="20,10" HorizontalAlignment="Left" />
+                                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_SaveHotkeys}" Click="BtnSaveHotkeys_Click" Padding="20,10" HorizontalAlignment="Left" />
                                     </StackPanel>
                                 </Border>
 
                                 <!-- Tray Info -->
                                 <Border Style="{StaticResource CardStyle}" Padding="20">
                                     <StackPanel>
-                                        <TextBlock Text="System Tray" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
-                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource SubtextBrush}" Text="Khi ẩn bằng hotkey, ứng dụng sẽ thu nhỏ vào khay hệ thống (System Tray). Nhấp đúp vào biểu tượng tray hoặc nhấn phím tắt để hiện lại. Click chuột phải để xem menu khẩn cấp." />
+                                        <TextBlock Text="{DynamicResource ui_Settings_SystemTray}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource SubtextBrush}" Text="{DynamicResource ui_Settings_TrayBlurb}" />
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
+                            </TabItem>
+                            <TabItem Header="{DynamicResource ui_Settings_Tab_Mouse}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel MaxWidth="600" Margin="0,8,0,0">
+                                        <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <TextBlock Text="{DynamicResource ui_MouseSettings_Title}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
+                                                <TextBlock Text="{DynamicResource ui_MouseSettings_Blurb}" FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
+                                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_MouseSettings_Profile}" />
+                                                <ComboBox x:Name="CmbMouseProfile" Width="220" Margin="0,6,0,16" HorizontalAlignment="Left"
+                                                          Style="{StaticResource DarkComboBoxStyle}" FontSize="12"
+                                                          SelectionChanged="CmbMouseProfile_SelectionChanged" />
+                                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_MouseSettings_Jitter}" />
+                                                <DockPanel Margin="0,6,0,8">
+                                                    <TextBlock x:Name="TxtMouseJitterValue" DockPanel.Dock="Right" MinWidth="36" TextAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextBrush}" />
+                                                    <Slider x:Name="SldMouseJitter" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                            VerticalAlignment="Center" ValueChanged="SldMouseJitter_ValueChanged" />
+                                                </DockPanel>
+                                                <CheckBox x:Name="ChkMouseOvershoot" Content="{DynamicResource ui_MouseSettings_Overshoot}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"
+                                                          Checked="ChkMousePreview_Changed" Unchecked="ChkMousePreview_Changed" />
+                                                <CheckBox x:Name="ChkMouseMicroPause" Content="{DynamicResource ui_MouseSettings_MicroPause}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"
+                                                          Checked="ChkMousePreview_Changed" Unchecked="ChkMousePreview_Changed" />
+                                                <CheckBox x:Name="ChkMouseRawBypass" Content="{DynamicResource ui_MouseSettings_RawBypass}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
+                                                <CheckBox x:Name="ChkMouseHwSim" Content="{DynamicResource ui_MouseSettings_HwSim}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,16" />
+                                                <Button x:Name="BtnSaveMouseSettings" Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_MouseSettings_Save}"
+                                                        Click="BtnSaveMouseSettings_Click" Padding="20,10" HorizontalAlignment="Left" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource CardStyle}" Padding="12" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <TextBlock Text="{DynamicResource ui_MouseSettings_PreviewTitle}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
+                                                <Border Background="#11111B" BorderBrush="#45475A" BorderThickness="1" Height="200" ClipToBounds="True">
+                                                    <Canvas x:Name="MousePreviewCanvas" Width="360" Height="200" SnapsToDevicePixels="True">
+                                                        <Polyline x:Name="MousePreviewPolyline" Stroke="#89B4FA" StrokeThickness="2" />
+                                                    </Canvas>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
+                        </TabControl>
                     </Grid>
 
                     <!-- ────── About View ────── -->
@@ -725,43 +1052,39 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel MaxWidth="520" HorizontalAlignment="Center" Margin="0,8,0,24">
                                 <!-- App Header with Logo -->
-                                <Border CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="{StaticResource AccentBlueColor}" Offset="0" />
-                                            <GradientStop Color="{StaticResource AccentLavenderColor}" Offset="1" />
-                                        </LinearGradientBrush>
-                                    </Border.Background>
+                                <Border Background="{StaticResource MantelBrush}"
+                                        BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
+                                        Padding="16,12" Margin="0,0,0,12">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <Border Width="80" Height="80" CornerRadius="16" Margin="0,0,0,12" HorizontalAlignment="Center">
+                                        <Border Width="64" Height="64" CornerRadius="0" Margin="0,0,0,8" HorizontalAlignment="Center">
                                             <Border.Background>
                                                 <ImageBrush ImageSource="/Assets/logo.png" Stretch="UniformToFill" />
                                             </Border.Background>
                                         </Border>
-                                        <TextBlock Text="SmartMacroAI" FontSize="28" FontWeight="Bold" Foreground="#11111B" HorizontalAlignment="Center" />
-                                        <TextBlock Text="v1.1.0 — RPA Automation Tool" FontSize="13" Foreground="#313244" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                        <TextBlock Text="{DynamicResource ui_WindowTitle}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="{DynamicResource ui_About_Tagline}" FontSize="12" Foreground="{StaticResource SubtextBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" />
                                     </StackPanel>
                                 </Border>
 
                                 <!-- Description -->
                                 <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
                                     <StackPanel>
-                                        <TextBlock Text="Non-invasive automation for Windows 10/11. Uses Win32 API to send clicks and keystrokes directly to background windows without hijacking your physical mouse or keyboard."
+                                        <TextBlock Text="{DynamicResource ui_About_Description}"
                                                    TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource SubtextBrush}" LineHeight="20" />
                                         <Border Height="1" Background="{StaticResource Surface1Brush}" Margin="0,14" />
-                                        <TextBlock Text="Technology Stack" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource OverlayBrush}" Margin="0,0,0,6" />
-                                        <TextBlock Text=".NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR" FontSize="11" Foreground="{StaticResource SubtextBrush}" />
+                                        <TextBlock Text="{DynamicResource ui_About_TechStack}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource OverlayBrush}" Margin="0,0,0,6" />
+                                        <TextBlock Text="{DynamicResource ui_About_TechLine}" FontSize="11" Foreground="{StaticResource SubtextBrush}" />
                                     </StackPanel>
                                 </Border>
 
                                 <!-- Author Credit & Contact -->
                                 <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="Created by Phạm Duy - Giải pháp tự động hóa thông minh."
+                                        <TextBlock Text="{DynamicResource ui_About_Credit}"
                                                    FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"
                                                    HorizontalAlignment="Center" TextAlignment="Center" />
                                         <Border Height="1" Background="{StaticResource Surface1Brush}" Margin="0,12" />
-                                        <TextBlock Text="Liên hệ hỗ trợ" FontSize="12" FontWeight="SemiBold"
+                                        <TextBlock Text="{DynamicResource ui_About_Contact}" FontSize="12" FontWeight="SemiBold"
                                                    Foreground="{StaticResource OverlayBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
                                         <TextBlock HorizontalAlignment="Center">
                                             <Hyperlink NavigateUri="https://www.facebook.com/neull" RequestNavigate="Hyperlink_RequestNavigate"
@@ -777,16 +1100,16 @@
                                     <DockPanel>
                                         <Button x:Name="BtnCheckUpdates"
                                                 DockPanel.Dock="Right"
-                                                Content="🔄 Kiểm tra cập nhật"
+                                                Content="{DynamicResource ui_About_CheckUpdates}"
                                                 Click="BtnCheckUpdates_Click"
                                                 Style="{StaticResource PrimaryButtonStyle}"
                                                 Padding="14,8" FontSize="12"
                                                 VerticalAlignment="Center" />
                                         <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                                            <TextBlock Text="Cập nhật phần mềm"
+                                            <TextBlock Text="{DynamicResource ui_About_UpdatesTitle}"
                                                        FontSize="13" FontWeight="SemiBold"
                                                        Foreground="{StaticResource TextBrush}" />
-                                            <TextBlock Text="Phiên bản hiện tại: v1.1.0"
+                                            <TextBlock Text="{DynamicResource ui_About_CurrentVersion}"
                                                        FontSize="11" Margin="0,3,0,0"
                                                        Foreground="{StaticResource SubtextBrush}" />
                                         </StackPanel>
@@ -794,29 +1117,21 @@
                                 </Border>
 
                                 <!-- Coffee / Support -->
-                                <Border CornerRadius="12" Padding="24,20" Margin="0,0,0,12">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#3E1E1E2E" Offset="0" />
-                                            <GradientStop Color="#3E313244" Offset="1" />
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                    <Border.BorderBrush>
-                                        <SolidColorBrush Color="{StaticResource AccentPeachColor}" Opacity="0.4" />
-                                    </Border.BorderBrush>
-                                    <Border.BorderThickness>1</Border.BorderThickness>
+                                <Border Background="{StaticResource BaseBrush}"
+                                        BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
+                                        Padding="14,12" Margin="0,0,0,12">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="&#x2615; Mời cà phê" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentPeachBrush}" HorizontalAlignment="Center" Margin="0,0,0,8" />
-                                        <TextBlock Text="Mời tác giả một ly cà phê nếu phần mềm này giúp ích cho bạn!"
+                                        <TextBlock Text="{DynamicResource ui_Coffee_Title}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentPeachBrush}" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                                        <TextBlock Text="{DynamicResource ui_Coffee_Blurb}"
                                                    TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource SubtextBrush}"
                                                    HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,16" />
-                                        <Border Width="220" Height="220" CornerRadius="12"
+                                        <Border Width="220" Height="220" CornerRadius="0"
                                                 Background="White"
-                                                BorderBrush="{StaticResource Surface1Brush}" BorderThickness="2"
+                                                BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
                                                 HorizontalAlignment="Center" Padding="4">
                                             <Image Source="/Assets/qr_bank.png" Stretch="Uniform" />
                                         </Border>
-                                        <TextBlock Text="MB Bank — PHAM QUOC DUY — 379997999" FontSize="10"
+                                        <TextBlock Text="{DynamicResource ui_Bank_Line}" FontSize="10"
                                                    Foreground="{StaticResource SubtextBrush}" HorizontalAlignment="Center"
                                                    Margin="0,8,0,0" />
                                     </StackPanel>
@@ -829,26 +1144,25 @@
             </Border>
 
             <!-- ────── Active Process Bar ────── -->
-            <Border Grid.Row="2" Background="{StaticResource Surface0Brush}" Padding="16,6" BorderBrush="{StaticResource Surface1Brush}" BorderThickness="0,1,0,0">
+            <Border Grid.Row="2" Background="{StaticResource Surface0Brush}" Padding="12,4" BorderBrush="{StaticResource Surface1Brush}" BorderThickness="0,1,0,0">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Style="{StaticResource DangerButtonStyle}" Click="BtnStopAllMacros_Click" Padding="12,4" FontSize="11">
-                        <TextBlock><Run Text="&#x23F9;" /><Run Text=" STOP ALL MACROS" /></TextBlock>
-                    </Button>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource DangerButtonStyle}" Click="BtnStopAllMacros_Click" Padding="12,4" FontSize="11"
+                            Content="{DynamicResource ui_StopAllMacros}" />
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse x:Name="ProcessDot" Width="8" Height="8" Fill="{StaticResource AccentGreenBrush}" Margin="0,0,8,0" />
-                        <TextBlock x:Name="TxtActiveProcesses" Text="Active: 0 macros running" FontSize="12" Foreground="{StaticResource SubtextBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtActiveProcesses" FontSize="12" Foreground="{StaticResource SubtextBrush}" VerticalAlignment="Center" />
                     </StackPanel>
                 </DockPanel>
             </Border>
 
             <!-- ────── Log Console Panel ────── -->
-            <Border Grid.Row="3" Background="{StaticResource MantelBrush}" BorderBrush="{StaticResource Surface0Brush}" BorderThickness="0,1,0,0" MaxHeight="180">
+            <Border Grid.Row="3" Background="{StaticResource MantelBrush}" BorderBrush="{StaticResource Surface0Brush}" BorderThickness="0,1,0,0">
                 <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" Margin="16,8,16,4">
-                        <Button DockPanel.Dock="Right" Style="{StaticResource SidebarButtonStyle}" Content="Clear" Click="BtnClearLog_Click" FontSize="11" Padding="8,4" />
-                        <TextBlock Text="LOG CONSOLE" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource OverlayBrush}" VerticalAlignment="Center" />
+                    <DockPanel DockPanel.Dock="Top" Margin="8,4,8,2">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource SidebarButtonStyle}" Content="{DynamicResource ui_Log_Clear}" Click="BtnClearLog_Click" FontSize="11" Padding="6,2" />
+                        <TextBlock Text="{DynamicResource ui_LogConsole}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource OverlayBrush}" VerticalAlignment="Center" />
                     </DockPanel>
-                    <ScrollViewer x:Name="LogScrollViewer" VerticalScrollBarVisibility="Auto" Margin="16,0,16,8">
+                    <ScrollViewer x:Name="LogScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="8,0,8,4">
                         <TextBlock x:Name="TxtLogConsole" FontSize="11" FontFamily="Consolas" Foreground="{StaticResource SubtextBrush}" TextWrapping="Wrap" />
                     </ScrollViewer>
                 </DockPanel>
@@ -860,18 +1174,18 @@
                 Background="{StaticResource MantelBrush}"
                 BorderBrush="{StaticResource Surface0Brush}"
                 BorderThickness="0,1,0,0"
-                Padding="24,8">
+                Padding="16,6">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Right" FontSize="11"
                            Foreground="{StaticResource OverlayBrush}"
                            VerticalAlignment="Center">
-                    <Run Text="SmartMacroAI v1.1.0" />
-                    <Run Text=" | " />
-                    <Run Text=".NET 8.0" />
+                    <Run Text="{DynamicResource ui_Footer_Runtime}" />
+                    <Run Text="{DynamicResource ui_Footer_Sep}" />
+                    <Run Text="{DynamicResource ui_Footer_DotNet}" />
                 </TextBlock>
                 <TextBlock FontSize="11" Foreground="{StaticResource SubtextBrush}"
                            VerticalAlignment="Center">
-                    <Run Text="Created by Phạm Duy - Giải pháp tự động hóa thông minh." FontWeight="Medium" />
+                    <Run Text="{DynamicResource ui_Footer_Credit}" FontWeight="Medium" />
                 </TextBlock>
             </DockPanel>
         </Border>

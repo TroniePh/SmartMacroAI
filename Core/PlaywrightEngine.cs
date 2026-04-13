@@ -16,6 +16,7 @@ public sealed class PlaywrightEngine : IAsyncDisposable
 
     /// <summary>
     /// Creates Playwright, launches Chromium (non-headless), and opens a page if needed.
+    /// Runs the heavy initialization on a thread-pool thread to guarantee no UI blocking.
     /// </summary>
     public async Task EnsureBrowserStartedAsync(CancellationToken cancellationToken = default)
     {
@@ -24,14 +25,17 @@ public sealed class PlaywrightEngine : IAsyncDisposable
         if (_page is not null)
             return;
 
-        _playwright = await Playwright.CreateAsync().ConfigureAwait(false);
-
-        _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        await Task.Run(async () =>
         {
-            Headless = false,
-        }).ConfigureAwait(false);
+            _playwright = await Playwright.CreateAsync().ConfigureAwait(false);
 
-        _page = await _browser.NewPageAsync().ConfigureAwait(false);
+            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = false,
+            }).ConfigureAwait(false);
+
+            _page = await _browser.NewPageAsync().ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -58,6 +62,15 @@ public sealed class PlaywrightEngine : IAsyncDisposable
         await EnsureBrowserStartedAsync(cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         await _page!.FillAsync(selector, text).WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<string> ScrapeSelectorAsync(string selector, CancellationToken cancellationToken = default)
+    {
+        await EnsureBrowserStartedAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var element = await _page!.QuerySelectorAsync(selector).ConfigureAwait(false);
+        if (element is null) return string.Empty;
+        return await element.InnerTextAsync().ConfigureAwait(false) ?? string.Empty;
     }
 
     public async ValueTask DisposeAsync()

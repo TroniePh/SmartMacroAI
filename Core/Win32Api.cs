@@ -1,7 +1,10 @@
+using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 namespace SmartMacroAI.Core;
 
@@ -40,9 +43,11 @@ public static class Win32Api
     //  CONSTANTS — ShowWindow / Hotkey
     // ═══════════════════════════════════════════════
 
-    public const int SW_HIDE    = 0;
-    public const int SW_SHOW    = 5;
-    public const int SW_RESTORE = 9;
+    public const int SW_HIDE      = 0;
+    public const int SW_MAXIMIZE  = 3;
+    public const int SW_SHOW      = 5;
+    /// <summary>Restore / normal placement (e.g. after temporary maximize for snip).</summary>
+    public const int SW_RESTORE   = 9;
     public const int WM_HOTKEY  = 0x0312;
 
     // ═══════════════════════════════════════════════
@@ -50,15 +55,16 @@ public static class Win32Api
     // ═══════════════════════════════════════════════
 
     public const uint PW_CLIENTONLY         = 0x00000001;
+    /// <summary>Forces composition of layered / GPU-accelerated content (Windows 8.1+).</summary>
     public const uint PW_RENDERFULLCONTENT  = 0x00000002;
-    public const uint SRCCOPY              = 0x00CC0020;
+    public const uint SRCCOPY               = 0x00CC0020;
 
     // ═══════════════════════════════════════════════
     //  P/INVOKE — Message Dispatch
     // ═══════════════════════════════════════════════
 
-    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, StringBuilder lParam);
@@ -113,8 +119,7 @@ public static class Win32Api
     //  P/INVOKE — Window Geometry
     // ═══════════════════════════════════════════════
 
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
+    [DllImport("user32.dll")]
     public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -125,9 +130,8 @@ public static class Win32Api
     //  P/INVOKE — Background Window Capture
     // ═══════════════════════════════════════════════
 
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, uint nFlags);
+    [DllImport("user32.dll")]
+    public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, int nFlags);
 
     // ═══════════════════════════════════════════════
     //  P/INVOKE — GDI (for bitmap operations)
@@ -149,9 +153,7 @@ public static class Win32Api
     public static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
 
     [DllImport("gdi32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int wDest, int hDest,
-                                      IntPtr hdcSrc, int xSrc, int ySrc, uint rop);
+    public static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
 
     [DllImport("gdi32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -176,7 +178,7 @@ public static class Win32Api
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
 
-    [DllImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
 
@@ -191,6 +193,10 @@ public static class Win32Api
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool FlashWindowEx(ref FLASHWINFO pwfi);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -218,17 +224,37 @@ public static class Win32Api
         public int Top;
         public int Right;
         public int Bottom;
-
-        public int Width  => Right - Left;
-        public int Height => Bottom - Top;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FLASHWINFO
+    {
+        public uint cbSize;
+        public IntPtr hwnd;
+        public uint dwFlags;
+        public uint uCount;
+        public uint dwTimeout;
+    }
+
+    public const uint FLASHW_ALL      = 0x00000003;
+    public const uint FLASHW_TIMERNOFG = 0x0000000C;
 
     // ═══════════════════════════════════════════════
     //  HELPER — Coordinate Packing
     // ═══════════════════════════════════════════════
 
     public static IntPtr MakeLParam(int x, int y)
-        => (IntPtr)((y << 16) | (x & 0xFFFF));
+        => (IntPtr)(((y & 0xFFFF) << 16) | (x & 0xFFFF));
+
+    /// <summary>Maps client coordinates to screen pixels for the given window.</summary>
+    public static Point ClientPointToScreen(IntPtr hWnd, int clientX, int clientY)
+    {
+        var pt = new POINT { X = clientX, Y = clientY };
+        if (hWnd == IntPtr.Zero || !IsWindow(hWnd))
+            return new Point(clientX, clientY);
+        ClientToScreen(hWnd, ref pt);
+        return new Point(pt.X, pt.Y);
+    }
 
     // ═══════════════════════════════════════════════
     //  STEALTH CLICK — Humanized async sequence that
@@ -244,6 +270,47 @@ public static class Win32Api
         PostMessage(hWnd, WM_LBUTTONDOWN, (IntPtr)MK_LBUTTON, lParam);
         await Task.Delay(Random.Shared.Next(20, 50));
         PostMessage(hWnd, WM_LBUTTONUP, IntPtr.Zero, lParam);
+    }
+
+    /// <summary>
+    /// PostMessage-based left click at a client point from template matching, with small
+    /// random offset and ClientToScreen/ScreenToClient round-trip for DPI-aware hosts
+    /// (emulators, per-monitor DPI). Prefer this over <see cref="ControlClickAsync"/> for
+    /// image-found coordinates only.
+    /// </summary>
+    public static async Task StealthClickOnFoundImage(
+        IntPtr hwnd,
+        Point bitmapPoint,
+        int randomOffsetRange = 3,
+        CancellationToken cancellationToken = default)
+    {
+        if (hwnd == IntPtr.Zero || !IsWindow(hwnd))
+            return;
+
+        var rng = new Random();
+        int offsetX = rng.Next(-randomOffsetRange, randomOffsetRange + 1);
+        int offsetY = rng.Next(-randomOffsetRange, randomOffsetRange + 1);
+
+        int clientX = bitmapPoint.X + offsetX;
+        int clientY = bitmapPoint.Y + offsetY;
+
+        var pt = new POINT { X = clientX, Y = clientY };
+        ClientToScreen(hwnd, ref pt);
+        ScreenToClient(hwnd, ref pt);
+
+        IntPtr lParam = MakeLParam(pt.X, pt.Y);
+        IntPtr wParam = (IntPtr)MK_LBUTTON;
+
+        PostMessage(hwnd, WM_MOUSEMOVE, IntPtr.Zero, lParam);
+        await Task.Delay(rng.Next(20, 60), cancellationToken);
+
+        PostMessage(hwnd, WM_LBUTTONDOWN, wParam, lParam);
+        await Task.Delay(rng.Next(30, 90), cancellationToken);
+
+        PostMessage(hwnd, WM_LBUTTONUP, IntPtr.Zero, lParam);
+
+        Debug.WriteLine(
+            $"[StealthClick] HWND=0x{hwnd:X} FinalClient=({pt.X},{pt.Y}) Offset=({offsetX},{offsetY})");
     }
 
     public static async Task ControlRightClickAsync(IntPtr hWnd, int x, int y)
@@ -280,6 +347,97 @@ public static class Win32Api
     {
         if (hwnd != IntPtr.Zero && IsWindow(hwnd))
             ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+    }
+
+    /// <summary>
+    /// Brings the window to the foreground and flashes it so the user
+    /// can visually identify which window handle they selected.
+    /// </summary>
+    public static void IdentifyWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !IsWindow(hwnd))
+            return;
+
+        if (IsIconic(hwnd))
+            ShowWindow(hwnd, SW_RESTORE);
+
+        SetForegroundWindow(hwnd);
+
+        var fi = new FLASHWINFO
+        {
+            cbSize   = (uint)Marshal.SizeOf<FLASHWINFO>(),
+            hwnd     = hwnd,
+            dwFlags  = FLASHW_ALL | FLASHW_TIMERNOFG,
+            uCount   = 5,
+            dwTimeout = 0,
+        };
+        FlashWindowEx(ref fi);
+    }
+
+    // ═══════════════════════════════════════════════
+    //  CHILD-WINDOW RESOLUTION (text fields)
+    //  ── Notepad, WinForms, etc. host the real edit
+    //     control in a child window (class "Edit").
+    // ═══════════════════════════════════════════════
+
+    private static readonly HashSet<string> TextInputClassNames =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Edit", "RichEdit20W", "RichEdit20A", "RichEditD2DPT",
+            "RICHEDIT50W", "TextBox", "WindowsForms10.EDIT.app",
+            "Scintilla", "ATL:Edit",
+        };
+
+    /// <summary>
+    /// Finds the first child window whose class name indicates a text-input
+    /// control (Edit, RichEdit, etc.).  Returns <paramref name="parentHwnd"/>
+    /// unchanged when no text-input child exists (single-window apps, games).
+    /// </summary>
+    public static IntPtr FindInputChild(IntPtr parentHwnd)
+    {
+        if (parentHwnd == IntPtr.Zero || !IsWindow(parentHwnd))
+            return parentHwnd;
+
+        IntPtr found = IntPtr.Zero;
+
+        EnumChildWindows(parentHwnd, (child, _) =>
+        {
+            string className = GetWindowClassName(child);
+            if (TextInputClassNames.Contains(className))
+            {
+                found = child;
+                return false;
+            }
+
+            // Partial match for runtime-suffixed WinForms class names
+            if (className.StartsWith("WindowsForms10.EDIT", StringComparison.OrdinalIgnoreCase)
+             || className.StartsWith("WindowsForms10.RichEdit", StringComparison.OrdinalIgnoreCase))
+            {
+                found = child;
+                return false;
+            }
+
+            return true;
+        }, IntPtr.Zero);
+
+        return found != IntPtr.Zero ? found : parentHwnd;
+    }
+
+    // ═══════════════════════════════════════════════
+    //  DPI-SAFE COORDINATE HELPERS
+    // ═══════════════════════════════════════════════
+
+    /// <summary>
+    /// Returns true when (<paramref name="x"/>, <paramref name="y"/>) falls
+    /// inside the client rectangle of <paramref name="hWnd"/>.
+    /// Useful for guarding against off-target clicks caused by DPI mismatch.
+    /// </summary>
+    public static bool IsInsideClientArea(IntPtr hWnd, int x, int y)
+    {
+        if (!GetClientRect(hWnd, out RECT rc)) return false;
+        int cw = rc.Right - rc.Left;
+        int ch = rc.Bottom - rc.Top;
+        return x >= 0 && y >= 0 && x < cw && y < ch;
     }
 
     // ═══════════════════════════════════════════════
@@ -351,120 +509,103 @@ public static class Win32Api
     }
 
     // ═══════════════════════════════════════════════
-    //  BACKGROUND WINDOW CAPTURE (PrintWindow)
-    //  ── works even if the window is behind other
-    //     windows, minimized, or off-screen.
+    //  BACKGROUND WINDOW CAPTURE (PrintWindow + BitBlt fallback)
+    //  ── Client-area capture; PW_RENDERFULLCONTENT for GPU composition.
     // ═══════════════════════════════════════════════
 
+    /// <summary>Per capture spec: nudge suspended hosts (same numeric value as <c>WM_CREATE</c>).</summary>
+    private const uint WM_CAPTURE_SPEC_WAKE = 0x0001;
+
     /// <summary>
-    /// Captures a screenshot of the window identified by <paramref name="hWnd"/>
-    /// using <c>PrintWindow</c> with <c>PW_RENDERFULLCONTENT</c>.
-    /// The target window does NOT need to be in the foreground.
-    /// Returns null when the handle is invalid or the window has zero size.
+    /// Background client-area capture: <c>PrintWindow</c> with GPU-friendly flags, then
+    /// <see cref="CaptureWindowBitBlt"/> if the result looks like a black frame.
     /// </summary>
-    public static Bitmap? CaptureWindow(IntPtr hWnd)
+    public static Bitmap? CaptureHiddenWindow(IntPtr hwnd)
     {
-        if (hWnd == IntPtr.Zero || !IsWindow(hWnd))
+        if (hwnd == IntPtr.Zero || !IsWindow(hwnd))
             return null;
 
-        if (!GetWindowRect(hWnd, out RECT rect))
+        SendMessage(hwnd, WM_CAPTURE_SPEC_WAKE, IntPtr.Zero, IntPtr.Zero);
+
+        if (!GetClientRect(hwnd, out RECT rect))
             return null;
 
-        int width  = rect.Width;
-        int height = rect.Height;
+        int width  = rect.Right - rect.Left;
+        int height = rect.Bottom - rect.Top;
+
+        bool iconicOrZero = IsIconic(hwnd) || width <= 0 || height <= 0;
+        if (iconicOrZero)
+        {
+            ShowWindow(hwnd, SW_RESTORE);
+            Thread.Sleep(300);
+            if (!GetClientRect(hwnd, out rect))
+                return null;
+            width  = rect.Right - rect.Left;
+            height = rect.Bottom - rect.Top;
+        }
+
         if (width <= 0 || height <= 0)
             return null;
 
         var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-        using Graphics gfx = Graphics.FromImage(bmp);
-        IntPtr hdc = gfx.GetHdc();
-
-        try
+        using (var g = Graphics.FromImage(bmp))
         {
-            // PW_RENDERFULLCONTENT (0x2) captures DWM-composed content
-            // even when the window is occluded or minimized.
-            bool ok = PrintWindow(hWnd, hdc, PW_RENDERFULLCONTENT);
-            if (!ok)
+            IntPtr hdc = g.GetHdc();
+            try
             {
-                // Fallback: try client-only capture
-                ok = PrintWindow(hWnd, hdc, PW_CLIENTONLY);
+                // PW_RENDERFULLCONTENT = 0x00000002
+                bool success = PrintWindow(hwnd, hdc, 0x00000002);
+                if (!success)
+                    PrintWindow(hwnd, hdc, 0x00000003); // PW_CLIENTONLY | PW_RENDERFULLCONTENT
             }
+            finally
+            {
+                g.ReleaseHdc(hdc);
+            }
+        }
 
-            return ok ? bmp : null;
-        }
-        finally
+        if (IsBlackBitmap(bmp))
         {
-            gfx.ReleaseHdc(hdc);
+            bmp.Dispose();
+            return CaptureWindowBitBlt(hwnd, width, height);
         }
+
+        return bmp;
     }
 
-    /// <summary>
-    /// Same as <see cref="CaptureWindow"/> but captures only the client area
-    /// (excludes title bar and borders).
-    /// </summary>
-    public static Bitmap? CaptureWindowClient(IntPtr hWnd)
+    /// <summary>BitBlt fallback when <see cref="CaptureHiddenWindow"/> yields a black <c>PrintWindow</c> frame.</summary>
+    public static Bitmap CaptureWindowBitBlt(IntPtr hwnd, int width, int height)
     {
-        if (hWnd == IntPtr.Zero || !IsWindow(hWnd))
-            return null;
-
-        if (!GetClientRect(hWnd, out RECT rect))
-            return null;
-
-        int width  = rect.Width;
-        int height = rect.Height;
-        if (width <= 0 || height <= 0)
-            return null;
-
         var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-        using Graphics gfx = Graphics.FromImage(bmp);
-        IntPtr hdc = gfx.GetHdc();
-
+        using var g = Graphics.FromImage(bmp);
+        IntPtr hdcDest = g.GetHdc();
+        IntPtr hdcSrc  = GetDC(hwnd);
         try
         {
-            bool ok = PrintWindow(hWnd, hdc, PW_RENDERFULLCONTENT | PW_CLIENTONLY);
-            return ok ? bmp : null;
+            // SRCCOPY = 0x00CC0020
+            BitBlt(hdcDest, 0, 0, width, height, hdcSrc, 0, 0, 0x00CC0020);
         }
         finally
         {
-            gfx.ReleaseHdc(hdc);
+            g.ReleaseHdc(hdcDest);
+            ReleaseDC(hwnd, hdcSrc);
         }
+
+        return bmp;
     }
 
-    /// <summary>
-    /// Alternative capture path using BitBlt from the window's own DC.
-    /// Useful as a fallback when PrintWindow returns a black frame
-    /// (some hardware-accelerated apps).
-    /// </summary>
-    public static Bitmap? CaptureWindowBitBlt(IntPtr hWnd)
+    private static bool IsBlackBitmap(Bitmap bmp)
     {
-        if (hWnd == IntPtr.Zero || !IsWindow(hWnd))
-            return null;
-
-        if (!GetWindowRect(hWnd, out RECT rect))
-            return null;
-
-        int width  = rect.Width;
-        int height = rect.Height;
-        if (width <= 0 || height <= 0)
-            return null;
-
-        IntPtr hdcWindow = GetDC(hWnd);
-        IntPtr hdcMemory = CreateCompatibleDC(hdcWindow);
-        IntPtr hBitmap   = CreateCompatibleBitmap(hdcWindow, width, height);
-        IntPtr hOld      = SelectObject(hdcMemory, hBitmap);
-
-        try
+        var rng = new Random();
+        for (int i = 0; i < 10; i++)
         {
-            BitBlt(hdcMemory, 0, 0, width, height, hdcWindow, 0, 0, SRCCOPY);
-            SelectObject(hdcMemory, hOld);
+            int x = rng.Next(bmp.Width);
+            int y = rng.Next(bmp.Height);
+            var pixel = bmp.GetPixel(x, y);
+            if (pixel.R > 10 || pixel.G > 10 || pixel.B > 10)
+                return false;
+        }
 
-            return Image.FromHbitmap(hBitmap);
-        }
-        finally
-        {
-            DeleteObject(hBitmap);
-            DeleteDC(hdcMemory);
-            ReleaseDC(hWnd, hdcWindow);
-        }
+        return true;
     }
 }

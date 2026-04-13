@@ -6,6 +6,7 @@ obj/
 .vs/
 .vscode/
 *.user
+New Text Document.txt
 
 # Bỏ qua dữ liệu cục bộ của người dùng (Không đẩy lên Git)
 Scripts/
@@ -18,6 +19,8 @@ hotkey_settings.json
 # Build artifacts & published output
 publish/
 installer_out/
+release_output/
+_compile_out/
 
 # Obfuscator output
 obfuscar.xml

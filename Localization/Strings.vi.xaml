@@ -1,0 +1,187 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+
+    <system:String x:Key="ui_WindowTitle">SmartMacroAI</system:String>
+    <system:String x:Key="ui_Navigation">ĐIỀU HƯỚNG</system:String>
+    <system:String x:Key="ui_Dashboard">Bảng điều khiển</system:String>
+    <system:String x:Key="ui_MacroEditor">Trình soạn macro</system:String>
+    <system:String x:Key="ui_ImageRecognition">Nhận dạng hình ảnh</system:String>
+    <system:String x:Key="ui_OcrEngine">OCR</system:String>
+    <system:String x:Key="ui_StealthManager">Quản lý Stealth</system:String>
+    <system:String x:Key="ui_Settings">Cài đặt</system:String>
+    <system:String x:Key="ui_About">Giới thiệu</system:String>
+
+    <system:String x:Key="ui_Header_Ready">Sẵn sàng</system:String>
+    <system:String x:Key="ui_Header_Running">Đang chạy...</system:String>
+    <system:String x:Key="ui_RecordSuffix"> Ghi</system:String>
+    <system:String x:Key="ui_NewMacro">+ Macro mới</system:String>
+
+    <system:String x:Key="ui_Page_Dashboard">Bảng điều khiển</system:String>
+    <system:String x:Key="ui_PageSub_Dashboard">Trạm đa nhiệm — chạy nhiều macro đồng thời</system:String>
+    <system:String x:Key="ui_Page_MacroEditor">Trình soạn macro</system:String>
+    <system:String x:Key="ui_PageSub_MacroEditor">Thiết kế quy trình tự động bằng kéo thả</system:String>
+    <system:String x:Key="ui_Page_ImageRecognition">Nhận dạng hình ảnh</system:String>
+    <system:String x:Key="ui_PageSub_ImageRecognition">Cấu hình khớp mẫu cho cửa sổ nền</system:String>
+    <system:String x:Key="ui_Page_OcrEngine">OCR</system:String>
+    <system:String x:Key="ui_PageSub_OcrEngine">Cài đặt và thử nhận dạng chữ</system:String>
+    <system:String x:Key="ui_Page_StealthManager">Quản lý Stealth</system:String>
+    <system:String x:Key="ui_PageSub_StealthManager">Ẩn/hiện cửa sổ — PostMessage vẫn hoạt động trên cửa sổ ẩn</system:String>
+    <system:String x:Key="ui_Page_Settings">Cài đặt</system:String>
+    <system:String x:Key="ui_PageSub_Settings">Phím tắt toàn cục và tùy chọn ứng dụng</system:String>
+    <system:String x:Key="ui_Page_About">Giới thiệu</system:String>
+    <system:String x:Key="ui_PageSub_About">SmartMacroAI — Phạm Duy</system:String>
+
+    <system:String x:Key="ui_SavedMacros">Macro đã lưu</system:String>
+    <system:String x:Key="ui_RunsToday">Chạy hôm nay</system:String>
+    <system:String x:Key="ui_ActiveThreads">Luồng hoạt động</system:String>
+    <system:String x:Key="ui_Dashboard_HubTitle">Trạm điều hành đa nhiệm</system:String>
+    <system:String x:Key="ui_Dashboard_EmptyHint">Chưa có kịch bản nào. Hãy tạo và lưu macro trong Trình soạn macro.</system:String>
+    <system:String x:Key="ui_StopAll">⏹ DỪNG TẤT CẢ</system:String>
+    <system:String x:Key="ui_Refresh">↻ Làm mới</system:String>
+
+    <system:String x:Key="ui_Col_MacroName">Tên kịch bản</system:String>
+    <system:String x:Key="ui_ActionCountFmt">{0} thao tác</system:String>
+    <system:String x:Key="ui_Tooltip_RenameMacro">Đổi tên macro</system:String>
+    <system:String x:Key="ui_Col_TargetWindow">Cửa sổ mục tiêu</system:String>
+    <system:String x:Key="ui_Tooltip_FlashWindow">Nhấp nháy cửa sổ này</system:String>
+    <system:String x:Key="ui_Col_Stealth">Stealth</system:String>
+    <system:String x:Key="ui_Tooltip_StealthRun">Ẩn cửa sổ mục tiêu khi chạy</system:String>
+    <system:String x:Key="ui_Col_HW">HW</system:String>
+    <system:String x:Key="ui_Tooltip_HWMode">Chế độ phần cứng — SendInput cho game DirectInput</system:String>
+    <system:String x:Key="ui_Col_RunCount">Số lần chạy</system:String>
+    <system:String x:Key="ui_Tooltip_RunCount">0 = vô hạn</system:String>
+    <system:String x:Key="ui_Col_Interval">Giãn cách (phút)</system:String>
+    <system:String x:Key="ui_Tooltip_Interval">0 = không giãn cách</system:String>
+    <system:String x:Key="ui_Col_Status">Trạng thái</system:String>
+    <system:String x:Key="ui_Col_Controls">Điều khiển</system:String>
+    <system:String x:Key="ui_Start">▶ Chạy</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteMacro">Xóa kịch bản</system:String>
+
+    <system:String x:Key="ui_Status_Ready">Sẵn sàng</system:String>
+    <system:String x:Key="ui_Status_Running">Đang chạy</system:String>
+    <system:String x:Key="ui_Status_Waiting">Đang chờ</system:String>
+    <system:String x:Key="ui_Status_Stopped">Đã dừng</system:String>
+    <system:String x:Key="ui_Status_Error">Lỗi</system:String>
+
+    <system:String x:Key="ui_Lbl_MacroName">TÊN MACRO</system:String>
+    <system:String x:Key="ui_DefaultMacroName">Macro chưa đặt tên</system:String>
+    <system:String x:Key="ui_Lbl_TargetWindowPid">CỬA SỔ MỤC TIÊU (chọn theo PID)</system:String>
+    <system:String x:Key="ui_Tooltip_FlashSelected">Nhấp nháy cửa sổ đã chọn</system:String>
+    <system:String x:Key="ui_Tooltip_RefreshWindows">Làm mới danh sách cửa sổ</system:String>
+    <system:String x:Key="ui_Tooltip_SelectPid">Chọn một cửa sổ cụ thể theo PID</system:String>
+    <system:String x:Key="ui_Lbl_Repeat">LẶP LẠI</system:String>
+    <system:String x:Key="ui_Tooltip_Repeat">Số lần chạy cả macro. Lặp = 0 nghĩa là lặp vô hạn (dùng Dừng hoặc Tự dừng sau phút).</system:String>
+    <system:String x:Key="ui_Lbl_AutoStopMinutes">TỰ DỪNG (PHÚT)</system:String>
+    <system:String x:Key="ui_Tooltip_AutoStopMinutes">Dừng macro sau số phút này. 0 = không giới hạn. Dùng được khi lặp vô hạn (Lặp = 0).</system:String>
+    <system:String x:Key="ui_Tooltip_HWCheckbox">Chế độ phần cứng — dùng SendInput với mã quét để vượt DirectInput. Con trỏ có thể nhích nhẹ.</system:String>
+    <system:String x:Key="ui_HwMode">Chế độ HW</system:String>
+    <system:String x:Key="ui_Save">Lưu</system:String>
+    <system:String x:Key="ui_Load">Mở</system:String>
+    <system:String x:Key="ui_Clear">Xóa</system:String>
+    <system:String x:Key="ui_Run">▶ Chạy</system:String>
+    <system:String x:Key="ui_Stop">⏹ Dừng</system:String>
+    <system:String x:Key="ui_ActionsPanel">Thao tác</system:String>
+    <system:String x:Key="ui_Action_Click">Click</system:String>
+    <system:String x:Key="ui_Action_TypeText">Gõ chữ</system:String>
+    <system:String x:Key="ui_Action_Wait">Chờ</system:String>
+    <system:String x:Key="ui_Action_IfImage">NẾU thấy ảnh</system:String>
+    <system:String x:Key="ui_Action_IfText">NẾU thấy chữ</system:String>
+    <system:String x:Key="ui_Action_WebAction">Thao tác Web</system:String>
+    <system:String x:Key="ui_MacroWorkflow">Quy trình macro</system:String>
+    <system:String x:Key="ui_CanvasPlaceholder">Kéo thao tác vào đây để tạo macro</system:String>
+
+    <system:String x:Key="ui_Vision_Title">Thử khớp mẫu (chụp nền)</system:String>
+    <system:String x:Key="ui_Lbl_WindowTitle">TIÊU ĐỀ CỬA SỔ</system:String>
+    <system:String x:Key="ui_Tooltip_Refresh">Làm mới</system:String>
+    <system:String x:Key="ui_Lbl_TemplatePath">ĐƯỜNG DẪN ẢNH MẪU</system:String>
+    <system:String x:Key="ui_Browse">Duyệt</system:String>
+    <system:String x:Key="ui_Snip">✂ Cắt ảnh</system:String>
+    <system:String x:Key="ui_Lbl_Threshold">NGƯỠNG</system:String>
+    <system:String x:Key="ui_TestCaptureMatch">Thử chụp &amp; khớp</system:String>
+    <system:String x:Key="ui_Vision_ClickFound">🖱 Click vị trí đã khớp</system:String>
+    <system:String x:Key="ui_Vision_RoiHeader">🔍 Vùng tìm (ROI) — để trống để quét cả cửa sổ</system:String>
+    <system:String x:Key="ui_Vision_RoiTipX">Cạnh trái (pixel từ mép trái cửa sổ)</system:String>
+    <system:String x:Key="ui_Vision_RoiTipY">Cạnh trên (pixel từ mép trên cửa sổ)</system:String>
+    <system:String x:Key="ui_Vision_RoiTipW">Chiều rộng vùng quét</system:String>
+    <system:String x:Key="ui_Vision_RoiTipH">Chiều cao vùng quét</system:String>
+    <system:String x:Key="ui_Vision_RoiClear">✕ Xóa</system:String>
+    <system:String x:Key="ui_Vision_RoiClearTip">Xóa ROI — quét cả cửa sổ</system:String>
+    <system:String x:Key="ui_Result">Kết quả</system:String>
+    <system:String x:Key="ui_Vision_ResultPlaceholder">Chạy thử để xem kết quả tại đây...</system:String>
+
+    <system:String x:Key="ui_Ocr_Title">Thử trích xuất chữ OCR (chụp nền)</system:String>
+    <system:String x:Key="ui_ExtractText">Trích xuất chữ</system:String>
+    <system:String x:Key="ui_ExtractedText">Chữ đã trích xuất</system:String>
+    <system:String x:Key="ui_Ocr_ResultPlaceholder">Chạy thử để xem kết quả OCR tại đây...</system:String>
+
+    <system:String x:Key="ui_Stealth_ShowAll">Hiện tất cả</system:String>
+    <system:String x:Key="ui_Stealth_Title">Quản lý Stealth</system:String>
+    <system:String x:Key="ui_Stealth_Subtitle">Ẩn/hiện bất kỳ cửa sổ nào. Macro vẫn gửi click vào cửa sổ đã ẩn.</system:String>
+    <system:String x:Key="ui_Col_Window">Cửa sổ</system:String>
+    <system:String x:Key="ui_Col_StealthStatus">Trạng thái</system:String>
+    <system:String x:Key="ui_Col_StealthAction">Hành động</system:String>
+    <system:String x:Key="ui_StealthStatus_Visible">Hiện</system:String>
+    <system:String x:Key="ui_StealthStatus_Hidden">Ẩn</system:String>
+    <system:String x:Key="ui_StealthToggle_Show">Hiện</system:String>
+    <system:String x:Key="ui_StealthToggle_Hide">Ẩn</system:String>
+
+    <system:String x:Key="ui_Settings_GlobalHotkeys">Phím tắt toàn cục</system:String>
+    <system:String x:Key="ui_Settings_HotkeysBlurb">Phím tắt hoạt động ngay cả khi ứng dụng bị ẩn.</system:String>
+    <system:String x:Key="ui_Settings_ToggleApp">ẨN/HIỆN ỨNG DỤNG (SmartMacroAI)</system:String>
+    <system:String x:Key="ui_Settings_ToggleTarget">ẨN/HIỆN CỬA SỔ MỤC TIÊU</system:String>
+    <system:String x:Key="ui_Settings_Plus">  +  </system:String>
+    <system:String x:Key="ui_SaveHotkeys">Lưu phím tắt</system:String>
+    <system:String x:Key="ui_Settings_SystemTray">Khay hệ thống</system:String>
+    <system:String x:Key="ui_Settings_TrayBlurb">Khi ẩn bằng hotkey, ứng dụng thu nhỏ vào khay hệ thống. Nhấp đúp biểu tượng hoặc nhấn phím tắt để hiện lại. Chuột phải để xem menu khẩn cấp.</system:String>
+    <system:String x:Key="ui_Settings_Language">Ngôn ngữ / Language</system:String>
+    <system:String x:Key="ui_Settings_VisionScaleTitle">Nhận dạng ảnh — khoảng tỷ lệ mẫu</system:String>
+    <system:String x:Key="ui_Settings_VisionScaleNote">Chỉnh nếu khớp mẫu kém trên màn hình DPI lạ (125%, 150%, …). Macro thử nhiều tỷ lệ giữa min và max.</system:String>
+    <system:String x:Key="ui_Settings_VisionScaleMin">Tỷ lệ tối thiểu</system:String>
+    <system:String x:Key="ui_Settings_VisionScaleMax">Tỷ lệ tối đa</system:String>
+    <system:String x:Key="ui_SaveVisionScales">Lưu khoảng tỷ lệ</system:String>
+    <system:String x:Key="ui_Toast_VisionScalesSaved">Đã lưu khoảng tỷ lệ nhận dạng ảnh.</system:String>
+
+    <system:String x:Key="ui_Settings_Tab_General">Chung</system:String>
+    <system:String x:Key="ui_Settings_Tab_Mouse">Chuột</system:String>
+    <system:String x:Key="ui_MouseSettings_Title">Chuột mượt (chế độ phần cứng)</system:String>
+    <system:String x:Key="ui_MouseSettings_Blurb">Dùng khi bật “Chế độ phần cứng” trên macro hoặc dòng dashboard: con trỏ vật lý đi theo đường Bézier và có thể thêm nhiễu. Click PostMessage (stealth) không đổi.</system:String>
+    <system:String x:Key="ui_MouseSettings_Profile">Hồ sơ tốc độ</system:String>
+    <system:String x:Key="ui_MouseSettings_Jitter">Cường độ nhiễu (0–100)</system:String>
+    <system:String x:Key="ui_MouseSettings_Overshoot">Bật vượt mục tiêu rồi chỉnh lại</system:String>
+    <system:String x:Key="ui_MouseSettings_MicroPause">Tạm dừng vi mô ngẫu nhiên trên đường</system:String>
+    <system:String x:Key="ui_MouseSettings_RawBypass">Raw input bypass (SetCursorPos + WM_MOUSEMOVE tới cửa sổ)</system:String>
+    <system:String x:Key="ui_MouseSettings_HwSim">Giả lập phần cứng (interception.dll nếu có)</system:String>
+    <system:String x:Key="ui_MouseSettings_Save">Lưu cài đặt chuột</system:String>
+    <system:String x:Key="ui_MouseSettings_PreviewTitle">Xem trước đường đi</system:String>
+    <system:String x:Key="ui_Toast_MouseSettingsSaved">Đã lưu cài đặt chuột.</system:String>
+
+    <system:String x:Key="ui_About_Tagline">v1.2.0 — Công cụ tự động RPA</system:String>
+    <system:String x:Key="ui_About_Description">Tự động hóa không chiếm chuột/bàn phím vật lý trên Windows 10/11. Dùng Win32 API để gửi click và phím tới cửa sổ nền.</system:String>
+    <system:String x:Key="ui_About_TechStack">Công nghệ</system:String>
+    <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
+    <system:String x:Key="ui_About_Credit">Tác giả Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
+    <system:String x:Key="ui_About_Contact">Liên hệ hỗ trợ</system:String>
+    <system:String x:Key="ui_About_CheckUpdates">🔄 Kiểm tra cập nhật</system:String>
+    <system:String x:Key="ui_About_UpdatesTitle">Cập nhật phần mềm</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.2.0</system:String>
+    <system:String x:Key="ui_Coffee_Title">☕ Mời cà phê</system:String>
+    <system:String x:Key="ui_Coffee_Blurb">Mời tác giả một ly cà phê nếu phần mềm này giúp ích cho bạn!</system:String>
+    <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
+
+    <system:String x:Key="ui_StopAllMacros">⏹ DỪNG TẤT CẢ MACRO</system:String>
+    <system:String x:Key="ui_ProcessBar_Fmt">Đang chạy: {0} macro  |  Đã ẩn: {1} cửa sổ</system:String>
+    <system:String x:Key="ui_LogConsole">NHẬT KÝ</system:String>
+    <system:String x:Key="ui_Log_Clear">Xóa</system:String>
+
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.2.0</system:String>
+    <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
+    <system:String x:Key="ui_Footer_Sep"> | </system:String>
+    <system:String x:Key="ui_Footer_Credit">Tác giả Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
+
+    <system:String x:Key="ui_Toast_SelectHotkeys">Vui lòng chọn đủ các ô phím tắt.</system:String>
+    <system:String x:Key="ui_Toast_HotkeysSavedFmt">Đã lưu phím tắt: App={0}, Target={1}</system:String>
+
+    <system:String x:Key="ui_Lang_English">English</system:String>
+    <system:String x:Key="ui_Lang_Vietnamese">Tiếng Việt</system:String>
+</ResourceDictionary>

@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Version (semver without leading v)
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}" -replace '^v', ''
+          "APP_SEMVER=$v" >> $env:GITHUB_ENV
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish
+        run: dotnet publish SmartMacroAI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./release_output
+
+      - name: Portable EXE for release
+        shell: pwsh
+        run: Copy-Item -Path ./release_output/SmartMacroAI.exe -Destination "SmartMacroAI_${{ github.ref_name }}_win-x64.exe" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Compile installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          & $iscc "installer\SmartMacroAI_Setup.iss" /DMyAppVersion=${{ env.APP_SEMVER }}
+
+      - name: Zip artifact
+        shell: pwsh
+        run: Compress-Archive -Path ./release_output/* -DestinationPath "SmartMacroAI_${{ github.ref_name }}.zip" -Force
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            SmartMacroAI_${{ github.ref_name }}.zip
+            SmartMacroAI_${{ github.ref_name }}_win-x64.exe
+            installer_out/SmartMacroAI_Setup_v${{ env.APP_SEMVER }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
