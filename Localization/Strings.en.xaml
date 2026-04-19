@@ -196,7 +196,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Path preview</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Mouse settings saved.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.2.0 — RPA Automation Tool</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.3.0 — RPA Automation Tool</system:String>
     <system:String x:Key="ui_About_Description">Non-invasive automation for Windows 10/11. Uses Win32 API to send clicks and keystrokes directly to background windows without hijacking your physical mouse or keyboard.</system:String>
     <system:String x:Key="ui_About_TechStack">Technology Stack</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -204,7 +204,7 @@
     <system:String x:Key="ui_About_Contact">Support contact</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Check for updates</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Software updates</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.2.0</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.3.0</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Buy me a coffee</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Treat the author to a coffee if this app helps you!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
@@ -214,7 +214,7 @@
     <system:String x:Key="ui_LogConsole">LOG CONSOLE</system:String>
     <system:String x:Key="ui_Log_Clear">Clear</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.2.0</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.3.0</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Created by Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
@@ -224,4 +224,32 @@
 
     <system:String x:Key="ui_Lang_English">English</system:String>
     <system:String x:Key="ui_Lang_Vietnamese">Tiếng Việt</system:String>
+
+    <!-- Data CSV Tab -->
+    <system:String x:Key="ui_Settings_DataCSV_Title">Data-Driven CSV Execution</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Subtitle">Load a CSV or pipe-separated TXT file to run your macro once per row. Column headers become {{variable}} names (spaces stripped, case-insensitive).</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_LoadButton">📂 Load CSV/TXT</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_ClearButton">🗑 Clear</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_SkipOnError">Skip to next row if an error occurs (continue running)</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_SkipDesc">When unchecked, the macro stops on the first error. When checked, failed rows are logged and skipped.</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_HowToUse">How to use:</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step1">1. Create a CSV/TXT file with headers in row 1 (e.g. username, password, email)</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step2">2. Load the file above — each column header becomes a variable: {{username}}</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step3">3. In your macro, use {{username}}, {{password}} in TypeText, Navigate, or Telegram actions</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step4">4. Run the macro — it will execute once per row with those variables substituted</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step5">5. After each row, check logs/run_*.txt for the execution log</system:String>
+
+    <!-- Telegram Tab -->
+    <system:String x:Key="ui_Settings_Telegram_Title">Telegram Notification Settings</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Subtitle">Save your default Bot Token and Chat ID for quick use in Send Telegram actions. No need to re-enter every time.</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TokenLabel">Default Bot Token</system:String>
+    <system:String x:Key="ui_Settings_Telegram_ChatIdLabel">Default Chat ID</system:String>
+    <system:String x:Key="ui_Settings_Telegram_SaveButton">💾 Save Telegram</system:String>
+    <system:String x:Key="ui_Settings_Telegram_HowToTitle">How to get your credentials:</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Step1">Bot Token: Open Telegram → @BotFather → /newbot → set name → copy token (format: 123456789:ABCdefGHI...)</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Step2">Chat ID: Add bot to group/channel → send /start → visit t.me/getidsbot to get the Chat ID.</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Step3">Proxy: If needed, enter proxy in the Proxy field in AdsPower Profile or use system proxy.</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TestTitle">Quick Test</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TestButton">📨 Send Test Message Now</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TestDesc">Sends a test message "SmartMacroAI connected successfully!" to the saved Chat ID. Each message includes your PC name [PC: ...] for identification.</system:String>
 </ResourceDictionary>

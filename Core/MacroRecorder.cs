@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Windows.Input;
 using SmartMacroAI.Models;
 
 namespace SmartMacroAI.Core;
@@ -14,6 +15,16 @@ public sealed class MacroRecorder : IDisposable
 {
     private const uint VK_F10 = 0x79;
     private const int MIN_WAIT_MS = 100;
+
+    // Modifiers-only VK codes — captured but not recorded as standalone actions
+    private static readonly uint[] MODIFIER_KEYS =
+    [
+        0x10, 0x11, 0x12,       // Shift, Ctrl, Alt
+        0xA0, 0xA1,             // Left/Right Shift
+        0xA2, 0xA3,             // Left/Right Ctrl
+        0xA4, 0xA5,             // Left/Right Alt
+        0x5B, 0x5C,             // Left/Right Win
+    ];
 
     private readonly GlobalHookManager _hookManager = new();
     private readonly Stopwatch _stopwatch = new();
@@ -64,6 +75,7 @@ public sealed class MacroRecorder : IDisposable
 
         _hookManager.MouseClicked += OnMouseClicked;
         _hookManager.KeyPressed += OnKeyPressed;
+        _hookManager.KeyPressedFull += OnKeyPressedFull;
 
         _stopwatch.Restart();
         _hookManager.StartRecording();
@@ -84,6 +96,7 @@ public sealed class MacroRecorder : IDisposable
 
         _hookManager.MouseClicked -= OnMouseClicked;
         _hookManager.KeyPressed -= OnKeyPressed;
+        _hookManager.KeyPressedFull -= OnKeyPressedFull;
 
         FlushTextBuffer();
 
@@ -124,7 +137,7 @@ public sealed class MacroRecorder : IDisposable
     }
 
     // ═══════════════════════════════════════════════
-    //  KEYBOARD HANDLER
+    //  KEYBOARD HANDLER — printable chars (TypeAction)
     // ═══════════════════════════════════════════════
 
     private void OnKeyPressed(uint vkCode, char ch)
@@ -145,6 +158,47 @@ public sealed class MacroRecorder : IDisposable
             AddWaitIfNeeded();
 
         _textBuffer.Append(ch);
+    }
+
+    // ═══════════════════════════════════════════════
+    //  KEYBOARD HANDLER — non-printable keys (KeyPressAction)
+    // ═══════════════════════════════════════════════
+
+    private void OnKeyPressedFull(uint vkCode, uint scanCode, bool shift, bool ctrl, bool alt)
+    {
+        if (vkCode == VK_F10)
+        {
+            StopKeyPressed?.Invoke();
+            return;
+        }
+
+        // Skip pure modifier key presses (they're tracked for combo building only)
+        if (MODIFIER_KEYS.Contains(vkCode))
+            return;
+
+        // Only printable chars go into the text buffer; everything else → KeyPressAction
+        FlushTextBuffer();
+
+        var key = KeyInterop.KeyFromVirtualKey((int)vkCode);
+        string keyName = key.ToString();
+
+        // Build modifier-prefixed display name
+        if (ctrl && shift) keyName = $"Ctrl+Shift+{keyName}";
+        else if (ctrl)     keyName = $"Ctrl+{keyName}";
+        else if (shift)    keyName = $"Shift+{keyName}";
+        else if (alt)      keyName = $"Alt+{keyName}";
+
+        var kpa = new KeyPressAction
+        {
+            VirtualKeyCode = (int)vkCode,
+            ScanCode       = (int)scanCode,
+            KeyName        = keyName,
+            Modifiers      = new KeyModifiers { Shift = shift, Ctrl = ctrl, Alt = alt },
+            HoldDurationMs = 50,
+        };
+        _recordedActions.Add(kpa);
+        Log?.Invoke($"  KeyPress [{keyName}] VK=0x{vkCode:X2} SC=0x{scanCode:X2}");
+        ActionRecorded?.Invoke(_recordedActions.Count);
     }
 
     // ═══════════════════════════════════════════════

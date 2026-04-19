@@ -25,6 +25,12 @@ public class MacroScript
     public bool LoopCsvHasHeader { get; set; } = true;
 
     /// <summary>
+    /// When true and a data-driven CSV run hits an error on one row, execution skips that row
+    /// and continues with the next row instead of stopping the entire macro.
+    /// </summary>
+    public bool LoopCsvSkipOnError { get; set; } = true;
+
+    /// <summary>
     /// The Win32 window title pattern used to locate the target HWND at runtime.
     /// Supports partial matching (e.g. "Notepad" will match "Untitled - Notepad").
     /// </summary>
@@ -54,4 +60,40 @@ public class MacroScript
     /// Ordered list of actions that form the macro workflow.
     /// </summary>
     public List<MacroAction> Actions { get; set; } = [];
+
+    /// <summary>
+    /// Default Telegram Bot Token used for auto-completion notifications (optional, per-script override).
+    /// </summary>
+    public string? TelegramBotToken { get; set; }
+
+    /// <summary>
+    /// Default Telegram Chat ID used for auto-completion notifications (optional, per-script override).
+    /// </summary>
+    public string? TelegramChatId { get; set; }
+
+    /// <summary>
+    /// When true, SmartMacroAI sends a Telegram notification on macro completion (success or error).
+    /// Uses <see cref="TelegramBotToken"/> and <see cref="TelegramChatId"/>.
+    /// </summary>
+    public bool SendTelegramOnComplete { get; set; } = false;
+
+    /// <summary>
+    /// HTML-formatted message sent via Telegram when the macro completes successfully.
+    /// Supports placeholders: {MacroName}, {RowsDone}, {RowsTotal}, {Duration}, {MachineName}.
+    /// </summary>
+    public string TelegramCompleteMessage { get; set; } =
+        "✅ <b>{MacroName}</b> chạy xong!\n" +
+        "📊 Hoàn thành: <b>{RowsDone}/{RowsTotal}</b> dòng\n" +
+        "⏱ Thời gian: <code>{Duration}</code>\n" +
+        "💻 Máy: <code>{MachineName}</code>";
+
+    /// <summary>
+    /// HTML-formatted message sent via Telegram when the macro completes with errors.
+    /// Supports placeholders: {MacroName}, {RowsDone}, {RowsTotal}, {ErrorMessage}, {MachineName}.
+    /// </summary>
+    public string TelegramErrorMessage { get; set; } =
+        "❌ <b>{MacroName}</b> bị lỗi!\n" +
+        "📊 Hoàn thành: <b>{RowsDone}/{RowsTotal}</b> dòng\n" +
+        "🔴 Lỗi: <code>{ErrorMessage}</code>\n" +
+        "💻 Máy: <code>{MachineName}</code>";
 }

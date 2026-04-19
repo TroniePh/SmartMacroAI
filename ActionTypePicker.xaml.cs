@@ -33,6 +33,8 @@ public partial class ActionTypePicker : Window
             new("WebNavigate", "Web: Điều hướng"),
             new("WebClick", "Web: Nhấp"),
             new("WebType", "Web: Gõ chữ"),
+            new("KeyPress", "Nhấn phím (Key Press)"),
+            new("Telegram", "Gửi Telegram"),
         };
         LstTypes.DisplayMemberPath = nameof(ActionTypePickItem.LabelVi);
         LstTypes.SelectedValuePath = nameof(ActionTypePickItem.Key);

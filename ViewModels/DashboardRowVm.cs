@@ -13,7 +13,16 @@ namespace SmartMacroAI.ViewModels;
 public sealed class DashboardRowVm : INotifyPropertyChanged
 {
     public string FilePath { get; set; } = "";
-    public MacroScript Script { get; set; } = new();
+    public MacroScript Script
+    {
+        get => _script;
+        set
+        {
+            _script = value;
+            _sendTelegramOnComplete = value.SendTelegramOnComplete;
+        }
+    }
+    private MacroScript _script = new();
 
     public string MacroName => Script.Name;
     public int ActionCount => Script.Actions.Count;
@@ -77,6 +86,22 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
     {
         get => _hardwareMode;
         set { if (_hardwareMode != value) { _hardwareMode = value; Notify(); } }
+    }
+
+    private bool _sendTelegramOnComplete;
+    public bool SendTelegramOnComplete
+    {
+        get => _sendTelegramOnComplete;
+        set
+        {
+            if (_sendTelegramOnComplete != value)
+            {
+                _sendTelegramOnComplete = value;
+                Script.SendTelegramOnComplete = value;
+                Notify();
+                ScriptManager.Save(Script, FilePath);
+            }
+        }
     }
 
     // Runtime state (not bound to UI)

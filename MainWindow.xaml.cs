@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -47,10 +47,6 @@ public partial class MainWindow : Window
 
     private readonly ObservableCollection<DashboardRowVm> _dashboardRows = [];
 
-    private readonly ObservableCollection<VariableLiveRowVm> _dashboardVariableRows = [];
-
-    private DispatcherTimer? _dashboardVariablesTimer;
-
     private bool _suppressWinRtOcrCombo;
 
     // ── Hotkey & Tray ──
@@ -75,7 +71,7 @@ public partial class MainWindow : Window
     // ── Update Checker ──
     /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
     public static string AppVersion => CurrentVersion;
-    private const string CurrentVersion   = "v1.2.3";
+    private const string CurrentVersion   = "v1.3.0";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
     /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
@@ -111,13 +107,6 @@ public partial class MainWindow : Window
         RegisterHotkeys();
         InitSettingsUi();
         StartAntiDetectionServices();
-        DashboardVariablesGrid.ItemsSource = _dashboardVariableRows;
-        _dashboardVariablesTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(600),
-        };
-        _dashboardVariablesTimer.Tick += (_, _) => RefreshDashboardVariablesPanel();
-        _dashboardVariablesTimer.Start();
         _ = CheckForUpdatesAsync(silent: true);
     }
 
@@ -304,6 +293,201 @@ public partial class MainWindow : Window
     private void BtnShowAllStealth_Click(object sender, RoutedEventArgs e) => ShowAllHiddenWindows();
 
     // ═══════════════════════════════════════════════════
+    //  ADS POWER PROFILE MANAGER
+    // ═══════════════════════════════════════════════════
+
+    private readonly ObservableCollection<ProfileRowVm> _profileRows = [];
+    private AdsPowerProfileStore _profileStore = new();
+
+    private void LoadProfileManager()
+    {
+        _profileStore = AdsPowerProfileStore.Load();
+        _profileRows.Clear();
+        foreach (var p in _profileStore.Profiles)
+        {
+            _profileRows.Add(new ProfileRowVm
+            {
+                ProfileId = p.ProfileId,
+                Name = p.Name,
+                ProxyHost = p.ProxyHost,
+                ProxyPort = p.ProxyPort,
+                ProxyUser = p.ProxyUser,
+                ProxyPassword = p.ProxyPassword,
+                Status = "",
+            });
+        }
+        ProfileGrid.ItemsSource = _profileRows;
+    }
+
+    private void BtnAddProfile_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ProfileEditDialog { Owner = this };
+        if (dlg.ShowDialog() != true) return;
+
+        var entry = new AdsPowerProfileEntry
+        {
+            ProfileId = dlg.ResultProfileId,
+            Name = dlg.ResultName,
+            ProxyHost = dlg.ResultProxyHost,
+            ProxyPort = dlg.ResultProxyPort,
+            ProxyUser = dlg.ResultProxyUser,
+            ProxyPassword = dlg.ResultProxyPassword,
+        };
+
+        _profileStore.Profiles.Add(entry);
+        _profileStore.Save();
+
+        _profileRows.Add(new ProfileRowVm
+        {
+            ProfileId = entry.ProfileId,
+            Name = entry.Name,
+            ProxyHost = entry.ProxyHost,
+            ProxyPort = entry.ProxyPort,
+            ProxyUser = entry.ProxyUser,
+            ProxyPassword = entry.ProxyPassword,
+            Status = "",
+        });
+
+        AppendLog($"[AdsPower] Đã thêm profile: {entry.ProfileId} ({entry.Name})");
+    }
+
+    private void BtnDeleteProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (ProfileGrid.SelectedItem is not ProfileRowVm selected)
+        {
+            ShowToast("Chọn một profile để xóa.", isError: true);
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"Xóa profile \"{selected.Name}\" ({selected.ProfileId})?",
+            "Xác nhận xóa",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes) return;
+
+        _profileStore.Profiles.RemoveAll(p => p.ProfileId == selected.ProfileId);
+        _profileStore.Save();
+        _profileRows.Remove(selected);
+        AppendLog($"[AdsPower] Đã xóa profile: {selected.ProfileId}");
+    }
+
+    private async void BtnTestProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (ProfileGrid.SelectedItem is not ProfileRowVm selected)
+        {
+            ShowToast("Chọn một profile để test.", isError: true);
+            return;
+        }
+
+        selected.Status = "Testing...";
+        AppendLog($"[AdsPower] Testing profile {selected.ProfileId}...");
+
+        try
+        {
+            var service = new AdsPowerService();
+            string endpoint = await service.StartProfileAsync(selected.ProfileId);
+            AppendLog($"[AdsPower] Browser launched — CDP: {Truncate(endpoint, 60)}");
+            await service.StopProfileAsync(selected.ProfileId);
+            selected.Status = "OK";
+            ShowToast($"Profile {selected.ProfileId} — kết nối thành công!", isError: false);
+        }
+        catch (Exception ex)
+        {
+            selected.Status = "Lỗi";
+            AppendLog($"[AdsPower] Test thất bại: {ex.Message}");
+            ShowToast($"Lỗi: {Truncate(ex.Message, 80)}", isError: true);
+        }
+    }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : string.Concat(value.AsSpan(0, maxLength), "…");
+
+    // ═══════════════════════════════════════════════════
+    //  SMA- SCRIPT SHARE (File menu)
+    // ═══════════════════════════════════════════════════
+
+    private void BtnShareScript_Click(object sender, RoutedEventArgs e)
+    {
+        if (_actions.Count == 0)
+        {
+            ShowToast("Không có bước nào để chia sẻ.", isError: true);
+            return;
+        }
+
+        SyncUiToScript();
+
+        try
+        {
+            string json = JsonSerializer.Serialize(_currentScript, new JsonSerializerOptions
+            {
+                WriteIndented = false,
+            });
+
+            string code = ScriptShareService.Export(json);
+
+            WinForms.Clipboard.SetText(code);
+            string preview = code.Length > 60 ? code.Substring(0, 60) + "..." : code;
+            AppendLog($"[Share] Đã copy SMA- code: {preview}");
+
+            MessageBox.Show(
+                $"Đã copy! Mã SMA- của bạn:\n\n{preview}\n\n({code.Length} ký tự)\n\nGửi mã này cho người khác để chia sẻ kịch bản macro.",
+                "Chia sẻ thành công",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"[Share] Lỗi export: {ex.Message}");
+            ShowToast($"Lỗi export: {ex.Message}", isError: true);
+        }
+    }
+
+    private void BtnImportScript_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new InputDialog("Nhập mã SMA-", "Dán mã SMA- vào đây:");
+        if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.InputText))
+            return;
+
+        string input = dlg.InputText.Trim();
+
+        try
+        {
+            string json = ScriptShareService.Import(input);
+            var script = JsonSerializer.Deserialize<MacroScript>(json);
+
+            if (script == null)
+            {
+                ShowToast("Mã không hợp lệ — không thể đọc kịch bản.", isError: true);
+                return;
+            }
+
+            _currentScript = script;
+            _actions.Clear();
+            foreach (var a in script.Actions)
+                _actions.Add(a);
+
+            SyncScriptToUi();
+            RebuildCanvas();
+            SetActiveView("MacroEditor");
+
+            AppendLog($"[Share] Đã nhập kịch bản: {script.Name} ({script.Actions.Count} bước)");
+            ShowToast($"Nhập thành công! {script.Actions.Count} bước — \"{script.Name}\"", isError: false);
+        }
+        catch (ScriptShareService.ShareCodeException ex)
+        {
+            AppendLog($"[Share] Lỗi import: {ex.Message}");
+            ShowToast("Mã không hợp lệ hoặc bị lỗi. Kiểm tra lại.", isError: true);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"[Share] Lỗi import: {ex.Message}");
+            ShowToast("Mã không hợp lệ hoặc bị lỗi. Kiểm tra lại.", isError: true);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════
     //  SYSTEM TRAY — dynamic menu
     // ═══════════════════════════════════════════════════
 
@@ -426,6 +610,7 @@ public partial class MainWindow : Window
         ImageRecognitionView.Visibility = Visibility.Collapsed;
         OcrEngineView.Visibility = Visibility.Collapsed;
         StealthManagerView.Visibility = Visibility.Collapsed;
+        ProfileManagerView.Visibility = Visibility.Collapsed;
         SettingsView.Visibility = Visibility.Collapsed;
         AboutView.Visibility = Visibility.Collapsed;
         ResetSidebarButtons();
@@ -453,6 +638,11 @@ public partial class MainWindow : Window
                 StealthManagerView.Visibility = Visibility.Visible;
                 BtnStealthManager.Style = (Style)FindResource("SidebarButtonActiveStyle");
                 LoadStealthManager();
+                break;
+            case "ProfileManager":
+                ProfileManagerView.Visibility = Visibility.Visible;
+                BtnProfileManager.Style = (Style)FindResource("SidebarButtonActiveStyle");
+                LoadProfileManager();
                 break;
             case "Settings":
                 SettingsView.Visibility = Visibility.Visible;
@@ -508,6 +698,7 @@ public partial class MainWindow : Window
         BtnImageRecognition.Style = s;
         BtnOcrEngine.Style = s;
         BtnStealthManager.Style = s;
+        BtnProfileManager.Style = s;
         BtnSettingsNav.Style = s;
         BtnAbout.Style = s;
     }
@@ -517,6 +708,7 @@ public partial class MainWindow : Window
     private void BtnImageRecognition_Click(object sender, RoutedEventArgs e) => SetActiveView("ImageRecognition");
     private void BtnOcrEngine_Click(object sender, RoutedEventArgs e) => SetActiveView("OcrEngine");
     private void BtnStealthManager_Click(object sender, RoutedEventArgs e) => SetActiveView("StealthManager");
+    private void BtnProfileManager_Click(object sender, RoutedEventArgs e) => SetActiveView("ProfileManager");
     private void BtnSettings_Click(object sender, RoutedEventArgs e) => SetActiveView("Settings");
     private void BtnAbout_Click(object sender, RoutedEventArgs e) => SetActiveView("About");
 
@@ -558,6 +750,7 @@ public partial class MainWindow : Window
         InitMouseSettingsUi();
         InitWinRtOcrLanguageCombo();
         LoadAntiDetectionFromSettings();
+        LoadTelegramSettingsFromSettings();
     }
 
     private void InitWinRtOcrLanguageCombo()
@@ -614,151 +807,6 @@ public partial class MainWindow : Window
         var app = AppSettings.Load();
         app.OcrLanguageTag = t;
         app.Save();
-    }
-
-    private void RefreshDashboardVariablesPanel()
-    {
-        if (_activeView != "Dashboard")
-            return;
-
-        DashboardRowVm? row = _dashboardRows.FirstOrDefault(r => r.IsRunning);
-        if (row?.Engine is null)
-        {
-            _dashboardVariableRows.Clear();
-            return;
-        }
-
-        IReadOnlyList<(string Name, string Value, string Source)> live = row.Engine.GetLiveVariableRows();
-        _dashboardVariableRows.Clear();
-        foreach ((string name, string value, string source) in live)
-        {
-            _dashboardVariableRows.Add(new VariableLiveRowVm
-            {
-                Name = name,
-                Value = value,
-                Source = source,
-            });
-        }
-    }
-
-    private void BtnDashboardAddVariable_Click(object sender, RoutedEventArgs e)
-    {
-        if (DashboardGrid.SelectedItem is not DashboardRowVm row)
-        {
-            ShowToast(LanguageManager.GetString("ui_Dashboard_AddVar_SelectRow"), isError: true);
-            return;
-        }
-
-        string? varName = PromptSimpleString(
-            LanguageManager.GetString("ui_Dashboard_AddVar_NameTitle"),
-            LanguageManager.GetString("ui_Dashboard_AddVar_NamePrompt"),
-            "myVar");
-        if (string.IsNullOrWhiteSpace(varName))
-            return;
-
-        varName = varName.Trim();
-        string? varValue = PromptSimpleString(
-            LanguageManager.GetString("ui_Dashboard_AddVar_ValueTitle"),
-            LanguageManager.GetString("ui_Dashboard_AddVar_ValuePrompt"),
-            "");
-
-        if (varValue is null)
-            return;
-
-        if (row.IsRunning && row.Engine is not null)
-        {
-            row.Engine.RuntimeStringVariables.Set(varName, varValue, "Manual");
-            AppendLog("[Biến] Đã đặt {{" + varName + "}} = \"" + Truncate(varValue, 40) + "\" (runtime).");
-            RefreshDashboardVariablesPanel();
-            return;
-        }
-
-        row.Script.Actions.Add(new SetVariableAction
-        {
-            VarName = varName,
-            Value = varValue,
-            Operation = "Set",
-            ValueSource = "Manual",
-        });
-        row.NotifyScriptMetadataChanged();
-        if (!string.IsNullOrWhiteSpace(row.FilePath))
-        {
-            try
-            {
-                ScriptManager.Save(row.Script, row.FilePath);
-                ShowToast(LanguageManager.GetString("ui_Dashboard_AddVar_SavedStep"), isError: false);
-            }
-            catch (Exception ex)
-            {
-                ShowToast($"{LanguageManager.GetString("ui_Dashboard_AddVar_SaveFailed")}: {ex.Message}", isError: true);
-            }
-        }
-        else
-            ShowToast(LanguageManager.GetString("ui_Dashboard_AddVar_UnsavedFile"), isError: false);
-    }
-
-    /// <summary>Small modal prompt; returns null if cancelled.</summary>
-    private string? PromptSimpleString(string title, string label, string initial)
-    {
-        var dlg = new Window
-        {
-            Title = title,
-            Width = 400,
-            Height = 170,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = this,
-            ResizeMode = ResizeMode.NoResize,
-            Background = TryFindResource("BaseBrush") as Brush ?? Brushes.WhiteSmoke,
-        };
-
-        var tb = new TextBox
-        {
-            Text = initial,
-            Margin = new Thickness(16, 8, 16, 0),
-            Foreground = TryFindResource("TextBrush") as Brush ?? Brushes.Black,
-            Background = TryFindResource("Surface0Brush") as Brush ?? Brushes.White,
-            BorderBrush = TryFindResource("Surface1Brush") as Brush ?? Brushes.Gray,
-            CaretBrush = TryFindResource("TextBrush") as Brush ?? Brushes.Black,
-            Padding = new Thickness(6, 4, 6, 4),
-        };
-
-        string? result = null;
-        var sp = new StackPanel();
-        sp.Children.Add(new TextBlock
-        {
-            Text = label,
-            Margin = new Thickness(16, 16, 16, 0),
-            Foreground = TryFindResource("TextBrush") as Brush ?? Brushes.Black,
-            TextWrapping = TextWrapping.Wrap,
-        });
-        sp.Children.Add(tb);
-
-        var btnOk = new Button
-        {
-            Content = LanguageManager.GetString("ui_Ok"),
-            Margin = new Thickness(0, 16, 8, 0),
-            Padding = new Thickness(16, 6, 16, 6),
-            IsDefault = true,
-        };
-        btnOk.Click += (_, _) => { result = tb.Text; dlg.DialogResult = true; };
-
-        var btnCancel = new Button
-        {
-            Content = LanguageManager.GetString("ui_Cancel"),
-            Margin = new Thickness(8, 16, 0, 0),
-            Padding = new Thickness(16, 6, 16, 6),
-            IsCancel = true,
-        };
-        var hp = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(16) };
-        hp.Children.Add(btnOk);
-        hp.Children.Add(btnCancel);
-        sp.Children.Add(hp);
-        dlg.Content = sp;
-        tb.Focus();
-        tb.SelectAll();
-
-        bool? ok = dlg.ShowDialog();
-        return ok == true ? result : null;
     }
 
     private void InitMouseSettingsUi()
@@ -1001,6 +1049,101 @@ public partial class MainWindow : Window
         ModuleAuditService.Instance.StartTitleRandomizerIfEnabled(s);
         ApplyCaptureAffinityFromSettings();
         ShowToast(LanguageManager.GetString("ui_Toast_AntiSaved"), isError: false);
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  TELEGRAM SETTINGS
+    // ═══════════════════════════════════════════════════
+
+    private void LoadTelegramSettingsFromSettings()
+    {
+        var s = AppSettings.Load();
+        TxtTelegramBotToken.Password = s.TelegramBotToken;
+        TxtTelegramChatId.Text = s.TelegramChatId;
+    }
+
+    private void BtnSaveTelegramSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var s = AppSettings.Load();
+        s.TelegramBotToken = TxtTelegramBotToken.Password.Trim();
+        s.TelegramChatId = TxtTelegramChatId.Text.Trim();
+        s.Save();
+        ShowToast("Đã lưu Telegram!", isError: false);
+    }
+
+    private async void BtnTestTelegramGlobal_Click(object sender, RoutedEventArgs e)
+    {
+        string botToken = TxtTelegramBotToken.Password.Trim();
+        string chatId = TxtTelegramChatId.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
+        {
+            ShowToast("Nhập Bot Token và Chat ID trước.", isError: true);
+            return;
+        }
+
+        AppendLog("[Telegram] Đang gửi test...");
+        bool ok = await TelegramService.SendAsync(
+            botToken,
+            chatId,
+            "✅ SmartMacroAI kết nối thành công!",
+            msg => Dispatcher.Invoke(() => AppendLog(msg)));
+
+        if (ok)
+            ShowToast("Tin nhắn test đã gửi thành công!", isError: false);
+        else
+            ShowToast("Gửi thất bại — kiểm tra Token, Chat ID và Internet.", isError: true);
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  DATA-DRIVEN CSV PANEL
+    // ═══════════════════════════════════════════════════
+
+    private string? _loadedCsvFilePath;
+    private List<Dictionary<string, string>>? _csvDataRows;
+
+    private void BtnLoadCsvData_Click(object sender, RoutedEventArgs e)
+    {
+        var rows = CsvDataService.LoadCsvFile();
+        if (rows == null)
+            return;
+
+        _csvDataRows = rows;
+
+        var dlg = new Microsoft.Win32.OpenFileDialog();
+        if (dlg.ShowDialog() == true)
+            _loadedCsvFilePath = dlg.FileName;
+
+        int count = rows.Count;
+        string fileName = string.IsNullOrEmpty(_loadedCsvFilePath) ? "loaded file" : System.IO.Path.GetFileName(_loadedCsvFilePath);
+        TxtCsvFileInfo.Text = $"{fileName} — {count} row{(count != 1 ? "s" : "")}";
+
+        var sb = new System.Text.StringBuilder();
+        if (rows.Count > 0)
+        {
+            sb.Append(string.Join(" | ", rows[0].Keys));
+            sb.AppendLine();
+            sb.AppendLine(new string('-', 60));
+            int preview = Math.Min(5, rows.Count);
+            for (int i = 0; i < preview; i++)
+            {
+                sb.Append(string.Join(" | ", rows[i].Values));
+                sb.AppendLine();
+            }
+            if (rows.Count > preview)
+                sb.AppendLine($"... ({rows.Count - preview} more rows)");
+        }
+        TxtCsvPreview.Text = sb.ToString();
+        CsvPreviewBorder.Visibility = System.Windows.Visibility.Visible;
+    }
+
+    private void BtnClearCsvData_Click(object sender, RoutedEventArgs e)
+    {
+        _csvDataRows = null;
+        _loadedCsvFilePath = null;
+        TxtCsvFileInfo.Text = "";
+        TxtCsvPreview.Text = "";
+        CsvPreviewBorder.Visibility = System.Windows.Visibility.Collapsed;
     }
 
     private void InitLanguageCombo()
@@ -1377,11 +1520,23 @@ public partial class MainWindow : Window
         "WebNavigate" => new WebNavigateAction(),
         "WebClick" => new WebClickAction(),
         "WebType" => new WebTypeAction(),
+        "KeyPress" => new KeyPressAction(),
         "OcrRegion" => new OcrRegionAction(),
         "ClearVar" => new ClearVariableAction(),
         "LogVar" => new LogVariableAction(),
+        "Telegram" => CreateTelegramActionWithDefaults(),
         _ => null,
     };
+
+    private static MacroAction CreateTelegramActionWithDefaults()
+    {
+        var defaults = AppSettings.Load();
+        return new TelegramAction
+        {
+            BotToken = defaults.TelegramBotToken,
+            ChatId = defaults.TelegramChatId,
+        };
+    }
 
     private void Workflow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -2119,6 +2274,7 @@ public partial class MainWindow : Window
         MacroAction? action = FindActionForCanvasTag(btn.Tag);
         if (action is null) return;
         var dlg = new ActionEditDialog(action, _editorTargetHwnd) { Owner = this };
+        dlg.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
         if (dlg.ShowDialog() == true)
         {
             RebuildCanvas();
@@ -2151,6 +2307,7 @@ public partial class MainWindow : Window
             return;
 
         var dialog = new ActionEditDialog(newAction, _editorTargetHwnd) { Owner = this };
+        dialog.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
         if (dialog.ShowDialog() != true)
             return;
 
@@ -2173,6 +2330,7 @@ public partial class MainWindow : Window
             return;
 
         var dialog = new ActionEditDialog(newAction, _editorTargetHwnd) { Owner = this };
+        dialog.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
         if (dialog.ShowDialog() != true)
             return;
 
@@ -2199,6 +2357,7 @@ public partial class MainWindow : Window
             return;
 
         var dialog = new ActionEditDialog(newAction, _editorTargetHwnd) { Owner = this };
+        dialog.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
         if (dialog.ShowDialog() != true)
             return;
 
@@ -2461,9 +2620,12 @@ public partial class MainWindow : Window
         SetRunningState(true);
         _cts = new CancellationTokenSource();
         _macroEngine = new MacroEngine { HardwareMode = ChkHardwareMode.IsChecked == true };
+        _macroEngine.DataRows = _csvDataRows;
         _macroEngine.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
         _macroEngine.ActionStarted += (action, idx) => Dispatcher.Invoke(() =>
             TxtStatus.Text = $"{LanguageManager.GetString("ui_Status_Running")} [{idx}] {action.DisplayName}");
+        _macroEngine.DataRowCompleted += (rowNum, total) => Dispatcher.Invoke(() =>
+            TxtStatus.Text = $"CSV Row {rowNum}/{total} done");
         _macroEngine.ExecutionFinished += () => Dispatcher.Invoke(() => { _runsToday++; SetRunningState(false); ShowToast("Macro completed.", isError: false); UpdateProcessBar(); });
         _macroEngine.ExecutionFaulted += ex => Dispatcher.Invoke(() => { SetRunningState(false); ShowToast($"Error: {ex.Message}", isError: true); UpdateProcessBar(); });
 
@@ -2510,12 +2672,33 @@ public partial class MainWindow : Window
         _recorder = new MacroRecorder();
         _recorder.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
 
+        // Minimize SmartMacroAI to get out of the way
+        WindowState = WindowState.Minimized;
+
+        // Bring target window to foreground at its CURRENT size — no resize!
+        // Use SW_RESTORE only if it was minimized, SW_SHOW otherwise to preserve size
+        if (Win32Api.IsIconic(hwnd))
+            Win32Api.ShowWindow(hwnd, 9); // SW_RESTORE
+        else
+            Win32Api.ShowWindow(hwnd, 5); // SW_SHOW (keep current size/position)
+        Win32Api.SetForegroundWindow(hwnd);
+
+        // Brief delay so the target window fully activates before recording begins
+        Thread.Sleep(300);
+
         try { _recorder.StartRecording(hwnd); }
-        catch (Exception ex) { ShowToast($"Recording failed: {ex.Message}", isError: true); _recorder.Dispose(); _recorder = null; return; }
+        catch (Exception ex)
+        {
+            WindowState = WindowState.Normal;
+            Activate();
+            ShowToast($"Recording failed: {ex.Message}", isError: true);
+            _recorder.Dispose();
+            _recorder = null;
+            return;
+        }
 
         var toolbar = new RecordToolbar(_recorder) { Owner = null };
         toolbar.RecordingFinished += OnRecordingFinished;
-        WindowState = WindowState.Minimized;
         toolbar.Show();
     }
 
@@ -2925,7 +3108,6 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
-        _dashboardVariablesTimer?.Stop();
         ModuleAuditService.Instance.StopTitleRandomizer();
         LanguageManager.UiLanguageChanged -= OnUiLanguageChanged;
         UnregisterHotkeys();
@@ -2968,7 +3150,17 @@ public partial class MainWindow : Window
         string clickPart = img.ClickOnFound ? " \U0001F3AF Auto-Click" : " No-Click";
         return Path.GetFileName(img.ImagePath) + clickPart + roiInfo;
     }
+}
 
-    private static string Truncate(string value, int maxLength) =>
-        value.Length <= maxLength ? value : string.Concat(value.AsSpan(0, maxLength), "...");
+public class BoolToTelegramTooltipConverter : System.Windows.Data.IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    {
+        return value is true
+            ? "Telegram: BẬT — Sẽ thông báo khi chạy xong"
+            : "Telegram: TẮT — Nhấn để bật";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        => throw new NotSupportedException();
 }

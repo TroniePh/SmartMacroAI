@@ -5,9 +5,11 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1E1E2E"
-        FontFamily="Segoe UI">
+        FontFamily="Segoe UI"
+        KeyboardNavigation.TabNavigation="Cycle"
+        KeyboardNavigation.ControlTabNavigation="Cycle">
 
-    <Grid Margin="20">
+    <Grid Margin="20" KeyboardNavigation.TabNavigation="Contained">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

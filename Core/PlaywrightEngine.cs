@@ -1,18 +1,45 @@
+// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Playwright;
 
 namespace SmartMacroAI.Core;
 
 /// <summary>
+/// Browser launch mode for web automation actions.
+/// </summary>
+public enum BrowserMode
+{
+    /// <summary>Use the system's installed Chromium (default, no extra setup).</summary>
+    Internal,
+
+    /// <summary>Connect to an AdsPower-managed browser profile via CDP.</summary>
+    AdsPower,
+}
+
+/// <summary>
 /// One Playwright browser + page per macro execution context.
 /// Headful mode so operators can watch web steps. Desktop automation remains on Win32.
-///
-/// Created by Phạm Duy - Giải pháp tự động hóa thông minh.
+/// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
 /// </summary>
 public sealed class PlaywrightEngine : IAsyncDisposable
 {
     private IPlaywright? _playwright;
     private IBrowser? _browser;
+    private IBrowserContext? _context;
     private IPage? _page;
+    private readonly AdsPowerService _adsPower = new();
+
+    /// <summary>Which browser launch mode to use. Default is <see cref="BrowserMode.Internal"/>.</summary>
+    public BrowserMode Mode { get; set; } = BrowserMode.Internal;
+
+    /// <summary>
+    /// The AdsPower profile ID to launch when <see cref="Mode"/> is <see cref="BrowserMode.AdsPower"/>.
+    /// Set this before the first web action is executed.
+    /// </summary>
+    public string? AdsPowerProfileId { get; set; }
 
     /// <summary>
     /// Creates Playwright, launches Chromium (non-headless), and opens a page if needed.
@@ -29,13 +56,39 @@ public sealed class PlaywrightEngine : IAsyncDisposable
         {
             _playwright = await Playwright.CreateAsync().ConfigureAwait(false);
 
-            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            if (Mode == BrowserMode.AdsPower && !string.IsNullOrWhiteSpace(AdsPowerProfileId))
             {
-                Headless = false,
-            }).ConfigureAwait(false);
+                _browser = await LaunchAdsPowerBrowserAsync(AdsPowerProfileId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                {
+                    Headless = false,
+                }).ConfigureAwait(false);
+            }
 
-            _page = await _browser.NewPageAsync().ConfigureAwait(false);
+            _context = await _browser.NewContextAsync().ConfigureAwait(false);
+            _page = await _context.NewPageAsync().ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<IBrowser> LaunchAdsPowerBrowserAsync(string profileId, CancellationToken ct)
+    {
+        string wsEndpoint = await _adsPower.StartProfileAsync(profileId, ct).ConfigureAwait(false);
+
+        // wsEndpoint can be a ws:// URL or a http:// CDP endpoint
+        bool isWebSocket = wsEndpoint.StartsWith("ws://", StringComparison.OrdinalIgnoreCase);
+
+        if (isWebSocket)
+        {
+            return await _playwright!.Chromium.ConnectOverCDPAsync(wsEndpoint).ConfigureAwait(false);
+        }
+        else
+        {
+            return await _playwright!.Chromium.ConnectOverCDPAsync(wsEndpoint).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -73,6 +126,18 @@ public sealed class PlaywrightEngine : IAsyncDisposable
         return await element.InnerTextAsync().ConfigureAwait(false) ?? string.Empty;
     }
 
+    /// <summary>
+    /// Stops the AdsPower profile if <see cref="Mode"/> is <see cref="BrowserMode.AdsPower"/>.
+    /// Call this when a CSV row completes so each profile is cleanly closed before the next starts.
+    /// </summary>
+    public async Task StopAdsPowerProfileAsync(CancellationToken cancellationToken = default)
+    {
+        if (Mode == BrowserMode.AdsPower && !string.IsNullOrWhiteSpace(AdsPowerProfileId))
+        {
+            await _adsPower.StopProfileAsync(AdsPowerProfileId, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         try
@@ -81,6 +146,12 @@ public sealed class PlaywrightEngine : IAsyncDisposable
             {
                 await _page.CloseAsync().ConfigureAwait(false);
                 _page = null;
+            }
+
+            if (_context is not null)
+            {
+                await _context.CloseAsync().ConfigureAwait(false);
+                _context = null;
             }
 
             if (_browser is not null)
@@ -94,5 +165,8 @@ public sealed class PlaywrightEngine : IAsyncDisposable
             _playwright?.Dispose();
             _playwright = null;
         }
+
+        _adsPower.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

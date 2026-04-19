@@ -196,7 +196,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Xem trước đường đi</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Đã lưu cài đặt chuột.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.2.0 — Công cụ tự động RPA</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.3.0 — Công cụ tự động RPA</system:String>
     <system:String x:Key="ui_About_Description">Tự động hóa không chiếm chuột/bàn phím vật lý trên Windows 10/11. Dùng Win32 API để gửi click và phím tới cửa sổ nền.</system:String>
     <system:String x:Key="ui_About_TechStack">Công nghệ</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -204,7 +204,7 @@
     <system:String x:Key="ui_About_Contact">Liên hệ hỗ trợ</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Kiểm tra cập nhật</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Cập nhật phần mềm</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.2.0</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.3.0</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Mời cà phê</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Mời tác giả một ly cà phê nếu phần mềm này giúp ích cho bạn!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
@@ -214,7 +214,7 @@
     <system:String x:Key="ui_LogConsole">NHẬT KÝ</system:String>
     <system:String x:Key="ui_Log_Clear">Xóa</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.2.0</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.3.0</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Tác giả Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
@@ -224,4 +224,32 @@
 
     <system:String x:Key="ui_Lang_English">English</system:String>
     <system:String x:Key="ui_Lang_Vietnamese">Tiếng Việt</system:String>
+
+    <!-- Data CSV Tab -->
+    <system:String x:Key="ui_Settings_DataCSV_Title">Thực thi CSV theo dòng</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Subtitle">Tải file CSV hoặc TXT (phân cách bằng |) để chạy macro mỗi dòng. Tiêu đề cột trở thành biến {{tên}}.</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_LoadButton">📂 Tải file CSV/TXT</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_ClearButton">🗑 Xóa</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_SkipOnError">Bỏ qua dòng bị lỗi và tiếp tục chạy</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_SkipDesc">Khi bỏ chọn, macro dừng hẳn khi gặp lỗi. Khi tích, dòng lỗi được ghi log và bỏ qua.</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_HowToUse">Hướng dẫn sử dụng:</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step1">1. Tạo file CSV/TXT với tiêu đề ở dòng 1 (VD: username, password, email)</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step2">2. Tải file lên — mỗi tiêu đề cột trở thành biến: {{username}}</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step3">3. Trong macro, dùng {{username}}, {{password}} trong Gõ chữ, Điều hướng hoặc Telegram</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step4">4. Chạy macro — sẽ chạy 1 lần cho mỗi dòng với biến đã thay thế</system:String>
+    <system:String x:Key="ui_Settings_DataCSV_Step5">5. Sau mỗi dòng, kiểm tra logs/run_*.txt để xem nhật ký thực thi</system:String>
+
+    <!-- Telegram Tab -->
+    <system:String x:Key="ui_Settings_Telegram_Title">Cài đặt thông báo Telegram</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Subtitle">Lưu Bot Token và Chat ID mặc định để dùng nhanh trong action Gửi Telegram. Không cần nhập lại mỗi lần thêm action.</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TokenLabel">Bot Token mặc định</system:String>
+    <system:String x:Key="ui_Settings_Telegram_ChatIdLabel">Chat ID mặc định</system:String>
+    <system:String x:Key="ui_Settings_Telegram_SaveButton">💾 Lưu Telegram</system:String>
+    <system:String x:Key="ui_Settings_Telegram_HowToTitle">Hướng dẫn lấy thông tin</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Step1">1. Bot Token: Mở Telegram, tìm @BotFather → gửi /newbot → đặt tên bot → nhận token</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Step2">2. Chat ID: Thêm bot vào nhóm/channel → gửi /start → truy cập t.me/getidsbot để lấy Chat ID</system:String>
+    <system:String x:Key="ui_Settings_Telegram_Step3">3. Proxy: Nếu cần proxy, nhập vào trường Proxy trong AdsPower Profile hoặc dùng system proxy.</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TestTitle">Gửi thử nhanh</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TestButton">📨 Gửi thử Telegram ngay</system:String>
+    <system:String x:Key="ui_Settings_Telegram_TestDesc">Gửi tin nhắn test "SmartMacroAI kết nối thành công!" đến Chat ID đã lưu. Mỗi tin nhắn ghi kèm tên máy tính [PC: ...].</system:String>
 </ResourceDictionary>

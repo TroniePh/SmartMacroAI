@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
 using SmartMacroAI.Core;
@@ -10,9 +11,12 @@ namespace SmartMacroAI;
 
 public partial class ActionEditDialog : Window
 {
+    public event Action<string>? Log;
+
     private readonly MacroAction _action;
     private readonly IntPtr _targetHwnd;
     private readonly Dictionary<string, TextBox> _fields = [];
+    private readonly Dictionary<string, PasswordBox> _passFields = [];
     private readonly Dictionary<string, CheckBox> _checkFields = [];
     private readonly Dictionary<string, ComboBox> _comboFields = [];
     private readonly Dictionary<string, Slider> _sliders = [];
@@ -203,6 +207,9 @@ public partial class ActionEditDialog : Window
                     Margin = new Thickness(0, 4, 0, 0),
                 });
                 break;
+            case KeyPressAction kpa:
+                AddKeyPressField(kpa);
+                break;
             case TryCatchAction:
                 FieldsPanel.Children.Add(new TextBlock
                 {
@@ -263,6 +270,45 @@ public partial class ActionEditDialog : Window
                 break;
             case LogVariableAction lv:
                 AddField("VarName", lv.VarName, displayCaption: "Tên biến");
+                break;
+            case TelegramAction tg:
+                AddFieldPassword("BotToken", tg.BotToken, displayCaption: "Bot Token");
+                AddField("ChatId", tg.ChatId, displayCaption: "Chat ID");
+                AddFieldMultiLine("Message", tg.Message, displayCaption: "Nội dung tin nhắn (hỗ trợ {{biến}})");
+                FieldsPanel.Children.Add(new TextBlock
+                {
+                    Text = "Hướng dẫn: 1) Mở Telegram, tìm @BotFather → /newbot để lấy Bot Token. " +
+                           "2) Thêm bot vào nhóm/channel, lấy Chat ID (vd: 123456789). " +
+                           "Nội dung hỗ trợ HTML: <b>bold</b>, <code>code</code>, <i>italic</i>. " +
+                           "Dùng {{tên_cột}} để chèn biến từ CSV.",
+                    Foreground = LabelBrush,
+                    FontSize = 10,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 6, 0, 0),
+                });
+
+                var btnTest = new Button
+                {
+                    Content = "Test ngay",
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Padding = new Thickness(16, 8, 16, 8),
+                    Background = AccentBrush,
+                    Foreground = Brushes.White,
+                    BorderThickness = new Thickness(0),
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                    FontWeight = FontWeights.SemiBold,
+                };
+                btnTest.Click += async (_, _) => await BtnTestTelegram_Click(tg);
+                FieldsPanel.Children.Add(btnTest);
+
+                FieldsPanel.Children.Add(new TextBlock
+                {
+                    Text = $"PC hiện tại: {Environment.MachineName} — tin nhắn test sẽ gửi \"Kết nối thành công!\" từ máy này.",
+                    Foreground = LabelBrush,
+                    FontSize = 10,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 6, 0, 0),
+                });
                 break;
         }
     }
@@ -393,6 +439,90 @@ public partial class ActionEditDialog : Window
         }
 
         Show();
+    }
+
+    private void AddFieldPassword(string fieldKey, string value, string? displayCaption = null)
+    {
+        string header = string.IsNullOrEmpty(displayCaption) ? fieldKey.ToUpperInvariant() : displayCaption;
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = header,
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = LabelBrush,
+            Margin = new Thickness(0, 8, 0, 4),
+        });
+
+        var passBox = new PasswordBox
+        {
+            Password = value,
+            Background = InputBg,
+            Foreground = InputFg,
+            BorderBrush = InputBorder,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 6, 8, 6),
+            FontSize = 12,
+            CaretBrush = InputFg,
+        };
+        _passFields[fieldKey] = passBox;
+        FieldsPanel.Children.Add(passBox);
+    }
+
+    private void AddFieldMultiLine(string fieldKey, string value, string? displayCaption = null)
+    {
+        string header = string.IsNullOrEmpty(displayCaption) ? fieldKey.ToUpperInvariant() : displayCaption;
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = header,
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = LabelBrush,
+            Margin = new Thickness(0, 8, 0, 4),
+        });
+
+        var textBox = new TextBox
+        {
+            Text = value,
+            Background = InputBg,
+            Foreground = InputFg,
+            BorderBrush = InputBorder,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 6, 8, 6),
+            FontSize = 12,
+            CaretBrush = InputFg,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            MinHeight = 80,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        };
+        _fields[fieldKey] = textBox;
+        FieldsPanel.Children.Add(textBox);
+    }
+
+    private async Task BtnTestTelegram_Click(TelegramAction tg)
+    {
+        string botToken = GetFieldValue("BotToken");
+        string chatId = GetFieldValue("ChatId");
+
+        if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
+        {
+            MessageBox.Show("Vui lòng nhập Bot Token và Chat ID trước khi test.",
+                "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        string testMessage = "✅ SmartMacroAI kết nối thành công!";
+        Log?.Invoke("[Telegram] Đang gửi tin nhắn test...");
+
+        bool ok = await TelegramService.SendAsync(botToken, chatId, testMessage, msg =>
+            Dispatcher.Invoke(() => Log?.Invoke(msg)));
+
+        if (ok)
+            MessageBox.Show("Tin nhắn test đã gửi thành công! Kiểm tra Telegram.",
+                "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+        else
+            MessageBox.Show("Gửi thất bại. Kiểm tra Bot Token, Chat ID và kết nối Internet.",
+                "Lỗi gửi", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     private void AddCheckField(string key, bool value, string description)
@@ -575,6 +705,9 @@ public partial class ActionEditDialog : Window
     }
 
     private string GetFieldValue(string key) => _fields.TryGetValue(key, out var tb) ? tb.Text.Trim() : "";
+    private string GetPassFieldValue(string key) => _passFields.TryGetValue(key, out var pb) ? pb.Password.Trim() : "";
+    private int GetIntFieldValue(string key) =>
+        int.TryParse(GetFieldValue(key), out int val) ? val : 0;
     private bool GetCheckValue(string key) => _checkFields.TryGetValue(key, out var cb) && cb.IsChecked == true;
     private string GetComboValue(string key)
     {
@@ -586,6 +719,170 @@ public partial class ActionEditDialog : Window
             string s => s,
             _ => cb.SelectedItem?.ToString() ?? "",
         };
+    }
+
+    /// <summary>Builds the Key Catcher TextBox + Clear button for a KeyPressAction.</summary>
+    private void AddKeyPressField(KeyPressAction kpa)
+    {
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = "Phím cần nhấn",
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = LabelBrush,
+            Margin = new Thickness(0, 8, 0, 4),
+        });
+
+        var panel = new StackPanel { Orientation = Orientation.Horizontal };
+
+        var keyBox = new TextBox
+        {
+            Width = 180,
+            IsReadOnly = true,
+            Focusable = true,
+            IsTabStop = true,
+            Text = string.IsNullOrEmpty(kpa.KeyName)
+                ? "Nhấp vào đây và nhấn 1 phím..."
+                : kpa.KeyName,
+            Foreground = string.IsNullOrEmpty(kpa.KeyName)
+                ? Brushes.Gray
+                : Brushes.White,
+            Background = InputBg,
+            BorderBrush = InputBorder,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 6, 8, 6),
+            FontSize = 12,
+            CaretBrush = InputFg,
+            VerticalContentAlignment = VerticalAlignment.Center,
+        };
+
+        keyBox.PreviewKeyDown += txtKeyCapture_PreviewKeyDown;
+        keyBox.GotFocus += txtKeyCapture_GotFocus;
+        keyBox.LostFocus += txtKeyCapture_LostFocus;
+        keyBox.PreviewMouseLeftButtonDown += txtKeyCapture_MouseDown;
+
+        _fields["KeyName"] = keyBox;
+        _fields["VirtualKeyCode"] = new TextBox { Text = kpa.VirtualKeyCode.ToString() };
+        _fields["HoldDurationMs"] = new TextBox { Text = kpa.HoldDurationMs.ToString() };
+
+        var btnClear = new Button
+        {
+            Content = "✕ Xóa",
+            Margin = new Thickness(4, 0, 0, 0),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#313244")),
+            Foreground = InputFg,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+        };
+        btnClear.Click += btnClearKey_Click;
+
+        panel.Children.Add(keyBox);
+        panel.Children.Add(btnClear);
+        FieldsPanel.Children.Add(panel);
+
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = "Giữ phím (ms):",
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = LabelBrush,
+            Margin = new Thickness(0, 10, 0, 4),
+        });
+
+        var holdBox = new TextBox
+        {
+            Text = kpa.HoldDurationMs.ToString(),
+            Width = 120,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Background = InputBg,
+            Foreground = InputFg,
+            BorderBrush = InputBorder,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 6, 8, 6),
+            FontSize = 12,
+            CaretBrush = InputFg,
+        };
+        _fields["HoldDurationMs"] = holdBox;
+        FieldsPanel.Children.Add(holdBox);
+
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = "Nhấn phím nóng hoặc phím thường (F1–F24, Ctrl, Alt, Shift, Enter…). Không dùng cho chuỗi văn bản — dùng \"Gõ chữ (Type)\" thay thế.",
+            Foreground = LabelBrush,
+            FontSize = 10,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 6, 0, 0),
+        });
+    }
+
+    private void txtKeyCapture_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+
+        Key pressedKey = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        // Ignore modifier-only keys (they'll fire their own events)
+        if (pressedKey is Key.LeftShift or Key.RightShift or
+            Key.LeftCtrl or Key.RightCtrl or
+            Key.LeftAlt or Key.RightAlt or
+            Key.LWin or Key.RWin or Key.System or
+            Key.CapsLock or Key.NumLock or Key.Scroll)
+            return;
+
+        int vkCode = KeyInterop.VirtualKeyFromKey(pressedKey);
+
+        var keyBox = (TextBox)sender;
+        keyBox.Text = pressedKey.ToString();
+        keyBox.Foreground = Brushes.White;
+
+        if (_fields.TryGetValue("VirtualKeyCode", out var vkBox))
+            vkBox.Text = vkCode.ToString();
+
+        if (_action is KeyPressAction kpa)
+        {
+            kpa.VirtualKeyCode = vkCode;
+            kpa.KeyName = pressedKey.ToString();
+        }
+    }
+
+    private void txtKeyCapture_GotFocus(object sender, RoutedEventArgs e)
+    {
+        var keyBox = (TextBox)sender;
+        if (keyBox.Text == "Nhấp vào đây và nhấn 1 phím...")
+            keyBox.Text = string.Empty;
+        keyBox.Focus();
+        Keyboard.Focus(keyBox);
+    }
+
+    private void txtKeyCapture_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        var keyBox = (TextBox)sender;
+        keyBox.Focus();
+        Keyboard.Focus(keyBox);
+        e.Handled = true;
+    }
+
+    private void txtKeyCapture_LostFocus(object sender, RoutedEventArgs e)
+    {
+        var keyBox = (TextBox)sender;
+        if (string.IsNullOrEmpty(keyBox.Text))
+        {
+            keyBox.Text = "Nhấp vào đây và nhấn 1 phím...";
+            keyBox.Foreground = Brushes.Gray;
+        }
+    }
+
+    private void btnClearKey_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_fields.TryGetValue("KeyName", out var keyBox))
+            return;
+
+        keyBox.Text = "Nhấp vào đây và nhấn 1 phím...";
+        keyBox.Foreground = Brushes.Gray;
+
+        if (_fields.TryGetValue("VirtualKeyCode", out var vkBox))
+            vkBox.Text = "0";
     }
 
     private void BtnApply_Click(object sender, RoutedEventArgs e)
@@ -676,6 +973,11 @@ public partial class ActionEditDialog : Window
                 case LogAction lg:
                     lg.Message = GetFieldValue("Message");
                     break;
+                case KeyPressAction kpa:
+                    kpa.VirtualKeyCode = GetIntFieldValue("VirtualKeyCode");
+                    kpa.KeyName = GetFieldValue("KeyName");
+                    kpa.HoldDurationMs = GetIntFieldValue("HoldDurationMs");
+                    break;
                 case TryCatchAction:
                     break;
                 case OcrRegionAction ocr:
@@ -690,6 +992,11 @@ public partial class ActionEditDialog : Window
                     break;
                 case LogVariableAction lv:
                     lv.VarName = GetFieldValue("VarName");
+                    break;
+                case TelegramAction tg:
+                    tg.BotToken = GetPassFieldValue("BotToken");
+                    tg.ChatId = GetFieldValue("ChatId");
+                    tg.Message = GetFieldValue("Message");
                     break;
             }
             DialogResult = true;

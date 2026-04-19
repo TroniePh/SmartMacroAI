@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using WinForms = System.Windows.Forms;
@@ -79,6 +80,30 @@ public sealed class VariableManager
 /// </summary>
 public sealed class MacroEngine
 {
+    [DllImport("user32.dll")]
+    private static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+    [DllImport("user32.dll")]
+    private static extern int ToUnicodeEx(
+        uint wVirtKey, uint wScanCode,
+        byte[] lpKeyState,
+        [Out, MarshalAs(UnmanagedType.LPWStr)] System.Text.StringBuilder pwszBuff,
+        int cchBuff, uint wFlags, IntPtr dwhkl);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetKeyboardLayout(uint idThread);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetKeyboardState(byte[] lpKeyState);
+
+    private const uint WM_CHAR  = 0x0102;
+    private const uint WM_CUT   = 0x0300;
+    private const uint WM_COPY  = 0x0301;
+    private const uint WM_PASTE = 0x0302;
+    private const uint WM_UNDO  = 0x0304;
+    private const uint EM_SETSEL = 0x00B1;
+
     private PlaywrightEngine? _playwrightEngine;
 
     private readonly BezierMouseMover _mouseMover = new();
@@ -93,12 +118,32 @@ public sealed class MacroEngine
 
     private int _currentMacroIteration;
 
+    /// <summary>Browser mode for web actions (default <see cref="BrowserMode.Internal"/>).</summary>
+    public BrowserMode BrowserMode { get; set; } = BrowserMode.Internal;
+
+    /// <summary>
+    /// CSV column name to look up in each row for an AdsPower profile ID.
+    /// When set and a matching column exists in the current row, the browser
+    /// is launched with that profile for the duration of the row.
+    /// </summary>
+    public string? CsvProfileIdColumn { get; set; }
+
+    /// <summary>Current AdsPower profile ID (updated per CSV row).</summary>
+    private string? _currentProfileId;
+
     private string _lastOcrText = string.Empty;
 
     private double _lastImageMatchConfidence;
 
     /// <summary>Thread-safe string variables (<c>{{name}}</c>) for the current run; UI may snapshot while a macro runs.</summary>
     public VariableStore RuntimeStringVariables => _variableStore;
+
+    /// <summary>
+    /// Data-driven CSV rows loaded from the UI (CsvDataService).
+    /// When set, the engine runs one macro pass per row, injecting each row's
+    /// columns into the runtime variable map under their normalized header keys.
+    /// </summary>
+    public List<Dictionary<string, string>>? DataRows { get; set; }
 
     /// <summary>Merged view for the Dashboard variables panel (engine + string store).</summary>
     public IReadOnlyList<(string Name, string Value, string Source)> GetLiveVariableRows()
@@ -138,6 +183,10 @@ public sealed class MacroEngine
 
     private readonly StringBuilder _runReport = new();
 
+    private int _totalRowsTotal;
+    private int _totalRowsDone;
+    private DateTime _sessionStartTime;
+
     /// <summary>Creates an engine instance and wires Bézier mouse diagnostics to <see cref="Log"/>.</summary>
     public MacroEngine()
     {
@@ -152,6 +201,7 @@ public sealed class MacroEngine
     public event Action<MacroAction, int>? ActionStarted;
     public event Action<MacroAction, int>? ActionCompleted;
     public event Action<int, int>? IterationStarted;
+    public event Action<int, int>? DataRowCompleted;
     public event Action? ExecutionFinished;
     public event Action<Exception>? ExecutionFaulted;
 
@@ -284,6 +334,9 @@ public sealed class MacroEngine
         _lastOcrText = string.Empty;
         _lastImageMatchConfidence = 0;
         _runReport.Clear();
+        _totalRowsTotal = 0;
+        _totalRowsDone = 0;
+        _sessionStartTime = DateTime.Now;
 
         _ocrService = new OcrService(AppSettings.Load().OcrLanguageTag);
 
@@ -310,6 +363,7 @@ public sealed class MacroEngine
                 await RunLoopAsync(script, loopToken).ConfigureAwait(false);
                 OnLog("Execution completed successfully.");
                 ExecutionFinished?.Invoke();
+                FireTelegramCompletion(script, rowsDone: _totalRowsDone, total: _totalRowsDone, hasError: false, lastErrorMessage: null);
             }
             catch (OperationCanceledException)
             {
@@ -323,6 +377,7 @@ public sealed class MacroEngine
             {
                 OnLog($"Execution faulted: {ex.Message}");
                 ExecutionFaulted?.Invoke(ex);
+                FireTelegramCompletion(script, rowsDone: _totalRowsDone, total: _totalRowsTotal, hasError: true, lastErrorMessage: ex.Message);
                 throw;
             }
         }
@@ -394,12 +449,25 @@ public sealed class MacroEngine
     }
 
     // ═══════════════════════════════════════════════
-    //  REPEAT LOOP
+    //  REPEAT LOOP (data-driven CSV support)
     // ═══════════════════════════════════════════════
 
     private async Task RunLoopAsync(MacroScript script, CancellationToken token)
     {
+        List<Dictionary<string, string>>? dataRows = DataRows;
+
+        // ── Data-driven CSV mode ──────────────────────────
+        if (dataRows is { Count: > 0 })
+        {
+            _totalRowsTotal = dataRows.Count;
+            await RunDataDrivenLoopAsync(script, dataRows, script.LoopCsvSkipOnError, token)
+                .ConfigureAwait(false);
+            return;
+        }
+
+        // ── Standard repeat loop ───────────────────────────
         bool infinite = script.RepeatCount <= 0;
+        _totalRowsTotal = infinite ? 1 : script.RepeatCount;
         int totalIterations = infinite ? int.MaxValue : script.RepeatCount;
 
         MacroScriptValidation.ValidateRepeatAndLoopCsv(script);
@@ -419,6 +487,7 @@ public sealed class MacroEngine
             IterationStarted?.Invoke(i, script.RepeatCount);
 
             await ExecuteActionsAsync(script.Actions, token).ConfigureAwait(false);
+            _totalRowsDone++;
 
             bool hasMore = i < totalIterations;
             if (hasMore && script.IntervalMinutes > 0)
@@ -426,6 +495,193 @@ public sealed class MacroEngine
                 OnLog($"── Waiting {script.IntervalMinutes} min before next iteration ──");
                 await Task.Delay(TimeSpan.FromMinutes(script.IntervalMinutes), token);
             }
+        }
+    }
+
+    /// <summary>
+    /// Runs one macro pass per CSV data row. Variables from the row are merged into
+    /// the runtime map, then <c>ExecuteActionsAsync</c> runs the full action list.
+    /// After each row the run log is flushed to <c>logs/run_{timestamp}.txt</c>.
+    /// When <see cref="CsvProfileIdColumn"/> is set and a matching column exists in a row,
+    /// the AdsPower browser is closed and restarted with that profile before execution.
+    /// </summary>
+    private async Task RunDataDrivenLoopAsync(
+        MacroScript script,
+        List<Dictionary<string, string>> dataRows,
+        bool skipOnError,
+        CancellationToken token)
+    {
+        int total = dataRows.Count;
+
+        // Prepare CSV headers for runtime injection (normalized keys)
+        var csvHeaderNames = new List<string>();
+        foreach (var row in dataRows)
+        {
+            foreach (var key in row.Keys)
+            {
+                if (!csvHeaderNames.Contains(key, StringComparer.OrdinalIgnoreCase))
+                    csvHeaderNames.Add(key);
+            }
+        }
+
+        AppendRunLogHeader(script.Name, total, csvHeaderNames);
+
+        // Reset per-row profile state
+        string? previousProfileId = null;
+
+        for (int rowIdx = 0; rowIdx < total; rowIdx++)
+        {
+            token.ThrowIfCancellationRequested();
+
+            if (_runtimeTargetHwnd != IntPtr.Zero && !Win32Api.IsWindow(_runtimeTargetHwnd))
+                throw new InvalidOperationException("Target window was closed during execution.");
+
+            var row = dataRows[rowIdx];
+            int rowNum = rowIdx + 1;
+
+            // Merge static script variables, then overlay CSV row columns
+            _runtimeVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (script.Variables is not null)
+            {
+                foreach (var kv in script.Variables)
+                    _runtimeVariables[kv.Key] = kv.Value ?? "";
+            }
+
+            // CSV row values take precedence over static variables
+            foreach (var kv in row)
+                _runtimeVariables[kv.Key] = kv.Value;
+
+            // AdsPower per-row profile switching
+            string? rowProfileId = null;
+            if (BrowserMode == BrowserMode.AdsPower && !string.IsNullOrWhiteSpace(CsvProfileIdColumn))
+            {
+                foreach (var key in row.Keys)
+                {
+                    if (string.Equals(key, CsvProfileIdColumn, StringComparison.OrdinalIgnoreCase))
+                    {
+                        rowProfileId = row[key];
+                        break;
+                    }
+                }
+            }
+
+            // Switch profile if it changed (or first row with AdsPower)
+            bool needsProfileSwitch =
+                BrowserMode == BrowserMode.AdsPower &&
+                !string.Equals(rowProfileId, previousProfileId, StringComparison.Ordinal);
+
+            if (needsProfileSwitch)
+            {
+                // Close existing AdsPower browser
+                if (_playwrightEngine is not null)
+                {
+                    try
+                    {
+                        await _playwrightEngine.StopAdsPowerProfileAsync(token).ConfigureAwait(false);
+                        await _playwrightEngine.DisposeAsync().ConfigureAwait(false);
+                    }
+                    catch { }
+                    _playwrightEngine = null;
+                }
+
+                if (!string.IsNullOrWhiteSpace(rowProfileId))
+                {
+                    OnLog($"  [AdsPower] Switching to profile: {rowProfileId}");
+                    _playwrightEngine = new PlaywrightEngine
+                    {
+                        Mode = BrowserMode.AdsPower,
+                        AdsPowerProfileId = rowProfileId,
+                    };
+                    _currentProfileId = rowProfileId;
+                }
+                else
+                {
+                    _currentProfileId = null;
+                }
+                previousProfileId = rowProfileId;
+            }
+
+            _currentMacroIteration = rowNum;
+            OnLog($"── CSV Row {rowNum}/{total} ── {string.Join(", ", row.Select(kv => $"{kv.Key}={Truncate(kv.Value, 30)}"))}");
+            IterationStarted?.Invoke(rowNum, total);
+
+            try
+            {
+                await ExecuteActionsAsync(script.Actions, token).ConfigureAwait(false);
+                _totalRowsDone++;
+                string logLine = $"[{DateTime.Now:HH:mm:ss}] Row {rowNum}/{total} OK";
+                AppendRunLog(logLine);
+                OnLog($"  ✅ Row {rowNum}/{total} done");
+            }
+            catch (Exception ex) when (skipOnError)
+            {
+                _totalRowsDone++;
+                string logLine = $"[{DateTime.Now:HH:mm:ss}] Row {rowNum}/{total} SKIPPED — {ex.Message}";
+                AppendRunLog(logLine);
+                OnLog($"  ⚠ Row {rowNum}/{total} skipped due to error: {ex.Message}");
+                DataRowCompleted?.Invoke(rowNum, total);
+            }
+
+            DataRowCompleted?.Invoke(rowNum, total);
+
+            if (rowIdx < total - 1 && script.IntervalMinutes > 0)
+            {
+                OnLog($"── Waiting {script.IntervalMinutes} min before next CSV row ──");
+                await Task.Delay(TimeSpan.FromMinutes(script.IntervalMinutes), token);
+            }
+        }
+
+        // Clean up AdsPower browser at the end
+        if (_playwrightEngine is not null)
+        {
+            try
+            {
+                await _playwrightEngine.StopAdsPowerProfileAsync(token).ConfigureAwait(false);
+                await _playwrightEngine.DisposeAsync().ConfigureAwait(false);
+            }
+            catch { }
+            _playwrightEngine = null;
+            _currentProfileId = null;
+        }
+
+        AppendRunLog($"[{DateTime.Now:HH:mm:ss}] === All {total} rows processed ===");
+    }
+
+    private static readonly string RunLogDir = Path.Combine(
+        AppDomain.CurrentDomain.BaseDirectory, "logs");
+
+    private static readonly string RunLogTimestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+    private static string? _currentRunLogPath;
+
+    private void AppendRunLogHeader(string macroName, int totalRows, List<string> headers)
+    {
+        try
+        {
+            Directory.CreateDirectory(RunLogDir);
+            _currentRunLogPath = Path.Combine(RunLogDir, $"run_{RunLogTimestamp}.txt");
+            string header = $"SmartMacroAI Run Log — {macroName} — {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                            $"Rows: {totalRows}  |  Headers: {string.Join(", ", headers)}\n" +
+                            new string('-', 60) + "\n";
+            File.AppendAllText(_currentRunLogPath, header);
+        }
+        catch
+        {
+            // Non-critical — don't crash the macro for log failures
+        }
+    }
+
+    private void AppendRunLog(string line)
+    {
+        if (string.IsNullOrEmpty(_currentRunLogPath))
+            return;
+        try
+        {
+            File.AppendAllText(_currentRunLogPath, line + Environment.NewLine);
+        }
+        catch
+        {
+            // Non-critical
         }
     }
 
@@ -674,6 +930,11 @@ public sealed class MacroEngine
                     await ExecuteTypeAsync(type, token);
                     break;
 
+                case KeyPressAction kpa:
+                    EnsureDesktopTargetBound();
+                    await ExecuteKeyPressAsync(kpa, token);
+                    break;
+
                 case IfImageAction ifImage:
                     EnsureDesktopTargetBound();
                     await ExecuteIfImageAsync(ifImage, token);
@@ -828,6 +1089,10 @@ public sealed class MacroEngine
                         await ExecuteActionsAsync(tryCatch.CatchActions, token).ConfigureAwait(false);
                     }
 
+                    break;
+
+                case TelegramAction tg:
+                    await ExecuteTelegramAsync(tg, token).ConfigureAwait(false);
                     break;
 
                 default:
@@ -1177,6 +1442,173 @@ public sealed class MacroEngine
         }
     }
 
+    private async Task ExecuteKeyPressAsync(KeyPressAction kpa, CancellationToken token)
+    {
+        if (kpa.VirtualKeyCode <= 0)
+        {
+            OnLog("  KeyPress — SKIPPED (no key set)");
+            return;
+        }
+
+        IntPtr hwnd = _runtimeTargetHwnd;
+        IntPtr target = Win32Api.FindInputChild(hwnd);
+        int vk = kpa.VirtualKeyCode;
+        int hold = Math.Max(0, kpa.HoldDurationMs);
+
+        // ── PATH 1: Printable character ──────────────────────────────────────
+        // TryGetPrintableChar handles Shift+2 → '@', Shift+a → 'A', etc.
+        // by translating through the current keyboard layout.
+        char? printable = TryGetPrintableChar(vk, kpa.Modifiers.Shift, kpa.Modifiers.Ctrl, kpa.Modifiers.Alt);
+        if (printable.HasValue)
+        {
+            Win32Api.PostMessage(target, WM_CHAR, (IntPtr)printable.Value, IntPtr.Zero);
+            await Task.Delay(hold, token).ConfigureAwait(false);
+            OnLog($"  KeyPress {kpa.KeyName} → WM_CHAR '{printable.Value}' (U+{((int)printable.Value):X4})");
+            return;
+        }
+
+        // ── PATH 2: Ctrl+A → select all via EM_SETSEL ────────────────────────
+        if (kpa.Modifiers.Ctrl && vk == 0x41)
+        {
+            // EM_SETSEL: wParam=start, lParam=end; (-1,-1) selects everything
+            Win32Api.PostMessage(target, EM_SETSEL, IntPtr.Zero, (IntPtr)(-1));
+            OnLog("  KeyPress Ctrl+A → EM_SETSEL (select all)");
+            return;
+        }
+
+        // ── PATH 3: Ctrl+C/V/X/Z → semantic clipboard messages ───────────────
+        // These bypass the keyboard layout entirely and go straight to the
+        // edit control's built-in clipboard handler — works on any background window.
+        uint? semantic = GetSemanticMessage(vk, kpa.Modifiers);
+        if (semantic.HasValue)
+        {
+            Win32Api.PostMessage(target, semantic.Value, IntPtr.Zero, IntPtr.Zero);
+            string name = semantic.Value switch
+            {
+                0x0301 => "WM_COPY",
+                0x0302 => "WM_PASTE",
+                0x0300 => "WM_CUT",
+                0x0304 => "WM_UNDO",
+                _ => $"0x{semantic.Value:X4}"
+            };
+            OnLog($"  KeyPress {kpa.KeyName} → {name}");
+            return;
+        }
+
+        // ── PATH 4: Everything else ───────────────────────────────────────────
+        // F1-F24, Enter, Tab, arrows, Ctrl+S, Alt+F4, etc.
+        // → raw WM_KEYDOWN/WM_KEYUP with staggered timing and correct lParam.
+        IntPtr downParam = BuildKeyLParam(vk, isKeyUp: false);
+        IntPtr upParam   = BuildKeyLParam(vk, isKeyUp: true);
+
+        // Press modifiers in order (with 20ms gap so message queue can drain)
+        if (kpa.Modifiers.Shift)
+        {
+            Win32Api.PostMessage(target, Win32Api.WM_KEYDOWN, (IntPtr)0x10, BuildKeyLParam(0x10, false));
+            await Task.Delay(20, token).ConfigureAwait(false);
+        }
+        if (kpa.Modifiers.Ctrl)
+        {
+            Win32Api.PostMessage(target, Win32Api.WM_KEYDOWN, (IntPtr)0x11, BuildKeyLParam(0x11, false));
+            await Task.Delay(20, token).ConfigureAwait(false);
+        }
+        if (kpa.Modifiers.Alt)
+        {
+            Win32Api.PostMessage(target, 0x0104u, (IntPtr)0x12, BuildKeyLParam(0x12, false));
+            await Task.Delay(20, token).ConfigureAwait(false);
+        }
+
+        // Press main key → hold → release
+        Win32Api.PostMessage(target, Win32Api.WM_KEYDOWN, (IntPtr)vk, downParam);
+        await Task.Delay(Math.Max(hold, 50), token).ConfigureAwait(false);
+        Win32Api.PostMessage(target, Win32Api.WM_KEYUP, (IntPtr)vk, upParam);
+
+        // Release modifiers in reverse order (with 20ms gap)
+        await Task.Delay(20, token).ConfigureAwait(false);
+        if (kpa.Modifiers.Alt)
+        {
+            Win32Api.PostMessage(target, 0x0105u, (IntPtr)0x12, BuildKeyLParam(0x12, true));
+            await Task.Delay(20, token).ConfigureAwait(false);
+        }
+        if (kpa.Modifiers.Ctrl)
+        {
+            Win32Api.PostMessage(target, Win32Api.WM_KEYUP, (IntPtr)0x11, BuildKeyLParam(0x11, true));
+            await Task.Delay(20, token).ConfigureAwait(false);
+        }
+        if (kpa.Modifiers.Shift)
+        {
+            Win32Api.PostMessage(target, Win32Api.WM_KEYUP, (IntPtr)0x10, BuildKeyLParam(0x10, true));
+        }
+
+        OnLog($"  KeyPress {kpa.KeyName} (VK=0x{vk:X2} SC=0x{MapVirtualKey((uint)vk, 0):X2})");
+    }
+
+    /// <summary>
+    /// Maps Ctrl+key combos to semantic clipboard/edit-control messages.
+    /// Returns null for non-clipboard combos (falls through to raw key path).
+    /// </summary>
+    private static uint? GetSemanticMessage(int vkCode, KeyModifiers mods)
+    {
+        if (!mods.Ctrl || mods.Alt) return null;
+        return vkCode switch
+        {
+            0x43 => WM_COPY,  // Ctrl+C
+            0x56 => WM_PASTE, // Ctrl+V
+            0x58 => WM_CUT,   // Ctrl+X
+            0x5A => WM_UNDO,  // Ctrl+Z
+            _    => null
+        };
+    }
+
+    /// <summary>
+    /// Translates a VK + modifier state into a printable character using the current
+    /// keyboard layout (supports Vietnamese/Unikey, Japanese, etc.). Returns null for
+    /// non-printable keys (F1-F24, Enter, Tab, arrows, Ctrl/Alt combos).
+    /// </summary>
+    private static char? TryGetPrintableChar(int vkCode, bool shift, bool ctrl, bool alt)
+    {
+        // Never printable: Ctrl or Alt combos, function keys, or classic control keys
+        if (ctrl || alt) return null;
+        if (vkCode is >= 0x70 and <= 0x87) return null;          // F1–F24
+        if (vkCode is 0x08 or 0x09 or 0x0D or 0x1B or 0x2E) return null; // BS,Tab,Enter,Esc,Del
+
+        byte[] keyState = new byte[256];
+        if (shift) keyState[0x10] = 0x80; // VK_SHIFT pressed
+
+        var sb = new System.Text.StringBuilder(4);
+        IntPtr layout = GetKeyboardLayout(0); // current thread keyboard layout
+        int result = ToUnicodeEx((uint)vkCode, 0, keyState, sb, sb.Capacity, 0, layout);
+
+        if (result == 1 && sb.Length > 0 && !char.IsControl(sb[0]))
+            return sb[0];
+
+        return null;
+    }
+
+    /// <summary>
+    /// Builds the correct lParam for WM_KEYDOWN / WM_KEYUP messages.
+    /// Bit layout: repeat-count(0-15) | scan-code(16-23) | extended-flag(24) | reserved(25-28) | transition(30-31).
+    /// This ensures games and emulators that read lParam directly receive a valid scan code.
+    /// </summary>
+    private static IntPtr BuildKeyLParam(int virtualKeyCode, bool isKeyUp)
+    {
+        uint scanCode = MapVirtualKey((uint)virtualKeyCode, 0); // MAPVK_VK_TO_VSC
+
+        // Extended keys: right-side modifiers, arrows, Insert/Delete, Home/End, PgUp/PgDn
+        bool isExtended = virtualKeyCode is
+            0x21 or 0x22 or 0x23 or 0x24 or // PageUp, PageDown, End, Home
+            0x25 or 0x26 or 0x27 or 0x28 or // Arrow keys
+            0x2D or 0x2E or                   // Insert, Delete
+            0xA1 or 0xA3 or 0xA5;            // Right Ctrl, Right Shift, Right Alt
+
+        uint lParam = 1;                             // repeat count = 1
+        lParam |= (scanCode & 0xFF) << 16;          // scan code in bits 16-23
+        if (isExtended) lParam |= 0x01000000;        // extended-key bit
+        if (isKeyUp)    lParam |= 0xC0000000;        // bits 30-31 = key-up transition
+
+        return (IntPtr)lParam;
+    }
+
     private async Task ExecuteIfImageAsync(IfImageAction ifImage, CancellationToken token)
     {
         IntPtr hwnd = _runtimeTargetHwnd;
@@ -1284,7 +1716,11 @@ public sealed class MacroEngine
             return;
         }
 
-        _playwrightEngine ??= new PlaywrightEngine();
+        _playwrightEngine ??= new PlaywrightEngine
+        {
+            Mode = BrowserMode,
+            AdsPowerProfileId = _currentProfileId,
+        };
         OnLog($"  WebNavigate: {url}");
         await _playwrightEngine.MapsAsync(url.Trim(), token).ConfigureAwait(false);
     }
@@ -1298,7 +1734,11 @@ public sealed class MacroEngine
             return;
         }
 
-        _playwrightEngine ??= new PlaywrightEngine();
+        _playwrightEngine ??= new PlaywrightEngine
+        {
+            Mode = BrowserMode,
+            AdsPowerProfileId = _currentProfileId,
+        };
         await _playwrightEngine.EnsureBrowserStartedAsync(token).ConfigureAwait(false);
         OnLog($"  WebClick: {sel}");
         await _playwrightEngine.ClickSelectorAsync(sel.Trim(), token).ConfigureAwait(false);
@@ -1314,7 +1754,11 @@ public sealed class MacroEngine
         }
 
         string typed = ExpandRuntime(type.TextToType ?? "");
-        _playwrightEngine ??= new PlaywrightEngine();
+        _playwrightEngine ??= new PlaywrightEngine
+        {
+            Mode = BrowserMode,
+            AdsPowerProfileId = _currentProfileId,
+        };
         await _playwrightEngine.EnsureBrowserStartedAsync(token).ConfigureAwait(false);
         OnLog($"  WebType: {sel} ← \"{Truncate(typed, 40)}\"");
         await _playwrightEngine.TypeSelectorAsync(sel.Trim(), typed, token)
@@ -1329,7 +1773,11 @@ public sealed class MacroEngine
     public async Task ExecuteWebActionAsync(
         string url, string selector, string actionType, string textToType, CancellationToken token)
     {
-        _playwrightEngine ??= new PlaywrightEngine();
+        _playwrightEngine ??= new PlaywrightEngine
+        {
+            Mode = BrowserMode,
+            AdsPowerProfileId = _currentProfileId,
+        };
         await _playwrightEngine.EnsureBrowserStartedAsync(token).ConfigureAwait(false);
 
         switch (actionType)
@@ -1548,6 +1996,102 @@ public sealed class MacroEngine
         }
 
         throw new FileNotFoundException("Microsoft Edge not found. Install Edge or use Chrome in Launch & Bind.");
+    }
+
+    // ═══════════════════════════════════════════════
+    //  TELEGRAM
+    // ═══════════════════════════════════════════════
+
+    private Task ExecuteTelegramAsync(TelegramAction tg, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(tg.BotToken) || string.IsNullOrWhiteSpace(tg.ChatId))
+        {
+            OnLog("  Telegram — SKIPPED (BotToken hoặc ChatId trống)");
+            return Task.CompletedTask;
+        }
+
+        string rawMessage = tg.Message ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(rawMessage))
+        {
+            OnLog("  Telegram — SKIPPED (message trống)");
+            return Task.CompletedTask;
+        }
+
+        string resolved = VariableResolver.Resolve(rawMessage, _runtimeVariables);
+        string resolvedToken = VariableResolver.Resolve(tg.BotToken, _runtimeVariables);
+        string resolvedChatId = VariableResolver.Resolve(tg.ChatId, _runtimeVariables);
+
+        OnLog($"  Telegram → \"{Truncate(resolved, 40)}\" @ {Truncate(resolvedChatId, 20)}");
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await TelegramService.SendAsync(resolvedToken, resolvedChatId, resolved, OnLog)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                OnLog($"  ⚠ Telegram error: {ex.Message}");
+            }
+        });
+
+        return Task.CompletedTask;
+    }
+
+    // ═══════════════════════════════════════════════
+    //  TELEGRAM COMPLETION (fire-and-forget)
+    // ═══════════════════════════════════════════════
+
+    private void FireTelegramCompletion(
+        MacroScript script,
+        int rowsDone,
+        int total,
+        bool hasError,
+        string? lastErrorMessage)
+    {
+        if (!script.SendTelegramOnComplete)
+            return;
+
+        string token = !string.IsNullOrWhiteSpace(script.TelegramBotToken)
+            ? script.TelegramBotToken
+            : AppSettings.Load().TelegramBotToken;
+
+        string chatId = !string.IsNullOrWhiteSpace(script.TelegramChatId)
+            ? script.TelegramChatId
+            : AppSettings.Load().TelegramChatId;
+
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(chatId))
+            return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                string duration = (DateTime.Now - _sessionStartTime).ToString(@"hh\:mm\:ss");
+                string template = hasError
+                    ? script.TelegramErrorMessage
+                    : script.TelegramCompleteMessage;
+
+                string msg = template
+                    .Replace("{MacroName}", script.Name ?? "Macro")
+                    .Replace("{RowsDone}", rowsDone.ToString())
+                    .Replace("{RowsTotal}", total.ToString())
+                    .Replace("{Duration}", duration)
+                    .Replace("{MachineName}", Environment.MachineName)
+                    .Replace("{ErrorMessage}",
+                        string.IsNullOrEmpty(lastErrorMessage)
+                            ? "Unknown error"
+                            : System.Net.WebUtility.HtmlEncode(lastErrorMessage));
+
+                await TelegramService.SendAsync(token, chatId, msg, Log)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Log?.Invoke($"[Telegram] Gửi thông báo thất bại: {ex.Message}");
+            }
+        });
     }
 
     // ═══════════════════════════════════════════════

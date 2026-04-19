@@ -46,6 +46,9 @@ public sealed class GlobalHookManager : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetKeyboardState(byte[] lpKeyState);
 
+    [DllImport("user32.dll")]
+    private static extern short GetKeyState(int nVirtKey);
+
     // ═══════════════════════════════════════════════
     //  HOOK STRUCTURES
     // ═══════════════════════════════════════════════
@@ -84,6 +87,12 @@ public sealed class GlobalHookManager : IDisposable
     /// translated Unicode character ('\0' if non-printable).
     /// </summary>
     public event Action<uint, char>? KeyPressed;
+
+    /// <summary>
+    /// Fires on every key-down with full details: virtual-key code, scan code,
+    /// and current modifier-key state. Use this for KeyPressAction recording.
+    /// </summary>
+    public event Action<uint, uint, bool, bool, bool>? KeyPressedFull;
 
     // ═══════════════════════════════════════════════
     //  STATE
@@ -178,6 +187,11 @@ public sealed class GlobalHookManager : IDisposable
                 var data = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
                 char ch = VkCodeToChar(data.vkCode, data.scanCode);
                 KeyPressed?.Invoke(data.vkCode, ch);
+
+                bool shift = (GetKeyState(0x10) & 0x8000) != 0;
+                bool ctrl  = (GetKeyState(0x11) & 0x8000) != 0;
+                bool alt   = (GetKeyState(0x12) & 0x8000) != 0;
+                KeyPressedFull?.Invoke(data.vkCode, data.scanCode, shift, ctrl, alt);
             }
         }
         return CallNextHookEx(_keyboardHookHandle, nCode, wParam, lParam);

@@ -9,6 +9,8 @@ namespace SmartMacroAI.Localization;
 /// </summary>
 public sealed class AppSettings
 {
+    private static AppSettings? _cached;
+    public static AppSettings Instance => _cached ??= Load();
     /// <summary>UI language: "en" or "vi".</summary>
     public string LanguageCode { get; set; } = "en";
 
@@ -76,6 +78,19 @@ public sealed class AppSettings
 
     public bool AntiDetectionHookScanOnStartup { get; set; } = true;
 
+    // ── Telegram notification defaults ──
+
+    /// <summary>Default Bot Token pre-filled in TelegramAction when user adds the action.</summary>
+    public string TelegramBotToken { get; set; } = "";
+
+    /// <summary>Default Chat ID pre-filled in TelegramAction when user adds the action.</summary>
+    public string TelegramChatId { get; set; } = "";
+
+    /// <summary>True when both TelegramBotToken and TelegramChatId are non-empty.</summary>
+    public bool HasTelegramToken =>
+        !string.IsNullOrWhiteSpace(TelegramBotToken) &&
+        !string.IsNullOrWhiteSpace(TelegramChatId);
+
     private static readonly string PathFile = Path.Combine(
         AppDomain.CurrentDomain.BaseDirectory, "app_settings.json");
 
@@ -113,6 +128,28 @@ public sealed class AppSettings
         {
             string json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(PathFile, json);
+            // Refresh the cached singleton so XAML bindings pick up the new values immediately.
+            try
+            {
+                if (File.Exists(PathFile))
+                {
+                    string fresh = File.ReadAllText(PathFile);
+                    var reloaded = JsonSerializer.Deserialize<AppSettings>(fresh);
+                    if (reloaded != null && _cached != null)
+                    {
+                        foreach (var prop in typeof(AppSettings).GetProperties(
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                        {
+                            if (prop.CanWrite)
+                            {
+                                var val = prop.GetValue(reloaded);
+                                prop.SetValue(_cached, val);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
         }
         catch { }
     }

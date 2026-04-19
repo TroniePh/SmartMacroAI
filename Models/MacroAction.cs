@@ -27,6 +27,8 @@ namespace SmartMacroAI.Models;
 [JsonDerivedType(typeof(WebAction), "WebAction")]
 [JsonDerivedType(typeof(SystemAction), "System")]
 [JsonDerivedType(typeof(LaunchAndBindAction), "LaunchAndBind")]
+[JsonDerivedType(typeof(KeyPressAction), "KeyPress")]
+[JsonDerivedType(typeof(TelegramAction), "Telegram")]
 public abstract class MacroAction
 {
     public string DisplayName { get; set; } = string.Empty;
@@ -456,5 +458,74 @@ public class LaunchAndBindAction : MacroAction
     public LaunchAndBindAction()
     {
         DisplayName = "Launch & Bind";
+    }
+}
+
+/// <summary>
+/// Sends a single keystroke (key-down followed by key-up via PostMessage) to the target window.
+/// Unlike TypeAction which sends WM_CHAR for printable characters, this sends raw VK codes
+/// via WM_KEYDOWN / WM_KEYUP — ideal for modifier keys (Ctrl, Alt, F-keys, etc.).
+/// </summary>
+public class KeyPressAction : MacroAction
+{
+    /// <summary>Win32 virtual-key code (VK_*). Zero means "not set / not executed".</summary>
+    public int VirtualKeyCode { get; set; }
+
+    /// <summary>Win32 scan code extracted via MapVirtualKey(VK, 0).</summary>
+    public int ScanCode { get; set; }
+
+    /// <summary>Human-readable name set when the key is captured, e.g. "F5", "Return", "A", "Ctrl+S".</summary>
+    public string KeyName { get; set; } = string.Empty;
+
+    /// <summary>Modifier key state active when this action was recorded.</summary>
+    public KeyModifiers Modifiers { get; set; } = new();
+
+    /// <summary>How long (ms) the key is held between down and up events.</summary>
+    public int HoldDurationMs { get; set; } = 50;
+
+    public KeyPressAction()
+    {
+        DisplayName = "Nhấn phím";
+    }
+}
+
+/// <summary>
+/// Describes which modifier keys (Shift, Ctrl, Alt) were held when a <see cref="KeyPressAction"/>
+/// was recorded. Used to reconstruct the exact key combo during playback.
+/// </summary>
+public class KeyModifiers
+{
+    /// <summary>True if Left or Right Shift was held.</summary>
+    public bool Shift { get; set; }
+    /// <summary>True if Left or Right Ctrl was held.</summary>
+    public bool Ctrl { get; set; }
+    /// <summary>True if Left or Right Alt was held.</summary>
+    public bool Alt { get; set; }
+}
+
+// ── Telegram notification ──
+
+/// <summary>
+/// Sends an HTML-formatted message to a Telegram chat via the Bot API.
+/// Supports <c>{{variable}}</c> placeholders resolved from the current data row.
+/// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+/// </summary>
+public class TelegramAction : MacroAction
+{
+    /// <summary>Bot token obtained from @BotFather (e.g. 123456789:ABCdefGHI…).</summary>
+    public string BotToken { get; set; } = string.Empty;
+
+    /// <summary>Target chat ID (numeric or @channel_username).</summary>
+    public string ChatId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Message body with optional <c>{{variable}}</c> tokens. HTML formatting is supported
+    /// (e.g. &lt;b&gt;bold&lt;/b&gt;, &lt;code&gt;…&lt;/code&gt;).
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+
+    public TelegramAction()
+    {
+        DisplayName = "Gửi Telegram";
     }
 }
