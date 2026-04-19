@@ -4,7 +4,7 @@
 ; Override version:   ISCC ... /DMyAppVersion=1.2.3
 
 #ifndef MyAppVersion
-#define MyAppVersion "1.2.2"
+#define MyAppVersion "1.2.3"
 #endif
 
 #define MyAppName "SmartMacroAI"
