@@ -328,8 +328,11 @@
                     <!-- File Menu -->
                     <Menu DockPanel.Dock="Left" Background="Transparent" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" Margin="0,0,16,0">
                         <MenuItem Header="File" Foreground="{StaticResource TextBrush}" FontSize="12" BorderThickness="0" Background="Transparent">
-                            <MenuItem Header="📤 Chia sẻ kịch bản (Copy mã SMA-)" Click="BtnShareScript_Click" />
+                            <MenuItem Header="📄 Macro mới" Click="BtnNewMacro_Click" />
+                            <MenuItem Header="📂 Mở macro" Click="BtnLoadMacro_Click" />
+                            <MenuItem Header="💾 Lưu macro" Click="BtnSaveMacro_Click" />
                             <Separator />
+                            <MenuItem Header="📤 Chia sẻ kịch bản (Copy mã SMA-)" Click="BtnShareScript_Click" />
                             <MenuItem Header="📥 Nhập từ mã SMA-" Click="BtnImportScript_Click" />
                         </MenuItem>
                     </Menu>
@@ -705,6 +708,8 @@
                                 <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal">
                                     <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Save}" Click="BtnSaveMacro_Click" Margin="0,0,6,0" Padding="16,8" />
                                     <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Load}" Click="BtnLoadMacro_Click" Margin="0,0,6,0" Padding="16,8" />
+                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="📤" ToolTip="Chia sẻ kịch bản (Copy mã SMA-)" Click="BtnShareScript_Click" Padding="10,8" FontSize="14" Margin="0,0,4,0" />
+                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="📥" ToolTip="Nhập từ mã SMA-" Click="BtnImportScript_Click" Padding="10,8" FontSize="14" Margin="0,0,6,0" />
                                     <Button Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_Clear}" Click="BtnClearCanvas_Click" Margin="0,0,6,0" Padding="16,8" />
                                     <Border Width="1" Background="{StaticResource Surface1Brush}" Margin="4,2,10,2" />
                                     <Button x:Name="BtnRunMacro" Click="BtnRunMacro_Click"
@@ -1247,7 +1252,8 @@
                                                 <CheckBox x:Name="ChkAntiCpuTweak" Content="{DynamicResource ui_Anti_CpuTweak}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
                                                 <CheckBox x:Name="ChkAntiHookScan" Content="{DynamicResource ui_Anti_HookScan}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
                                                 <CheckBox x:Name="ChkAntiScanTyping" Content="{DynamicResource ui_Anti_ScanTyping}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8" />
-                                                <CheckBox x:Name="ChkAntiCapture" Content="{DynamicResource ui_Anti_Capture}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                                                <CheckBox x:Name="ChkAntiCapture" Content="{DynamicResource ui_Anti_Capture}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12"
+                                                          Checked="ChkAntiCapture_Changed" Unchecked="ChkAntiCapture_Changed" />
                                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Anti_Misclick}" />
                                                 <DockPanel Margin="0,6,0,12">
                                                     <TextBlock x:Name="TxtAntiMisclickValue" DockPanel.Dock="Right" MinWidth="32" TextAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextBrush}" />

@@ -450,7 +450,11 @@ public partial class MainWindow : Window
         if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.InputText))
             return;
 
-        string input = dlg.InputText.Trim();
+        string input = dlg.InputText
+            .Trim()
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace(" ", "");
 
         try
         {
@@ -975,12 +979,21 @@ public partial class MainWindow : Window
             if (hwnd == IntPtr.Zero)
                 return;
             var s = AppSettings.Load();
-            ModuleAuditService.ApplyExcludeFromCapture(hwnd, s.AntiDetectionEnabled && s.AntiDetectionHideFromCapture);
+            // Apply independently: HideFromCapture toggles even when AntiDetectionEnabled is off
+            ModuleAuditService.ApplyExcludeFromCapture(hwnd, s.AntiDetectionHideFromCapture);
         }
         catch (Exception ex)
         {
             AppendLog($"[Anti-Detection] Capture affinity: {ex.Message}");
         }
+    }
+
+    private void ChkAntiCapture_Changed(object sender, RoutedEventArgs e)
+    {
+        bool hideFromCapture = ChkAntiCapture.IsChecked == true;
+        AppSettings.Instance.AntiDetectionHideFromCapture = hideFromCapture;
+        AppSettings.Instance.Save();
+        ApplyCaptureAffinityFromSettings(); // apply immediately, not just on Save button
     }
 
     private void LoadAntiDetectionFromSettings()

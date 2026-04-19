@@ -42,10 +42,20 @@ public static class LanguageManager
 
         lock (Gate)
         {
-            if (_stringsDictionary is not null)
-                app.Resources.MergedDictionaries.Remove(_stringsDictionary);
+            // Remove ALL existing language dictionaries before adding the new one.
+            // This prevents accumulating duplicate dicts if ChangeLanguage is called
+            // before _stringsDictionary has been assigned (e.g., after app restart).
+            var existing = app.Resources.MergedDictionaries
+                .Where(d => d.Source is not null &&
+                            (d.Source.OriginalString.Contains("Strings.vi") ||
+                             d.Source.OriginalString.Contains("Strings.en")))
+                .ToList();
 
-            app.Resources.MergedDictionaries.Insert(0, newDict);
+            foreach (var d in existing)
+                app.Resources.MergedDictionaries.Remove(d);
+
+            // Add the new dict at the end so WPF framework dictionaries keep priority.
+            app.Resources.MergedDictionaries.Add(newDict);
             _stringsDictionary = newDict;
         }
 

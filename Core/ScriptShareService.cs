@@ -30,7 +30,6 @@ public static class ScriptShareService
         byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
 
         using var output = new MemoryStream();
-        output.Write(new byte[] { 0x1F, 0x8B }, 0, 2);
 
         using (var gzip = new GZipStream(output, CompressionLevel.Optimal, leaveOpen: true))
         {
@@ -53,7 +52,10 @@ public static class ScriptShareService
         if (string.IsNullOrWhiteSpace(code))
             throw new ShareCodeException("Mã SMA- trống. Vui lòng dán mã đầy đủ.");
 
-        string trimmed = code.Trim();
+        string trimmed = code.Trim()
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace(" ", "");
 
         if (!trimmed.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
             throw new ShareCodeException(
