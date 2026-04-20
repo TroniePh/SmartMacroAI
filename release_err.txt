@@ -1,0 +1,13 @@
+Unhandled exception. System.IO.FileNotFoundException: 
+File name: 'SmartMacroAI, Version=1.4.0.0, Culture=neutral, PublicKeyToken=null'
+   at System.Reflection.RuntimeAssembly.InternalLoad(AssemblyName assemblyName, StackCrawlMark& stackMark, AssemblyLoadContext assemblyLoadContext, RuntimeAssembly requestingAssembly, Boolean throwOnFileNotFound)
+   at System.Reflection.Assembly.Load(AssemblyName assemblyRef)
+   at System.Windows.Navigation.BaseUriHelper.GetLoadedAssembly(String assemblyName, String assemblyVersion, String assemblyKey)
+   at MS.Internal.AppModel.ResourceContainer.GetResourceManagerWrapper(Uri uri, String& partName, Boolean& isContentFile)
+   at MS.Internal.AppModel.ResourceContainer.GetPartCore(Uri uri)
+   at System.IO.Packaging.Package.GetPartHelper(Uri partUri)
+   at System.IO.Packaging.Package.GetPart(Uri partUri)
+   at System.Windows.Application.GetResourceOrContentPart(Uri uri)
+   at System.Windows.Application.LoadComponent(Object component, Uri resourceLocator)
+   at SmartMacroAI.App.InitializeComponent() in E:\macro\SmartMacroAI\App.xaml:line 1
+   at SmartMacroAI.App.Main()
