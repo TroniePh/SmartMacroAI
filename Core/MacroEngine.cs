@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 using WinForms = System.Windows.Forms;
 using WpfApp = System.Windows.Application;
@@ -82,6 +83,60 @@ public sealed class VariableManager
 /// </summary>
 public sealed class MacroEngine
 {
+    // Guards: Clipboard, SetForegroundWindow, SendInput physical mouse, keybd_event
+    // Prevents cross-window input contamination when multiple macros target different Discord windows
+    private static readonly SemaphoreSlim _osResourceLock = new(1, 1);
+
+    // Pinned at construction — never re-derived during execution (FIX 2)
+    private IntPtr _targetHwnd;
+    private uint _targetThread;
+    private uint _targetPid;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT { public int X; public int Y; }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+
+    private void InitializeTargetHwnd(IntPtr hwnd)
+    {
+        _targetHwnd = hwnd;
+        _targetThread = GetWindowThreadProcessId(hwnd, out uint pid);
+        _targetPid = pid;
+    }
+
+    private bool IsTargetValid()
+    {
+        if (!IsWindow(_targetHwnd))
+        {
+            OnLog($"[ERROR] Window 0x{_targetHwnd:X} no longer exists — stopping macro");
+            return false;
+        }
+        GetWindowThreadProcessId(_targetHwnd, out uint pid);
+        if (pid != _targetPid)
+        {
+            OnLog($"[ERROR] Window PID changed: expected {_targetPid}, got {pid}");
+            return false;
+        }
+        return true;
+    }
+
     [DllImport("user32.dll")]
     private static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
@@ -228,6 +283,7 @@ public sealed class MacroEngine
         _mouseMover.DiagnosticLog = msg => log?.Invoke(msg);
         Log = log;
         TargetHwnd = hwnd;
+        if (hwnd != IntPtr.Zero) InitializeTargetHwnd(hwnd);
         InitialScript = script;
         _currentScript = script;
     }
@@ -240,6 +296,7 @@ public sealed class MacroEngine
         _mouseMover.DiagnosticLog = msg => log?.Invoke(msg);
         Log = log;
         TargetHwnd = hwnd;
+        if (hwnd != IntPtr.Zero) InitializeTargetHwnd(hwnd);
         InitialScript = script;
         _currentScript = script;
         _subMacroDepth = parent._subMacroDepth + 1;
@@ -392,6 +449,7 @@ public sealed class MacroEngine
         if (valid)
         {
             _runtimeTargetHwnd = hwnd;
+            InitializeTargetHwnd(hwnd); // FIX 2: pin HWND at execution start
             string windowTitle = Win32Api.GetWindowTitle(hwnd);
             OnLog($"Target acquired: \"{windowTitle}\" (HWND=0x{hwnd:X}) — PostMessage (stealth)");
         }
@@ -1233,6 +1291,9 @@ public sealed class MacroEngine
 
     private async Task ExecuteOcrRegionAsync(OcrRegionAction act, CancellationToken token)
     {
+        // FIX 5: HWND liveness check (OCR region can be independent of window)
+        if (_runtimeTargetHwnd != IntPtr.Zero && !IsTargetValid()) return;
+
         var region = new Rectangle(act.ScreenX, act.ScreenY, act.ScreenWidth, act.ScreenHeight);
         int vx = (int)System.Windows.SystemParameters.VirtualScreenLeft;
         int vy = (int)System.Windows.SystemParameters.VirtualScreenTop;
@@ -1276,11 +1337,8 @@ public sealed class MacroEngine
     {
         IntPtr hwnd = _runtimeTargetHwnd;
 
-        if (!Win32Api.IsWindow(hwnd))
-        {
-            Log?.Invoke("❌ Cửa sổ mục tiêu không tồn tại. Chọn lại cửa sổ.");
-            return;
-        }
+        // FIX 5: HWND liveness check
+        if (!IsTargetValid()) return;
 
         if (!Win32Api.IsInsideClientArea(hwnd, click.X, click.Y))
             OnLog($"  ⚠ ({click.X},{click.Y}) is outside client rect");
@@ -1288,24 +1346,35 @@ public sealed class MacroEngine
         // ── HARDWARE MODE: physical mouse hijack (user explicitly wants it) ──────
         if (HardwareMode)
         {
-            var pt = new Win32Api.POINT { X = click.X, Y = click.Y };
-            Win32Api.ClientToScreen(hwnd, ref pt);
+            // FIX 1: Wrap OS resource usage with semaphore to prevent cross-window contamination
+            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
+            {
+                OnLog("[WARN] OS resource lock timeout on click — skipping");
+                return;
+            }
+            try
+            {
+                var pt = new POINT { X = click.X, Y = click.Y };
+                ClientToScreen(hwnd, ref pt);
 
-            IntPtr prevFg = GetForegroundWindow();
-            if (prevFg != hwnd) { SetForegroundWindow(hwnd); await Task.Delay(50, token); }
+                IntPtr prevFg = GetForegroundWindow();
+                if (prevFg != hwnd) { SetForegroundWindow(hwnd); await Task.Delay(50, token); }
 
-            SetCursorPos(pt.X, pt.Y);
-            await Task.Delay(20, token);
-            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
-            await Task.Delay(30, token);
-            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
+                SetCursorPos(pt.X, pt.Y);
+                await Task.Delay(20, token);
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
+                await Task.Delay(30, token);
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
 
-            if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
-            Log?.Invoke($"[Click/HW] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
+                if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
+                Log?.Invoke($"[Click/HW] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
+            }
+            finally { _osResourceLock.Release(); }
             return;
         }
 
         // ── DEFAULT (stealth ON or OFF): PostMessage ONLY — never hijacks mouse ─
+        // PostMessage is thread-safe by design — NO lock needed
         IntPtr lParam = Win32Api.MakeLParam(click.X, click.Y);
         Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
         await Task.Delay(20, token);
@@ -1449,6 +1518,10 @@ public sealed class MacroEngine
     {
         EnsureDesktopTargetBound();
         IntPtr hwnd = _runtimeTargetHwnd;
+
+        // FIX 5: HWND liveness check
+        if (!IsTargetValid()) return;
+
         string breakPath = ExpandRuntime(repeat.BreakIfImagePath);
 
         bool infinite = repeat.RepeatCount == 0;
@@ -1498,6 +1571,10 @@ public sealed class MacroEngine
     private async Task ExecuteTypeAsync(TypeAction type, CancellationToken token)
     {
         IntPtr hwnd = _runtimeTargetHwnd;
+
+        // FIX 5: HWND liveness check
+        if (!IsTargetValid()) return;
+
         IntPtr target = Win32Api.FindInputChild(hwnd);
         bool isChild = target != hwnd;
         string suffix = isChild
@@ -1639,31 +1716,41 @@ public sealed class MacroEngine
 
     private async Task TypeViaClipboardAsync(IntPtr target, string text, CancellationToken token)
     {
-        string? prev = null;
-
-        await WpfApp.Current.Dispatcher.InvokeAsync(() =>
+        // FIX 1: Lock clipboard access to prevent cross-window contamination
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
         {
-            try { prev = System.Windows.Clipboard.GetText(); } catch { }
-            System.Windows.Clipboard.SetText(text);
-        });
-
-        await Task.Delay(100, token);
-
-        Win32Api.PostMessage(target, 0x0302, IntPtr.Zero, IntPtr.Zero);
-
-        await Task.Delay(150, token);
-
-        await WpfApp.Current.Dispatcher.InvokeAsync(() =>
+            OnLog("[WARN] OS resource lock timeout on TypeViaClipboardAsync — skipping");
+            return;
+        }
+        try
         {
-            try
+            string? prev = null;
+
+            await WpfApp.Current.Dispatcher.InvokeAsync(() =>
             {
-                if (prev != null)
-                    System.Windows.Clipboard.SetText(prev);
-                else
-                    System.Windows.Clipboard.Clear();
-            }
-            catch { }
-        });
+                try { prev = System.Windows.Clipboard.GetText(); } catch { }
+                try { System.Windows.Clipboard.SetText(text); } catch { }
+            });
+
+            await Task.Delay(100, token);
+
+            PostMessage(target, WM_PASTE, IntPtr.Zero, IntPtr.Zero);
+
+            await Task.Delay(150, token);
+
+            await WpfApp.Current.Dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    if (prev != null)
+                        System.Windows.Clipboard.SetText(prev);
+                    else
+                        System.Windows.Clipboard.Clear();
+                }
+                catch { }
+            });
+        }
+        finally { _osResourceLock.Release(); }
 
         OnLog($"    → Clipboard paste: {text.Length} ký tự");
     }
@@ -1687,37 +1774,47 @@ public sealed class MacroEngine
     /// </summary>
     private async Task TypeViaSendInputAsync(IntPtr hwnd, string text, int delayMs, CancellationToken token)
     {
-        uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
-        uint ourThreadId = GetCurrentThreadId();
-
-        foreach (char ch in text)
+        // FIX 1: Lock SendInput usage to prevent cross-window contamination
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
         {
-            token.ThrowIfCancellationRequested();
-
-            // Attach → send → detach atomically (no await while attached)
-            if (AttachThreadInput(ourThreadId, targetThreadId, true))
-            {
-                IntPtr focusedChild = GetFocusedChildWindow(hwnd);
-                SetFocus(focusedChild);
-
-                var down = new INPUT
-                {
-                    type = INPUT_KEYBOARD,
-                    u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0, wScan = ch, dwFlags = KEYEVENTF_SCANCODE, time = 0, dwExtraInfo = IntPtr.Zero } }
-                };
-                var up = new INPUT
-                {
-                    type = INPUT_KEYBOARD,
-                    u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0, wScan = ch, dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP, time = 0, dwExtraInfo = IntPtr.Zero } }
-                };
-
-                SendInput(2, new[] { down, up }, Marshal.SizeOf<INPUT>());
-                ReleaseAllModifiers(); // safety: unstick any leaked modifiers
-                AttachThreadInput(ourThreadId, targetThreadId, false); // detach immediately
-            }
-
-            await Task.Delay(Math.Max(delayMs, 30), token);
+            OnLog("[WARN] OS resource lock timeout on TypeViaSendInput — skipping");
+            return;
         }
+        try
+        {
+            uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
+            uint ourThreadId = GetCurrentThreadId();
+
+            foreach (char ch in text)
+            {
+                token.ThrowIfCancellationRequested();
+
+                // Attach → send → detach atomically (no await while attached)
+                if (AttachThreadInput(ourThreadId, targetThreadId, true))
+                {
+                    IntPtr focusedChild = GetFocusedChildWindow(hwnd);
+                    SetFocus(focusedChild);
+
+                    var down = new INPUT
+                    {
+                        type = INPUT_KEYBOARD,
+                        u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0, wScan = ch, dwFlags = KEYEVENTF_SCANCODE, time = 0, dwExtraInfo = IntPtr.Zero } }
+                    };
+                    var up = new INPUT
+                    {
+                        type = INPUT_KEYBOARD,
+                        u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0, wScan = ch, dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP, time = 0, dwExtraInfo = IntPtr.Zero } }
+                    };
+
+                    SendInput(2, new[] { down, up }, Marshal.SizeOf<INPUT>());
+                    ReleaseAllModifiers(); // safety: unstick any leaked modifiers
+                    AttachThreadInput(ourThreadId, targetThreadId, false); // detach immediately
+                }
+
+                await Task.Delay(Math.Max(delayMs, 30), token);
+            }
+        }
+        finally { _osResourceLock.Release(); }
 
         OnLog($"    → SendInput+Attach/Unicode: {text.Length} ký tự");
     }
@@ -1732,63 +1829,73 @@ public sealed class MacroEngine
     /// </summary>
     private async Task ExecuteKeyPressSendInputAsync(KeyPressAction kpa, IntPtr hwnd, CancellationToken token)
     {
-        uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
-        uint ourThreadId = GetCurrentThreadId();
-
-        // Find focused child once (stable for the duration of a single key press)
-        IntPtr focusedChild;
-        if (AttachThreadInput(ourThreadId, targetThreadId, true))
+        // FIX 1: Lock SendInput usage to prevent cross-window contamination
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
         {
-            focusedChild = GetFocusedChildWindow(hwnd);
-            SetFocus(focusedChild);
+            OnLog("[WARN] OS resource lock timeout on SendInput keypress — skipping");
+            return;
+        }
+        try
+        {
+            uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
+            uint ourThreadId = GetCurrentThreadId();
 
-            var inputs = new List<INPUT>();
-
-            void AddKey(ushort vk, bool keyUp)
+            // Find focused child once (stable for the duration of a single key press)
+            IntPtr focusedChild;
+            if (AttachThreadInput(ourThreadId, targetThreadId, true))
             {
-                uint scanCode = MapVirtualKey(vk, 0);
-                inputs.Add(new INPUT
+                focusedChild = GetFocusedChildWindow(hwnd);
+                SetFocus(focusedChild);
+
+                var inputs = new List<INPUT>();
+
+                void AddKey(ushort vk, bool keyUp)
                 {
-                    type = INPUT_KEYBOARD,
-                    u = new INPUTUNION
+                    uint scanCode = MapVirtualKey(vk, 0);
+                    inputs.Add(new INPUT
                     {
-                        ki = new KEYBDINPUT
+                        type = INPUT_KEYBOARD,
+                        u = new INPUTUNION
                         {
-                            wVk = vk,
-                            wScan = (ushort)scanCode,
-                            dwFlags = (keyUp ? KEYEVENTF_KEYUP : 0) | KEYEVENTF_SCANCODE,
-                            time = 0,
-                            dwExtraInfo = IntPtr.Zero
+                            ki = new KEYBDINPUT
+                            {
+                                wVk = vk,
+                                wScan = (ushort)scanCode,
+                                dwFlags = (keyUp ? KEYEVENTF_KEYUP : 0) | KEYEVENTF_SCANCODE,
+                                time = 0,
+                                dwExtraInfo = IntPtr.Zero
+                            }
                         }
-                    }
-                });
+                    });
+                }
+
+                // Modifiers down
+                if (kpa.Modifiers.Shift) AddKey(0x10, false);
+                if (kpa.Modifiers.Ctrl) AddKey(0x11, false);
+                if (kpa.Modifiers.Alt) AddKey(0x12, false);
+
+                // Main key down + up
+                AddKey((ushort)kpa.VirtualKeyCode, false);
+                AddKey((ushort)kpa.VirtualKeyCode, true);
+
+                // Modifiers up (reverse)
+                if (kpa.Modifiers.Alt) AddKey(0x12, true);
+                if (kpa.Modifiers.Ctrl) AddKey(0x11, true);
+                if (kpa.Modifiers.Shift) AddKey(0x10, true);
+
+                SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+                ReleaseAllModifiers(); // safety: unstick any leaked modifiers
+                AttachThreadInput(ourThreadId, targetThreadId, false); // detach immediately
+            }
+            else
+            {
+                focusedChild = hwnd;
             }
 
-            // Modifiers down
-            if (kpa.Modifiers.Shift) AddKey(0x10, false);
-            if (kpa.Modifiers.Ctrl) AddKey(0x11, false);
-            if (kpa.Modifiers.Alt) AddKey(0x12, false);
-
-            // Main key down + up
-            AddKey((ushort)kpa.VirtualKeyCode, false);
-            AddKey((ushort)kpa.VirtualKeyCode, true);
-
-            // Modifiers up (reverse)
-            if (kpa.Modifiers.Alt) AddKey(0x12, true);
-            if (kpa.Modifiers.Ctrl) AddKey(0x11, true);
-            if (kpa.Modifiers.Shift) AddKey(0x10, true);
-
-            SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
-            ReleaseAllModifiers(); // safety: unstick any leaked modifiers
-            AttachThreadInput(ourThreadId, targetThreadId, false); // detach immediately
+            await Task.Delay(Math.Max(kpa.HoldDurationMs, 50), token);
+            OnLog($"  KeyPress/SendInput+Attach {kpa.KeyName} → child: 0x{focusedChild:X}");
         }
-        else
-        {
-            focusedChild = hwnd;
-        }
-
-        await Task.Delay(Math.Max(kpa.HoldDurationMs, 50), token);
-        OnLog($"  KeyPress/SendInput+Attach {kpa.KeyName} → child: 0x{focusedChild:X}");
+        finally { _osResourceLock.Release(); }
     }
 
     /// <summary>
@@ -1797,65 +1904,75 @@ public sealed class MacroEngine
     /// </summary>
     private async Task ExecuteKeyPressRawInputAsync(KeyPressAction kpa, IntPtr hwnd, CancellationToken token)
     {
-        uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
-        uint ourThreadId = GetCurrentThreadId();
-
-        IntPtr focusedChild;
-        if (AttachThreadInput(ourThreadId, targetThreadId, true))
+        // FIX 1: Lock SendInput usage to prevent cross-window contamination
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
         {
-            focusedChild = GetFocusedChildWindow(hwnd);
-            SetFocus(focusedChild);
+            OnLog("[WARN] OS resource lock timeout on RawInput keypress — skipping");
+            return;
+        }
+        try
+        {
+            uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
+            uint ourThreadId = GetCurrentThreadId();
 
-            var inputs = new List<INPUT>();
-
-            void AddScanCode(int vk, bool keyUp)
+            IntPtr focusedChild;
+            if (AttachThreadInput(ourThreadId, targetThreadId, true))
             {
-                uint sc = MapVirtualKey((uint)vk, 0);
-                bool isExtended = vk is 0x21 or 0x22 or 0x23 or 0x24 or
-                                      0x25 or 0x26 or 0x27 or 0x28 or
-                                      0x2D or 0x2E or 0xA1 or 0xA3 or 0xA5;
-                uint flags = KEYEVENTF_SCANCODE;
-                if (keyUp) flags |= KEYEVENTF_KEYUP;
-                if (isExtended) flags |= 0x0001;
-                inputs.Add(new INPUT
+                focusedChild = GetFocusedChildWindow(hwnd);
+                SetFocus(focusedChild);
+
+                var inputs = new List<INPUT>();
+
+                void AddScanCode(int vk, bool keyUp)
                 {
-                    type = INPUT_KEYBOARD,
-                    u = new INPUTUNION
+                    uint sc = MapVirtualKey((uint)vk, 0);
+                    bool isExtended = vk is 0x21 or 0x22 or 0x23 or 0x24 or
+                                          0x25 or 0x26 or 0x27 or 0x28 or
+                                          0x2D or 0x2E or 0xA1 or 0xA3 or 0xA5;
+                    uint flags = KEYEVENTF_SCANCODE;
+                    if (keyUp) flags |= KEYEVENTF_KEYUP;
+                    if (isExtended) flags |= 0x0001;
+                    inputs.Add(new INPUT
                     {
-                        ki = new KEYBDINPUT
+                        type = INPUT_KEYBOARD,
+                        u = new INPUTUNION
                         {
-                            wVk = 0,
-                            wScan = (ushort)sc,
-                            dwFlags = flags,
-                            time = 0,
-                            dwExtraInfo = IntPtr.Zero
+                            ki = new KEYBDINPUT
+                            {
+                                wVk = 0,
+                                wScan = (ushort)sc,
+                                dwFlags = flags,
+                                time = 0,
+                                dwExtraInfo = IntPtr.Zero
+                            }
                         }
-                    }
-                });
+                    });
+                }
+
+                if (kpa.Modifiers.Shift) AddScanCode(0x10, false);
+                if (kpa.Modifiers.Ctrl) AddScanCode(0x11, false);
+                if (kpa.Modifiers.Alt) AddScanCode(0x12, false);
+
+                AddScanCode(kpa.VirtualKeyCode, false);
+                AddScanCode(kpa.VirtualKeyCode, true);
+
+                if (kpa.Modifiers.Alt) AddScanCode(0x12, true);
+                if (kpa.Modifiers.Ctrl) AddScanCode(0x11, true);
+                if (kpa.Modifiers.Shift) AddScanCode(0x10, true);
+
+                SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+                ReleaseAllModifiers();
+                AttachThreadInput(ourThreadId, targetThreadId, false);
+            }
+            else
+            {
+                focusedChild = hwnd;
             }
 
-            if (kpa.Modifiers.Shift) AddScanCode(0x10, false);
-            if (kpa.Modifiers.Ctrl) AddScanCode(0x11, false);
-            if (kpa.Modifiers.Alt) AddScanCode(0x12, false);
-
-            AddScanCode(kpa.VirtualKeyCode, false);
-            AddScanCode(kpa.VirtualKeyCode, true);
-
-            if (kpa.Modifiers.Alt) AddScanCode(0x12, true);
-            if (kpa.Modifiers.Ctrl) AddScanCode(0x11, true);
-            if (kpa.Modifiers.Shift) AddScanCode(0x10, true);
-
-            SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
-            ReleaseAllModifiers();
-            AttachThreadInput(ourThreadId, targetThreadId, false);
+            await Task.Delay(Math.Max(kpa.HoldDurationMs, 50), token);
+            OnLog($"[KeyPress/RawInput+Attach] {kpa.KeyName} SC=0x{MapVirtualKey((uint)kpa.VirtualKeyCode, 0):X2} → child: 0x{focusedChild:X}");
         }
-        else
-        {
-            focusedChild = hwnd;
-        }
-
-        await Task.Delay(Math.Max(kpa.HoldDurationMs, 50), token);
-        OnLog($"[KeyPress/RawInput+Attach] {kpa.KeyName} SC=0x{MapVirtualKey((uint)kpa.VirtualKeyCode, 0):X2} → child: 0x{focusedChild:X}");
+        finally { _osResourceLock.Release(); }
     }
 
     /// <summary>
@@ -1905,7 +2022,10 @@ public sealed class MacroEngine
         }
 
         IntPtr hwnd = _runtimeTargetHwnd;
-        IntPtr target = Win32Api.FindInputChild(hwnd);
+
+        // FIX 5: HWND liveness check
+        if (!IsTargetValid()) return;
+
         int vk = kpa.VirtualKeyCode;
         int hold = Math.Max(0, kpa.HoldDurationMs);
 
@@ -1918,66 +2038,107 @@ public sealed class MacroEngine
             case KeyInputMode.SendInput:
                 await ExecuteKeyPressSendInputAsync(kpa, hwnd, token);
                 return;
-            default:
-                break;
         }
 
-        // ── POSTMESSAGE PATH ───────────────────────────────────────────────────────
+        // ── POSTMESSAGE PATH (FIX 4) ─────────────────────────────────────────────
+        // Route based on key complexity to minimize cross-window contamination risk.
 
-        // PATH 1: Printable character → WM_CHAR
-        char? printable = TryGetPrintableChar(vk, kpa.Modifiers.Shift, kpa.Modifiers.Ctrl, kpa.Modifiers.Alt);
-        if (printable.HasValue)
+        // PATH A: Simple printable char (no Ctrl/Alt) → PostMessage WM_CHAR directly.
+        // Zero cross-contamination risk — targets specific HWND, no focus steal needed.
+        // Uses GetFocusedChildForTarget which validates PID + IsChild to avoid wrong Discord window.
+        if (!kpa.Modifiers.Ctrl && !kpa.Modifiers.Alt)
         {
-            Win32Api.PostMessage(target, WM_CHAR, (IntPtr)printable.Value, IntPtr.Zero);
-            await Task.Delay(hold, token).ConfigureAwait(false);
-            OnLog($"  KeyPress {kpa.KeyName} → WM_CHAR '{printable.Value}' (U+{((int)printable.Value):X4})");
-            return;
-        }
-
-        // PATH 2: Ctrl+A → select all via EM_SETSEL
-        if (kpa.Modifiers.Ctrl && vk == 0x41)
-        {
-            Win32Api.PostMessage(target, EM_SETSEL, IntPtr.Zero, (IntPtr)(-1));
-            OnLog("  KeyPress Ctrl+A → EM_SETSEL (select all)");
-            return;
-        }
-
-        // PATH 3: Ctrl+C/V/X/Z → semantic clipboard messages
-        uint? semantic = GetSemanticMessage(vk, kpa.Modifiers);
-        if (semantic.HasValue)
-        {
-            Win32Api.PostMessage(target, semantic.Value, IntPtr.Zero, IntPtr.Zero);
-            string name = semantic.Value switch
+            char? printable = TryGetPrintableChar(vk, kpa.Modifiers.Shift, kpa.Modifiers.Ctrl, kpa.Modifiers.Alt);
+            if (printable.HasValue)
             {
-                0x0301 => "WM_COPY",
-                0x0302 => "WM_PASTE",
-                0x0300 => "WM_CUT",
-                0x0304 => "WM_UNDO",
-                _ => $"0x{semantic.Value:X4}"
-            };
-            OnLog($"  KeyPress {kpa.KeyName} → {name}");
+                IntPtr child = GetFocusedChildForTarget(hwnd);
+                PostMessage(child, WM_CHAR, (IntPtr)printable.Value, IntPtr.Zero);
+                await Task.Delay(hold, token).ConfigureAwait(false);
+                OnLog($"[KeyPress/PostChar] '{printable.Value}' → 0x{child:X}");
+                return;
+            }
+        }
+
+        // PATH B: Control keys without Shift/Alt → PostMessage WM_KEYDOWN directly.
+        // No cross-contamination risk — targets specific HWND via GetFocusedChildForTarget.
+        if (!kpa.Modifiers.Shift && !kpa.Modifiers.Alt)
+        {
+            IntPtr child = GetFocusedChildForTarget(hwnd);
+            uint scan = MapVirtualKey((uint)vk, 0);
+            IntPtr lpDn = (IntPtr)((scan << 16) | 1);
+            IntPtr lpUp = (IntPtr)((scan << 16) | 0xC0000001);
+
+            if (kpa.Modifiers.Ctrl)
+            {
+                PostMessage(child, WM_KEYDOWN, (IntPtr)0x11, MakeLParam(0x1D, 0));
+                await Task.Delay(15, token);
+            }
+            PostMessage(child, WM_KEYDOWN, (IntPtr)vk, lpDn);
+            await Task.Delay(Math.Max(hold, 20), token);
+            PostMessage(child, WM_KEYUP, (IntPtr)vk, lpUp);
+            if (kpa.Modifiers.Ctrl)
+            {
+                await Task.Delay(15, token);
+                PostMessage(child, WM_KEYUP, (IntPtr)0x11, MakeLParam(0x1D, 0xC000));
+            }
+            OnLog($"[KeyPress/PostMsg] {kpa.KeyName} → 0x{child:X}");
             return;
         }
 
-        // PATH 4: Everything else → raw WM_KEYDOWN/WM_KEYUP or ElectronKeyPress
-        IntPtr downParam = BuildKeyLParam(vk, isKeyUp: false);
-        IntPtr upParam   = BuildKeyLParam(vk, isKeyUp: true);
+        // PATH C: Complex combos (Shift+Alt etc.) → AttachThreadInput fallback.
+        // Note: If Ctrl+V still misfires here, Chromium calls GetKeyState() physically
+        // → route those through TypeViaFlashForegroundAsync (which has _osResourceLock).
+        await ExecuteKeyPressAttachAsync(hwnd, kpa, token);
+    }
 
-        // For Electron/Chromium: WM_KEYDOWN/WM_KEYUP via PostMessage is ignored.
-        // Use ElectronKeyPressAsync (flash + SendInput) instead.
+    /// <summary>
+    /// PATH C fallback: AttachThreadInput for complex modifier combos (Shift+Alt, etc.)
+    /// that can't be safely routed via PostMessage alone.
+    /// </summary>
+    private async Task ExecuteKeyPressAttachAsync(IntPtr hwnd, KeyPressAction kpa, CancellationToken token)
+    {
+        uint ourThread = GetCurrentThreadId();
+        IntPtr focused = hwnd;
+
+        bool attached = AttachThreadInput(ourThread, _targetThread, true);
+        try
+        {
+            IntPtr raw = GetFocus();
+            if (raw != IntPtr.Zero)
+            {
+                GetWindowThreadProcessId(raw, out uint focusedPid);
+                // Validate — ONLY proceed if focused window belongs to OUR target
+                bool valid = focusedPid == _targetPid &&
+                             (raw == hwnd || IsChild(hwnd, raw));
+                focused = valid ? raw : hwnd;
+            }
+        }
+        finally
+        {
+            if (attached) AttachThreadInput(ourThread, _targetThread, false);
+        }
+
+        // For Electron/Chromium: use ElectronKeyPressAsync (which holds _osResourceLock)
         if (RequiresSendInput(hwnd))
         {
-            await ElectronKeyPressAsync(hwnd, kpa, token);
+            await ElectronKeyPressAsync(focused, kpa, token);
             return;
         }
 
         // Normal Win32 apps: PostMessage works.
-        Win32Api.PostMessage(target, WM_KEYDOWN, (IntPtr)vk, downParam);
-        await Task.Delay(Math.Max(hold, 50), token).ConfigureAwait(false);
-        Win32Api.PostMessage(target, WM_KEYUP, (IntPtr)vk, upParam);
-
-        OnLog($"  KeyPress {kpa.KeyName} → WM_KEYDOWN/WM_KEYUP");
+        IntPtr downParam = BuildKeyLParam(kpa.VirtualKeyCode, isKeyUp: false);
+        IntPtr upParam   = BuildKeyLParam(kpa.VirtualKeyCode, isKeyUp: true);
+        PostMessage(focused, WM_KEYDOWN, (IntPtr)kpa.VirtualKeyCode, downParam);
+        await Task.Delay(Math.Max(kpa.HoldDurationMs, 50), token).ConfigureAwait(false);
+        PostMessage(focused, WM_KEYUP, (IntPtr)kpa.VirtualKeyCode, upParam);
+        OnLog($"[KeyPress/Attach] {kpa.KeyName} → 0x{focused:X}");
     }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    private static IntPtr MakeLParam(int lo, int hi) =>
+        (IntPtr)((hi << 16) | (lo & 0xFFFF));
 
     /// <summary>
     /// Maps Ctrl+key combos to semantic clipboard/edit-control messages.
@@ -2048,6 +2209,10 @@ public sealed class MacroEngine
     private async Task ExecuteIfImageAsync(IfImageAction ifImage, CancellationToken token)
     {
         IntPtr hwnd = _runtimeTargetHwnd;
+
+        // FIX 5: HWND liveness check
+        if (!IsTargetValid()) return;
+
         string imagePath = ExpandRuntime(ifImage.ImagePath);
         const int PollMs = 500;
         int maxWait = Math.Max(0, ifImage.TimeoutMs);
@@ -2270,6 +2435,10 @@ public sealed class MacroEngine
     private async Task ExecuteIfTextAsync(IfTextAction ifText, CancellationToken token)
     {
         IntPtr hwnd = _runtimeTargetHwnd;
+
+        // FIX 5: HWND liveness check
+        if (!IsTargetValid()) return;
+
         string needle = ExpandRuntime(ifText.Text);
         OnLog($"  IfTextFound \"{Truncate(needle, 30)}\" " +
               $"(ignoreCase={ifText.IgnoreCase}, partial={ifText.PartialMatch})");
@@ -2397,6 +2566,7 @@ public sealed class MacroEngine
         }
 
         _runtimeTargetHwnd = found;
+        InitializeTargetHwnd(found); // FIX 2: pin new HWND after launch & bind
         OnLog($"[Auto-Bind] Successfully bound to new window. New HWND: 0x{_runtimeTargetHwnd:X}");
         TargetWindowRebound?.Invoke(_runtimeTargetHwnd);
     }
@@ -2648,39 +2818,38 @@ public sealed class MacroEngine
     /// For Electron apps (Discord, etc.), the top-level window is NOT the actual text input —
     /// the focused window is deep in the Chromium render tree.
     /// Returns <paramref name="topLevelHwnd"/> if no valid child is found.
+    /// FIX 3: Uses native IsChild() instead of GetAncestor() walk for speed and reliability.
     /// </summary>
-    private static IntPtr GetFocusedChildWindow(IntPtr topLevelHwnd)
+    private IntPtr GetFocusedChildForTarget(IntPtr topLevelHwnd)
     {
-        if (topLevelHwnd == IntPtr.Zero) return topLevelHwnd;
-
-        uint targetThread = GetWindowThreadProcessId(topLevelHwnd, out uint targetPid);
         uint ourThread = GetCurrentThreadId();
+        IntPtr result = topLevelHwnd;
 
-        if (AttachThreadInput(ourThread, targetThread, true))
+        bool attached = AttachThreadInput(ourThread, _targetThread, true);
+        try
         {
-            try
+            IntPtr focused = GetFocus();
+            if (focused != IntPtr.Zero)
             {
-                IntPtr focused = GetFocus();
-                if (focused != IntPtr.Zero && focused != topLevelHwnd)
+                GetWindowThreadProcessId(focused, out uint focusedPid);
+                // Must belong to same process AND be child of our specific top-level window
+                if (focusedPid == _targetPid &&
+                    (focused == topLevelHwnd || IsChild(topLevelHwnd, focused)))
                 {
-                    GetWindowThreadProcessId(focused, out uint focusedPid);
-                    if (focusedPid == targetPid)
-                    {
-                        // Walk up to confirm it's a descendant of top-level
-                        IntPtr ancestor = GetAncestor(focused, GA_ROOT);
-                        if (ancestor == topLevelHwnd)
-                            return focused;
-                    }
+                    result = focused;
                 }
-            }
-            finally
-            {
-                AttachThreadInput(ourThread, targetThread, false);
+                // else: belongs to another Discord window → stay with topLevelHwnd
             }
         }
-
-        return topLevelHwnd;
+        finally
+        {
+            if (attached) AttachThreadInput(ourThread, _targetThread, false);
+        }
+        return result;
     }
+
+    // Legacy alias kept for backward compatibility with existing callers
+    private IntPtr GetFocusedChildWindow(IntPtr topLevelHwnd) => GetFocusedChildForTarget(topLevelHwnd);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct INPUT
@@ -2725,15 +2894,19 @@ public sealed class MacroEngine
     private const uint INPUT_KEYBOARD = 1;
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_SCANCODE = 0x0008;
+
+    // Virtual key codes used by keybd_event in TypeViaFlashForegroundAsync
+    private const byte VK_CONTROL = 0x11;
+    private const byte VK_V = 0x56;
+
+    [DllImport("user32.dll")]
+    private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
     private const int SW_HIDE = 0;
     private const int SW_SHOW = 5;
     private const int SW_RESTORE = 9;
 
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
-
-    [DllImport("user32.dll")]
-    private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
     [DllImport("user32.dll")]
     private static extern bool SetCursorPos(int X, int Y);
@@ -2746,12 +2919,6 @@ public sealed class MacroEngine
 
     private static IntPtr MAKELPARAM(int x, int y)
         => (IntPtr)(((y & 0xFFFF) << 16) | (x & 0xFFFF));
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct RECT
-    {
-        public int Left, Top, Right, Bottom;
-    }
 
     /// <summary>
     /// Detects non-Win32 apps that ignore PostMessage input.
@@ -2933,74 +3100,86 @@ public sealed class MacroEngine
     }
     private async Task ElectronKeyPressAsync(IntPtr hwnd, KeyPressAction kpa, CancellationToken token)
     {
-        IntPtr prevFg = GetForegroundWindow();
-        bool wasHidden = !Win32Api.IsWindowVisible(hwnd);
+        // FIX 1: Wrap OS resource usage (SetForegroundWindow + SendInput)
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
+        {
+            OnLog("[WARN] OS resource lock timeout on keypress — skipping");
+            return;
+        }
+        try
+        {
+            IntPtr prevFg = GetForegroundWindow();
+            bool wasHidden = !Win32Api.IsWindowVisible(hwnd);
 
-        if (wasHidden) { ShowWindow(hwnd, SW_SHOW); await Task.Delay(80, token); }
-        SetForegroundWindow(hwnd);
-        await Task.Delay(120, token);
+            if (wasHidden) { ShowWindow(hwnd, SW_SHOW); await Task.Delay(80, token); }
+            SetForegroundWindow(hwnd);
+            await Task.Delay(120, token);
 
-        var inputs = new List<INPUT>();
+            var inputs = new List<INPUT>();
 
-        if (kpa.Modifiers?.Shift == true)
-            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x10 } } });
-        if (kpa.Modifiers?.Ctrl == true)
-            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x11 } } });
-        if (kpa.Modifiers?.Alt == true)
-            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x12 } } });
+            if (kpa.Modifiers?.Shift == true)
+                inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x10 } } });
+            if (kpa.Modifiers?.Ctrl == true)
+                inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x11 } } });
+            if (kpa.Modifiers?.Alt == true)
+                inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x12 } } });
 
-        inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = (ushort)kpa.VirtualKeyCode } } });
-        inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = (ushort)kpa.VirtualKeyCode, dwFlags = KEYEVENTF_KEYUP } } });
+            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = (ushort)kpa.VirtualKeyCode } } });
+            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = (ushort)kpa.VirtualKeyCode, dwFlags = KEYEVENTF_KEYUP } } });
 
-        if (kpa.Modifiers?.Alt == true)
-            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x12, dwFlags = KEYEVENTF_KEYUP } } });
-        if (kpa.Modifiers?.Ctrl == true)
-            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x11, dwFlags = KEYEVENTF_KEYUP } } });
-        if (kpa.Modifiers?.Shift == true)
-            inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x10, dwFlags = KEYEVENTF_KEYUP } } });
+            if (kpa.Modifiers?.Alt == true)
+                inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x12, dwFlags = KEYEVENTF_KEYUP } } });
+            if (kpa.Modifiers?.Ctrl == true)
+                inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x11, dwFlags = KEYEVENTF_KEYUP } } });
+            if (kpa.Modifiers?.Shift == true)
+                inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x10, dwFlags = KEYEVENTF_KEYUP } } });
 
-        var arr = inputs.ToArray();
-        SendInput((uint)arr.Length, arr, Marshal.SizeOf<INPUT>());
-        await Task.Delay(80, token);
+            var arr = inputs.ToArray();
+            SendInput((uint)arr.Length, arr, Marshal.SizeOf<INPUT>());
+            await Task.Delay(80, token);
 
-        if (wasHidden) { ShowWindow(hwnd, SW_HIDE); await Task.Delay(30, token); }
-        if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
+            if (wasHidden) { ShowWindow(hwnd, SW_HIDE); await Task.Delay(30, token); }
+            if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
+        }
+        finally { _osResourceLock.Release(); }
 
         Log?.Invoke($"[KeyPress/Flash] {kpa.KeyName}");
     }
 
     private async Task TypeViaFlashForegroundAsync(IntPtr hwnd, string text, CancellationToken token)
     {
-        string? prev = null;
-        await WpfApp.Current.Dispatcher.InvokeAsync(() => {
-            try { prev = System.Windows.Clipboard.GetText(); } catch {}
-            try { System.Windows.Clipboard.SetText(text); } catch {}
-        });
-        await Task.Delay(80, token);
-
-        IntPtr prevFg = GetForegroundWindow();
-        bool wasHidden = !Win32Api.IsWindowVisible(hwnd);
-
-        if (wasHidden) { ShowWindow(hwnd, SW_SHOW); await Task.Delay(100, token); }
-        SetForegroundWindow(hwnd);
-        await Task.Delay(150, token);
-
-        var inputs = new INPUT[]
+        // FIX 1: Wrap OS resource usage (Clipboard + SetForegroundWindow + SendInput Ctrl+V)
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
         {
-            new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x11 } } },
-            new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x56 } } },
-            new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x56, dwFlags = KEYEVENTF_KEYUP } } },
-            new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0x11, dwFlags = KEYEVENTF_KEYUP } } },
-        };
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
-        await Task.Delay(150, token);
+            OnLog("[WARN] OS resource lock timeout — skipping to prevent deadlock");
+            return;
+        }
+        try
+        {
+            string? prev = null;
+            await WpfApp.Current.Dispatcher.InvokeAsync(() => {
+                try { prev = System.Windows.Clipboard.GetText(); } catch {}
+                try { System.Windows.Clipboard.SetText(text); } catch {}
+            });
+            await Task.Delay(20, token);
 
-        if (wasHidden) { ShowWindow(hwnd, SW_HIDE); await Task.Delay(30, token); }
-        if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
+            IntPtr prevFg = GetForegroundWindow();
+            if (hwnd != prevFg) { SetForegroundWindow(hwnd); await Task.Delay(50, token); }
 
-        await WpfApp.Current.Dispatcher.InvokeAsync(() => {
-            try { if (prev != null) System.Windows.Clipboard.SetText(prev); else System.Windows.Clipboard.Clear(); } catch {}
-        });
+            // SendInput Ctrl+V
+            keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
+            keybd_event(VK_V, 0, 0, UIntPtr.Zero);
+            await Task.Delay(30, token);
+            keybd_event(VK_V, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+            keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+
+            if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
+
+            await WpfApp.Current.Dispatcher.InvokeAsync(() => {
+                try { if (prev != null) System.Windows.Clipboard.SetText(prev); else System.Windows.Clipboard.Clear(); } catch {}
+            });
+        }
+        finally { _osResourceLock.Release(); }
 
         OnLog($"    → Clipboard paste: {text.Length} ký tự → Electron app (flash fallback)");
     }

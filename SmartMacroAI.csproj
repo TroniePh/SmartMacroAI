@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**</DefaultItemExcludes>
@@ -14,8 +14,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyTitle>SmartMacroAI</AssemblyTitle>
     <Product>SmartMacroAI</Product>
-    <Company>Phạm Duy</Company>
-    <Copyright>Created by Phạm Duy - Giải pháp tự động hóa thông minh.</Copyright>
+    <Company>Ph?m Duy</Company>
+    <Copyright>Created by Ph?m Duy - Gi?i ph�p t? d?ng h�a th�ng minh.</Copyright>
     <Version>1.5.1</Version>
     <AssemblyVersion>1.5.1.0</AssemblyVersion>
     <FileVersion>1.5.1.0</FileVersion>
