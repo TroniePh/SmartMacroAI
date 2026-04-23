@@ -81,7 +81,7 @@ public partial class MainWindow : Window
     // ── Update Checker ──
     /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
     public static string AppVersion => CurrentVersion;
-    private const string CurrentVersion   = "v1.5.0";
+    private const string CurrentVersion   = "v1.5.1";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
     /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
@@ -1358,22 +1358,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void DashboardStart_Click(object sender, RoutedEventArgs e)
+    private void DashboardStart_Click(object sender, RoutedEventArgs e)
     {
-        if (Interlocked.Increment(ref _macroStartCount) != 1)
-        { Interlocked.Decrement(ref _macroStartCount); return; }
         if (sender is not Button { DataContext: DashboardRowVm row }) return;
-        try { await RunDashboardMacroAsync(row); }
-        finally { Interlocked.Decrement(ref _macroStartCount); }
-    }
+        if (row.Runner.IsRunning) return;
 
-    /// <summary>
-    /// Executes a macro from the dashboard row. Used by both the dashboard Start button
-    /// and the scheduler when a scheduled macro fires.
-    /// </summary>
-    public async Task RunDashboardMacroAsync(DashboardRowVm row)
-    {
-        // Check password lock before running
         if (!CheckMacroLock(row.Script, "chạy"))
         {
             ShowToast("Bạn cần nhập mật khẩu để chạy macro này.", isError: true);
@@ -1407,59 +1396,14 @@ public partial class MainWindow : Window
             AppendLog($"[{row.MacroName}] Stealth ON — ẩn cửa sổ mục tiêu.");
         }
 
-        row.Cts = new CancellationTokenSource();
-        row.Engine = new MacroEngine { HardwareMode = row.HardwareMode };
-        row.IsRunning = true;
-        row.Status = "Running";
-        UpdateProcessBar();
-
-        row.Engine.Log += msg => Dispatcher.Invoke(() =>
-        {
-            AppendLog($"[{row.MacroName}] {msg}");
-            if (msg.Contains("Waiting") || msg.Contains("CSV Row")) row.Status = "Waiting";
-            else if (msg.Contains("Iteration")) row.Status = "Running";
-        });
-        row.Engine.ExecutionFinished += () => Dispatcher.Invoke(() =>
-        {
-            _runsToday++;
-            row.IsRunning = false;
-            row.Status = "Ready";
-            UpdateProcessBar();
-            AppendLog($"[{row.MacroName}] Hoàn tất.");
-        });
-        row.Engine.ExecutionFaulted += ex => Dispatcher.Invoke(() =>
-        {
-            row.IsRunning = false;
-            row.Status = "Error";
-            UpdateProcessBar();
-            AppendLog($"[{row.MacroName}] Lỗi: {ex.Message}");
-        });
-        var startTime = DateTime.Now;
-
-        try
-        {
-            AppendLog($"[{row.MacroName}] Bắt đầu trên \"{row.TargetWindow}\"...");
-            await row.Engine.ExecuteScriptAsync(row.Script, targetHwnd, row.Cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            bool autoStop = row.Script.AutoStopMinutes > 0 && row.Cts is { Token.IsCancellationRequested: false };
-            AppendLog($"[{row.MacroName}] {(autoStop ? "Đã dừng (hẹn giờ tự động)." : "Đã dừng.")}");
-        }
-        catch (Exception ex)
-        {
-            AppendLog($"[{row.MacroName}] Lừ: {ex.Message}");
-        }
-        finally
-        {
-            row.IsRunning = false;
-            if (row.Status == "Running" || row.Status == "Waiting")
-                row.Status = "Stopped";
-            RestoreStealthWindow(row);
-            UpdateProcessBar();
-        }
+        row.InitRunner(row.Script, targetHwnd, row.StealthMode, row.HardwareMode);
+        row.Runner.Start(msg => AppendLog(msg));
     }
 
+    /// <summary>
+    /// Executes a macro from the dashboard row. Used by both the dashboard Start button
+    /// and the scheduler when a scheduled macro fires.
+    /// </summary>
     private void RestoreStealthWindow(DashboardRowVm row)
     {
         if (row.StealthMode && row.TargetHwnd != IntPtr.Zero)
@@ -1472,7 +1416,7 @@ public partial class MainWindow : Window
     private void DashboardStop_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { DataContext: DashboardRowVm row }) return;
-        row.Cts?.Cancel();
+        row.Runner.Stop();
         AppendLog($"[{row.MacroName}] Yêu cầu dừng.");
     }
 
@@ -1578,14 +1522,10 @@ public partial class MainWindow : Window
 
     private void BtnStopAllMacros_Click(object sender, RoutedEventArgs e)
     {
-        int count = 0;
-        foreach (var row in _dashboardRows.Where(r => r.IsRunning))
-        {
-            row.Cts?.Cancel();
-            count++;
-        }
+        foreach (var row in _dashboardRows)
+            row.Runner.Stop();
         _cts?.Cancel();
-        AppendLog($"STOP ALL: đã dừng {count} macro đang chạy.");
+        AppendLog($"Đã dừng tất cả macro.");
     }
 
     // ═══════════════════════════════════════════════════
@@ -2616,7 +2556,21 @@ public partial class MainWindow : Window
                         var row = _dashboardRows.FirstOrDefault(r => r.MacroName == s.Name);
                         if (row != null)
                         {
-                            await RunDashboardMacroAsync(row);
+                            if (row.Runner.IsRunning)
+                            {
+                                AppendLog($"[Scheduler] \"{s.Name}\" đang chạy, bỏ qua.");
+                                return;
+                            }
+
+                            IntPtr hwnd = ResolveHwnd(row.TargetWindow);
+                            if (hwnd == IntPtr.Zero)
+                            {
+                                AppendLog($"[Scheduler] Không tìm thấy cửa sổ: {row.TargetWindow}");
+                                return;
+                            }
+
+                            row.InitRunner(s, hwnd, row.StealthMode, row.HardwareMode);
+                            row.Runner.Start(msg => AppendLog(msg));
                         }
                         else
                         {
@@ -3583,7 +3537,7 @@ public partial class MainWindow : Window
         UnregisterHotkeys();
         ShowAllHiddenWindows();
 
-        foreach (var row in _dashboardRows.Where(r => r.IsRunning)) row.Cts?.Cancel();
+        foreach (var row in _dashboardRows) row.Runner.Stop();
         _cts?.Cancel();
         _cts?.Dispose();
         _recorder?.Dispose();

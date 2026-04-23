@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using SmartMacroAI.Core;
 using SmartMacroAI.Models;
 
@@ -187,6 +188,25 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
     public MacroEngine? Engine { get; set; }
     public CancellationTokenSource? Cts { get; set; }
     public IntPtr TargetHwnd { get; set; }
+
+    /// <summary>Per-instance runner for dashboard execution. Replaces shared Cts/Engine.</summary>
+    public MacroRunnerState Runner { get; set; } = new();
+
+    /// <summary>Wires the runner's StatusChanged to update the UI-bound Status property.</summary>
+    public void InitRunner(MacroScript script, IntPtr hwnd, bool stealth, bool hwMode)
+    {
+        Runner = new MacroRunnerState
+        {
+            Script = script,
+            TargetHwnd = hwnd,
+            IsStealthMode = stealth,
+            HwMode = hwMode
+        };
+        Runner.StatusChanged += s =>
+        {
+            Application.Current.Dispatcher.InvokeAsync(() => Status = s);
+        };
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void Notify([CallerMemberName] string? name = null)
