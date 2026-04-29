@@ -23,5 +23,9 @@ release_output/
 _compile_out/
 _ocr_build_out/
 
+# Release packages
+*.zip
+*.exe
+
 # Obfuscator output
 obfuscar.xml

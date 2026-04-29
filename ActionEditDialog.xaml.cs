@@ -45,6 +45,7 @@ public partial class ActionEditDialog : Window
                 AddFieldWithPickerButton("X", c.X.ToString(), "Tọa độ X");
                 AddFieldWithPickerButton("Y", c.Y.ToString(), "Tọa độ Y");
                 AddCheckField("IsRightClick", c.IsRightClick, "Nhấp chuột phải thay vì trái");
+                AddClickModeSelector("ClickMode", c.Mode);
                 break;
             case TypeAction t:
                 AddField("Text", t.Text, displayCaption: "Nội dung gõ");
@@ -136,12 +137,17 @@ public partial class ActionEditDialog : Window
                 AddField("Threshold", img.Threshold.ToString("F2"), displayCaption: "Ngưỡng khớp");
                 AddCheckField("ClickOnFound", img.ClickOnFound,
                     "Tự nhấp vào tâm ảnh khi tìm thấy");
+                AddClickModeSelector("IfImageClickMode", img.ClickMode);
                 AddField("RandomOffset", img.RandomOffset.ToString(), displayCaption: "Độ lệch ngẫu nhiên (px)");
-                AddField("TimeoutMs", img.TimeoutMs.ToString(), displayCaption: "Hết thời chờ (ms)");
+                AddCheckField("RetryUntilFound", img.RetryUntilFound,
+                    "🔄 Lặp lại tìm cho đến khi thấy (Retry until found)");
+                AddRetrySettingsPanel(img);
+                AddField("TimeoutMs", img.TimeoutMs.ToString(), displayCaption: "Hết thời chờ tối đa (ms)");
                 AddRoiExpander(img);
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Độ lệch: ± pixel khi nhấp stealth. Hết thời chờ: thời gian tối đa trước nhánh Else (0 = thử một lần).",
+                    Text = "RetryUntilFound: macro tiếp tục tìm lại ảnh trong vòng lặp cho đến khi thấy, " +
+                           "rồi mới chạy Then. Nếu MaxRetryCount > 0 và đạt giới hạn → chạy Else.",
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -853,6 +859,21 @@ public partial class ActionEditDialog : Window
         };
     }
 
+    private Models.ClickMode GetClickModeValue(string prefix)
+    {
+        foreach (var child in FieldsPanel.Children)
+        {
+            if (child is System.Windows.Controls.RadioButton rb && rb.IsChecked == true)
+            {
+                string? tag = rb.Tag as string;
+                if (tag == prefix + "_Stealth") return Models.ClickMode.Stealth;
+                if (tag == prefix + "_Raw")     return Models.ClickMode.Raw;
+                if (tag == prefix + "_Hardware") return Models.ClickMode.Hardware;
+            }
+        }
+        return Models.ClickMode.Stealth;
+    }
+
     /// <summary>Builds the Key Catcher TextBox + Clear button for a KeyPressAction.</summary>
     private void AddKeyPressField(KeyPressAction kpa)
     {
@@ -1067,6 +1088,125 @@ public partial class ActionEditDialog : Window
             vkBox.Text = "0";
     }
 
+    // ── ClickMode selector for ClickAction and IfImageAction ───────────────────────
+    // Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+
+    private void AddClickModeSelector(string dictKey, Models.ClickMode currentMode)
+    {
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = "Chế độ click:",
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = LabelBrush,
+            Margin = new Thickness(0, 12, 0, 4),
+        });
+
+        var rbStealth = new System.Windows.Controls.RadioButton
+        {
+            Content = "🔇 Stealth — chạy ngầm, không chiếm chuột (khuyến nghị)",
+            IsChecked = currentMode == Models.ClickMode.Stealth,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_Stealth"
+        };
+        var rbRaw = new System.Windows.Controls.RadioButton
+        {
+            Content = "⚡ Raw — chiếm chuột vật lý, game nhận được",
+            IsChecked = currentMode == Models.ClickMode.Raw,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_Raw",
+            ToolTip = "SendInput chiếm chuột vật lý — game nhận được, cần cửa sổ ở foreground."
+        };
+        var rbHw = new System.Windows.Controls.RadioButton
+        {
+            Content = "🖥️ Hardware — full HW mode (kéo foreground)",
+            IsChecked = currentMode == Models.ClickMode.Hardware,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_Hardware",
+            ToolTip = "SetForegroundWindow + SetCursorPos + mouse_event — full hardware click."
+        };
+
+        FieldsPanel.Children.Add(rbStealth);
+        FieldsPanel.Children.Add(rbRaw);
+        FieldsPanel.Children.Add(rbHw);
+    }
+
+    private void AddRetrySettingsPanel(IfImageAction img)
+    {
+        var exp = new Expander
+        {
+            Header = "⚙️ Cài đặt Retry (khi bật \"Lặp lại tìm cho đến khi thấy\")",
+            IsExpanded = true,
+            Margin = new Thickness(0, 4, 0, 0),
+            Foreground = InputFg,
+        };
+
+        var grid = new Grid { Margin = new Thickness(0, 6, 0, 0) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var retryIntervalTb = new TextBox
+        {
+            Text = img.RetryIntervalMs.ToString(),
+            Background = InputBg,
+            Foreground = InputFg,
+            BorderBrush = InputBorder,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 6, 8, 6),
+            FontSize = 12,
+            CaretBrush = InputFg,
+        };
+        _fields["RetryIntervalMs"] = retryIntervalTb;
+
+        var maxRetryTb = new TextBox
+        {
+            Text = img.MaxRetryCount.ToString(),
+            Background = InputBg,
+            Foreground = InputFg,
+            BorderBrush = InputBorder,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 6, 8, 6),
+            FontSize = 12,
+            CaretBrush = InputFg,
+        };
+        _fields["MaxRetryCount"] = maxRetryTb;
+
+        var lblInterval = new TextBlock
+        {
+            Text = "Khoảng cách retry (ms):",
+            Foreground = LabelBrush,
+            FontSize = 11,
+            Margin = new Thickness(0, 0, 4, 4),
+        };
+        Grid.SetRow(lblInterval, 0);
+        Grid.SetColumn(lblInterval, 0);
+        Grid.SetRow(retryIntervalTb, 1);
+        Grid.SetColumn(retryIntervalTb, 0);
+
+        var lblMax = new TextBlock
+        {
+            Text = "Số lần tối đa (0=vô hạn):",
+            Foreground = LabelBrush,
+            FontSize = 11,
+            Margin = new Thickness(8, 0, 4, 4),
+        };
+        Grid.SetRow(lblMax, 0);
+        Grid.SetColumn(lblMax, 1);
+        Grid.SetRow(maxRetryTb, 1);
+        Grid.SetColumn(maxRetryTb, 1);
+
+        grid.Children.Add(lblInterval);
+        grid.Children.Add(retryIntervalTb);
+        grid.Children.Add(lblMax);
+        grid.Children.Add(maxRetryTb);
+
+        exp.Content = grid;
+        FieldsPanel.Children.Add(exp);
+    }
+
     private void BtnApply_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -1077,6 +1217,7 @@ public partial class ActionEditDialog : Window
                     c.X = int.Parse(GetFieldValue("X"));
                     c.Y = int.Parse(GetFieldValue("Y"));
                     c.IsRightClick = GetCheckValue("IsRightClick");
+                    c.Mode = GetClickModeValue("ClickMode");
                     break;
                 case TypeAction t:
                     t.Text = GetFieldValue("Text");
@@ -1109,10 +1250,14 @@ public partial class ActionEditDialog : Window
                     img.ImagePath = GetFieldValue("ImagePath");
                     img.Threshold = double.Parse(GetFieldValue("Threshold"));
                     img.ClickOnFound = GetCheckValue("ClickOnFound");
+                    img.ClickMode = GetClickModeValue("IfImageClickMode");
                     var ro = GetFieldValue("RandomOffset");
                     img.RandomOffset = string.IsNullOrWhiteSpace(ro)
                         ? 3
                         : Math.Clamp(int.Parse(ro), 0, 64);
+                    img.RetryUntilFound = GetCheckValue("RetryUntilFound");
+                    img.RetryIntervalMs = int.TryParse(GetFieldValue("RetryIntervalMs"), out int ri) ? Math.Max(50, ri) : 500;
+                    img.MaxRetryCount = int.TryParse(GetFieldValue("MaxRetryCount"), out int mr) ? mr : 0;
                     var to = GetFieldValue("TimeoutMs");
                     img.TimeoutMs = string.IsNullOrWhiteSpace(to) ? 5000 : Math.Max(0, int.Parse(to));
                     img.RoiX = ParseOptionalInt(GetFieldValue("RoiX"));
