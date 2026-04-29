@@ -1,10 +1,10 @@
 ; SmartMacroAI — Inno Setup 6
 ; Build (repo root):  dotnet publish ... -o release_output
 ; Compile:            ISCC.exe installer\SmartMacroAI_Setup.iss
-; Override version:   ISCC ... /DMyAppVersion=1.5.1
+; Override version:   ISCC ... /DMyAppVersion=1.5.2
 
 #ifndef MyAppVersion
-#define MyAppVersion "1.5.1"
+#define MyAppVersion "1.5.2"
 #endif
 
 #define MyAppName "SmartMacroAI"
@@ -49,7 +49,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\release_output\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
