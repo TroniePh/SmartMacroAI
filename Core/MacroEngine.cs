@@ -154,6 +154,9 @@ public sealed class MacroEngine
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetKeyboardState(byte[] lpKeyState);
 
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
     private const uint WM_KEYDOWN    = 0x0100;
     private const uint WM_KEYUP      = 0x0101;
     private const uint WM_CHAR      = 0x0102;
@@ -1343,10 +1346,9 @@ public sealed class MacroEngine
         if (!Win32Api.IsInsideClientArea(hwnd, click.X, click.Y))
             OnLog($"  ⚠ ({click.X},{click.Y}) is outside client rect");
 
-        // ── HARDWARE MODE: physical mouse hijack (user explicitly wants it) ──────
-        if (HardwareMode)
+        // ── HARDWARE MODE: SetCursorPos + mouse_event + SetForegroundWindow ──────────
+        if (click.Mode == ClickMode.Hardware)
         {
-            // FIX 1: Wrap OS resource usage with semaphore to prevent cross-window contamination
             if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
             {
                 OnLog("[WARN] OS resource lock timeout on click — skipping");
@@ -1367,21 +1369,76 @@ public sealed class MacroEngine
                 mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
 
                 if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
-                Log?.Invoke($"[Click/HW] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
+                Log?.Invoke($"[Click/Hardware] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
             }
             finally { _osResourceLock.Release(); }
             return;
         }
 
-        // ── DEFAULT (stealth ON or OFF): PostMessage ONLY — never hijacks mouse ─
-        // PostMessage is thread-safe by design — NO lock needed
+        // ── RAW MODE: SendInput with absolute coordinates — hijacks physical cursor ───
+        if (click.Mode == ClickMode.Raw)
+        {
+            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
+            {
+                OnLog("[WARN] OS resource lock timeout on click — skipping");
+                return;
+            }
+            try
+            {
+                var pt = new POINT { X = click.X, Y = click.Y };
+                ClientToScreen(hwnd, ref pt);
+
+                int screenW = GetSystemMetrics(0);
+                int screenH = GetSystemMetrics(1);
+                int absX = (int)((pt.X + 0.5) * 65536.0 / screenW);
+                int absY = (int)((pt.Y + 0.5) * 65536.0 / screenH);
+
+                INPUT[] inputs;
+                if (click.IsRightClick)
+                {
+                    inputs = new[]
+                    {
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_RIGHTDOWN } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_RIGHTUP } } }
+                    };
+                }
+                else
+                {
+                    inputs = new[]
+                    {
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTDOWN } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTUP } } }
+                    };
+                }
+                SendInput(3, inputs, Marshal.SizeOf<INPUT>());
+                Log?.Invoke($"[Click/Raw] ({click.X},{click.Y})");
+            }
+            finally { _osResourceLock.Release(); }
+            return;
+        }
+
+        // ── STEALTH MODE (default): PostMessage — no cursor hijack, runs in background ─
         IntPtr lParam = Win32Api.MakeLParam(click.X, click.Y);
-        Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
-        await Task.Delay(20, token);
-        Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONDOWN, (IntPtr)1, lParam);
-        await Task.Delay(Math.Max(50, 50), token);
-        Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
-        Log?.Invoke($"[Click/Background] ({click.X},{click.Y})");
+        if (click.IsRightClick)
+        {
+            Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
+            await Task.Delay(20, token);
+            Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONDOWN, (IntPtr)Win32Api.MK_RBUTTON, lParam);
+            await Task.Delay(50, token);
+            Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONUP, IntPtr.Zero, lParam);
+            Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y}) right-click");
+        }
+        else
+        {
+            Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
+            await Task.Delay(20, token);
+            Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONDOWN, (IntPtr)Win32Api.MK_LBUTTON, lParam);
+            await Task.Delay(50, token);
+            Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
+            Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y})");
+        }
     }
 
     private async Task ExecuteWaitAsync(WaitAction wait, CancellationToken token)
@@ -2214,50 +2271,105 @@ public sealed class MacroEngine
         if (!IsTargetValid()) return;
 
         string imagePath = ExpandRuntime(ifImage.ImagePath);
-        const int PollMs = 500;
         int maxWait = Math.Max(0, ifImage.TimeoutMs);
         int elapsed = 0;
+        int retryCount = 0;
         Point? match = null;
 
+        bool retryUntilFound = ifImage.RetryUntilFound;
+        int retryInterval = Math.Max(50, ifImage.RetryIntervalMs);
+        int maxRetries = ifImage.MaxRetryCount; // 0 = unlimited
+
         OnLog($"  IfImageFound \"{Path.GetFileName(imagePath)}\" " +
-              $"(threshold={ifImage.Threshold:P0}, timeout={maxWait}ms)");
+              $"(threshold={ifImage.Threshold:P0}, timeout={maxWait}ms, retryUntilFound={retryUntilFound})");
 
-        do
+        // ── RetryUntilFound mode: loop indefinitely until found or MaxRetries hit ────────
+        if (retryUntilFound)
         {
-            token.ThrowIfCancellationRequested();
+            do
+            {
+                token.ThrowIfCancellationRequested();
 
-            try
-            {
-                match = VisionEngine.FindImageOnWindowMultiScale(
-                    hwnd,
-                    imagePath,
-                    ifImage.Threshold,
-                    scales: null,
-                    searchRegion: ifImage.SearchRegion);
+                try
+                {
+                    match = VisionEngine.FindImageOnWindowMultiScale(
+                        hwnd,
+                        imagePath,
+                        ifImage.Threshold,
+                        scales: null,
+                        searchRegion: ifImage.SearchRegion);
+                }
+                catch (Exception ex)
+                {
+                    OnLog($"    ⚠ Vision error: {ex.Message}");
+                    break;
+                }
+
+                if (match.HasValue)
+                {
+                    OnLog($"    → FOUND at ({match.Value.X}, {match.Value.Y}) after {retryCount} retry(ies)");
+                    break;
+                }
+
+                // Check retry limit before waiting
+                if (maxRetries > 0 && retryCount >= maxRetries)
+                {
+                    OnLog($"    → Max retry count ({maxRetries}) reached → running ElseActions");
+                    match = null;
+                    break;
+                }
+
+                retryCount++;
+                OnLog($"    [Retry {retryCount}] Not found — waiting {retryInterval}ms...");
+                await _macroRunner.Timing.WaitAsync(retryInterval, Math.Max(10, retryInterval / 4), token).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            while (true);
+        }
+        // ── Standard timeout-based mode ──────────────────────────────────────────────────
+        else
+        {
+            const int PollMs = 500;
+
+            do
             {
-                OnLog($"    ⚠ Vision error: {ex.Message}");
-                break;
-            }
+                token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    match = VisionEngine.FindImageOnWindowMultiScale(
+                        hwnd,
+                        imagePath,
+                        ifImage.Threshold,
+                        scales: null,
+                        searchRegion: ifImage.SearchRegion);
+                }
+                catch (Exception ex)
+                {
+                    OnLog($"    ⚠ Vision error: {ex.Message}");
+                    break;
+                }
+
+                if (match.HasValue)
+                    break;
+
+                if (elapsed >= maxWait)
+                    break;
+
+                int wait = Math.Min(PollMs, maxWait - elapsed);
+                if (wait <= 0)
+                    break;
+
+                await _macroRunner.Timing.WaitAsync(wait, Math.Max(10, wait / 4), token).ConfigureAwait(false);
+                elapsed += wait;
+            } while (elapsed < maxWait);
 
             if (match.HasValue)
-                break;
+                OnLog($"    → FOUND at ({match.Value.X}, {match.Value.Y}) after {elapsed}ms");
+        }
 
-            if (elapsed >= maxWait)
-                break;
-
-            int wait = Math.Min(PollMs, maxWait - elapsed);
-            if (wait <= 0)
-                break;
-
-            await _macroRunner.Timing.WaitAsync(wait, Math.Max(10, wait / 4), token).ConfigureAwait(false);
-            elapsed += wait;
-        } while (elapsed < maxWait);
-
+        // ── Image found → click (if enabled) + ThenActions ───────────────────────────────
         if (match.HasValue)
         {
-            OnLog($"    → FOUND at ({match.Value.X}, {match.Value.Y}) after {elapsed}ms");
             try
             {
                 var det = VisionEngine.FindImageOnWindowDetailed(hwnd, imagePath, ifImage.SearchRegion);
@@ -2272,21 +2384,52 @@ public sealed class MacroEngine
             if (ifImage.ClickOnFound)
             {
                 int off = Math.Clamp(ifImage.RandomOffset, 0, 64);
-                if (HardwareMode)
+                int ox = Random.Shared.Next(-off, off + 1);
+                int oy = Random.Shared.Next(-off, off + 1);
+                int cx = match.Value.X + ox;
+                int cy = match.Value.Y + oy;
+
+                // Route by per-action ClickMode, not global HardwareMode
+                switch (ifImage.ClickMode)
                 {
-                    int ox = Random.Shared.Next(-off, off + 1);
-                    int oy = Random.Shared.Next(-off, off + 1);
-                    int cx = match.Value.X + ox;
-                    int cy = match.Value.Y + oy;
-                    Point screen = Win32Api.ClientPointToScreen(hwnd, cx, cy);
-                    MouseProfile profile = BezierMouseMover.ParseProfile(AppSettings.Load().MouseProfileName);
-                    OnLog($"    → Hardware click at client ({cx},{cy}) screen ({screen.X},{screen.Y}) profile={profile}");
-                    await _mouseMover.MoveAndClickAsync(screen, MouseButton.Left, profile, token).ConfigureAwait(false);
-                }
-                else
-                {
-                    await Win32Api.StealthClickOnFoundImage(hwnd, match.Value, randomOffsetRange: off, token);
-                    OnLog($"    → StealthClick at ({match.Value.X},{match.Value.Y}) [offset ±{off}px]");
+                    case ClickMode.Hardware:
+                        {
+                            Point screen = Win32Api.ClientPointToScreen(hwnd, cx, cy);
+                            MouseProfile profile = BezierMouseMover.ParseProfile(AppSettings.Load().MouseProfileName);
+                            OnLog($"    → HW click at ({cx},{cy}) screen ({screen.X},{screen.Y})");
+                            await _mouseMover.MoveAndClickAsync(screen, MouseButton.Left, profile, token).ConfigureAwait(false);
+                            break;
+                        }
+                    case ClickMode.Raw:
+                        {
+                            // SendInput — hijacks physical cursor
+                            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token)) return;
+                            try
+                            {
+                                var pt = new POINT { X = cx, Y = cy };
+                                ClientToScreen(hwnd, ref pt);
+                                int screenW = GetSystemMetrics(0);
+                                int screenH = GetSystemMetrics(1);
+                                int absX = (int)((pt.X + 0.5) * 65536.0 / screenW);
+                                int absY = (int)((pt.Y + 0.5) * 65536.0 / screenH);
+                                var inputs = new[]
+                                {
+                                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
+                                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTDOWN } } },
+                                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTUP } } }
+                                };
+                                SendInput(3, inputs, Marshal.SizeOf<INPUT>());
+                                OnLog($"    → Raw click at ({cx},{cy})");
+                            }
+                            finally { _osResourceLock.Release(); }
+                            break;
+                        }
+                    default: // ClickMode.Stealth
+                        {
+                            await Win32Api.StealthClickOnFoundImage(hwnd, new Point(cx, cy), randomOffsetRange: 0, token);
+                            OnLog($"    → Stealth click at ({cx},{cy}) [offset ±{off}px]");
+                            break;
+                        }
                 }
             }
 
@@ -2298,7 +2441,7 @@ public sealed class MacroEngine
         }
         else
         {
-            OnLog($"    → NOT FOUND after {maxWait}ms timeout → running ElseActions");
+            OnLog($"    → NOT FOUND → running ElseActions");
 
             if (ifImage.ElseActions.Count > 0)
             {
@@ -2914,8 +3057,15 @@ public sealed class MacroEngine
     [DllImport("user32.dll")]
     private static extern void mouse_event(uint dwFlags, int dx, int dy, int dwData, UIntPtr dwExtraInfo);
 
-    private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
-    private const uint MOUSEEVENTF_LEFTUP   = 0x0004;
+    // Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+    private const uint MOUSEEVENTF_LEFTDOWN   = 0x0002;
+    private const uint MOUSEEVENTF_LEFTUP     = 0x0004;
+    private const uint MOUSEEVENTF_RIGHTDOWN  = 0x0008;
+    private const uint MOUSEEVENTF_RIGHTUP    = 0x0010;
+    private const uint MOUSEEVENTF_MOVE       = 0x0001;
+    private const uint MOUSEEVENTF_ABSOLUTE    = 0x8000;
+    private const uint MOUSEEVENTF_VIRTUALDESKTOP = 0x4000;
+    private const uint INPUT_MOUSE = 0;
 
     private static IntPtr MAKELPARAM(int x, int y)
         => (IntPtr)(((y & 0xFFFF) << 16) | (x & 0xFFFF));

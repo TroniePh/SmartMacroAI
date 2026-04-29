@@ -14,11 +14,11 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyTitle>SmartMacroAI</AssemblyTitle>
     <Product>SmartMacroAI</Product>
-    <Company>Ph?m Duy</Company>
-    <Copyright>Created by Ph?m Duy - Gi?i pháp t? d?ng hóa thông minh.</Copyright>
-    <Version>1.5.1</Version>
-    <AssemblyVersion>1.5.1.0</AssemblyVersion>
-    <FileVersion>1.5.1.0</FileVersion>
+    <Company>Pham Duy</Company>
+    <Copyright>Created by Pham Duy - Giai phap tu dong hoa thong minh.</Copyright>
+    <Version>1.5.2</Version>
+    <AssemblyVersion>1.5.2.0</AssemblyVersion>
+    <FileVersion>1.5.2.0</FileVersion>
     <Description>SmartMacroAI - RPA Automation Tool for Windows. Non-invasive macro automation with Image and OCR recognition.</Description>
   </PropertyGroup>
 
@@ -57,4 +57,3 @@
   </ItemGroup>
 
 </Project>
-

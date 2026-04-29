@@ -1,7 +1,25 @@
+// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+
 using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace SmartMacroAI.Models;
+
+/// <summary>
+/// Click delivery mode, matching the existing KeyInputMode pattern for consistency.
+/// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+/// </summary>
+public enum ClickMode
+{
+    /// <summary>PostMessage WM_LBUTTON — no cursor hijack, runs in background (default).</summary>
+    Stealth = 0,
+
+    /// <summary>SendInput mouse_event — hijacks physical mouse, games/Anti-Cheat receive it.</summary>
+    Raw = 1,
+
+    /// <summary>SetCursorPos + mouse_event + SetForegroundWindow — full hardware, pulls window to foreground.</summary>
+    Hardware = 2,
+}
 
 /// <summary>
 /// Base class for every action that can appear in a macro workflow.
@@ -43,7 +61,7 @@ public abstract class MacroAction
 
 /// <summary>
 /// Sends a non-invasive left-click at (X, Y) client-coordinates on the target HWND.
-/// Uses PostMessage — the physical cursor is never moved.
+/// Uses PostMessage by default — the physical cursor is never moved.
 /// </summary>
 public class ClickAction : MacroAction
 {
@@ -61,6 +79,12 @@ public class ClickAction : MacroAction
     /// -1 = not set / use primary monitor.
     /// </summary>
     public int MonitorIndex { get; set; } = -1;
+
+    /// <summary>
+    /// Click delivery mode: Stealth (PostMessage), Raw (SendInput), or Hardware (full HW).
+    /// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+    /// </summary>
+    public ClickMode Mode { get; set; } = ClickMode.Stealth;
 
     public ClickAction()
     {
@@ -241,15 +265,37 @@ public class IfImageAction : MacroAction
     /// </summary>
     public double Threshold { get; set; } = 0.8;
 
-    /// <summary>
-    /// If true, sends a stealth PostMessage click at the match center when found.
-    /// </summary>
+    /// <summary>Whether to click the center of the found image.</summary>
     public bool ClickOnFound { get; set; } = true;
 
     /// <summary>Half-range (pixels) for random offset passed to stealth click.</summary>
     public int RandomOffset { get; set; } = 3;
 
-    /// <summary>Maximum time (ms) to poll for the template before running <see cref="ElseActions"/>.</summary>
+    /// <summary>
+    /// Click mode used when <see cref="ClickOnFound"/> is true.
+    /// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+    /// </summary>
+    public ClickMode ClickMode { get; set; } = ClickMode.Stealth;
+
+    /// <summary>
+    /// When true, keeps retrying until the image is found (loop with <see cref="RetryIntervalMs"/>).
+    /// Only then runs ThenActions; if <see cref="MaxRetryCount"/> is hit, runs ElseActions.
+    /// </summary>
+    public bool RetryUntilFound { get; set; } = false;
+
+    /// <summary>Delay (ms) between each retry attempt when <see cref="RetryUntilFound"/> is true.</summary>
+    public int RetryIntervalMs { get; set; } = 500;
+
+    /// <summary>
+    /// Maximum retry count when <see cref="RetryUntilFound"/> is true.
+    /// 0 = unlimited retries until timeout.
+    /// </summary>
+    public int MaxRetryCount { get; set; } = 0;
+
+    /// <summary>
+    /// Maximum total elapsed time (ms) before giving up and running <see cref="ElseActions"/>.
+    /// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+    /// </summary>
     public int TimeoutMs { get; set; } = 5000;
 
     /// <summary>Optional ROI origin X (client pixels). Null with other ROI fields = full window.</summary>
