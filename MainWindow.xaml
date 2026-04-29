@@ -967,6 +967,12 @@
                                             Style="{StaticResource DangerButtonStyle}"
                                             Padding="16,8" FontSize="12"
                                             Content="{DynamicResource ui_Stop}" />
+                                    <Button x:Name="BtnShowLog" Click="BtnShowLog_Click"
+                                            ToolTip="Xem log hoạt động real-time"
+                                            Padding="10,4" Margin="8,0,0,0"
+                                            Background="#45475A" Foreground="#CDD6F4"
+                                            BorderThickness="0" Cursor="Hand" FontSize="12"
+                                            Content="📋 Log" />
                                 </StackPanel>
                             </WrapPanel>
                         </Border>

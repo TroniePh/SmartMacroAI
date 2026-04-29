@@ -1183,6 +1183,15 @@ public sealed class MacroEngine
                         break;
                     }
 
+                    case ResetVariablesAction:
+                    {
+                        _vars.Clear();
+                        _variableStore.Clear();
+                        OnLog("    → [ResetVars] Đã xóa tất cả biến");
+                        FireVariablesUpdated();
+                        break;
+                    }
+
                     case LogVariableAction logVar:
                     {
                         string n = logVar.VarName.Trim();

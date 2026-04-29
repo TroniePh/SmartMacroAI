@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private MacroEngine? _macroEngine;
     private CancellationTokenSource? _cts;
     private MacroRecorder? _recorder;
+    private LogWindow? _logWindow;
     private int _runsToday;
     private IntPtr _editorTargetHwnd = IntPtr.Zero;
 
@@ -81,7 +82,7 @@ public partial class MainWindow : Window
     // ── Update Checker ──
     /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
     public static string AppVersion => CurrentVersion;
-    private const string CurrentVersion   = "v1.5.1";
+    private const string CurrentVersion   = "v1.5.2";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
     /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
@@ -2587,7 +2588,7 @@ public partial class MainWindow : Window
                                 return;
                             }
                             var engine = new MacroEngine { HardwareMode = false };
-                            engine.Log += msg => AppendLog($"[{s.Name}] {msg}");
+                            engine.Log += msg => Dispatcher.Invoke(() => AppendLogWithMacroName(s.Name, msg));
                             try
                             {
                                 await engine.ExecuteScriptAsync(runScript, hwnd, CancellationToken.None);
@@ -2990,7 +2991,7 @@ public partial class MainWindow : Window
             _cts = new CancellationTokenSource();
             _macroEngine = new MacroEngine { HardwareMode = ChkHardwareMode.IsChecked == true };
             _macroEngine.DataRows = _csvDataRows;
-            _macroEngine.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
+            _macroEngine.Log += msg => Dispatcher.Invoke(() => AppendLogWithMacroName(_currentScript.Name, msg));
             _macroEngine.ActionStarted += (action, idx) => Dispatcher.Invoke(() =>
                 TxtStatus.Text = $"{LanguageManager.GetString("ui_Status_Running")} [{idx}] {action.DisplayName}");
             _macroEngine.DataRowCompleted += (rowNum, total) => Dispatcher.Invoke(() =>
@@ -3020,6 +3021,15 @@ public partial class MainWindow : Window
     }
 
     private void BtnStopMacro_Click(object sender, RoutedEventArgs e) { _cts?.Cancel(); AppendLog("Stop requested."); }
+
+    private void BtnShowLog_Click(object sender, RoutedEventArgs e)
+    {
+        _logWindow ??= new LogWindow();
+        if (!_logWindow.IsVisible)
+            _logWindow.Show();
+        else
+            _logWindow.Activate();
+    }
 
     private void SetRunningState(bool running)
     {
@@ -3468,6 +3478,15 @@ public partial class MainWindow : Window
         string ts = DateTime.Now.ToString("HH:mm:ss");
         TxtLogConsole.Text += $"[{ts}] {message}\n";
         LogScrollViewer.ScrollToEnd();
+        _logWindow?.AppendLog(string.Empty, message);
+    }
+
+    private void AppendLogWithMacroName(string macroName, string message)
+    {
+        string ts = DateTime.Now.ToString("HH:mm:ss");
+        TxtLogConsole.Text += $"[{ts}] [{macroName}] {message}\n";
+        LogScrollViewer.ScrollToEnd();
+        _logWindow?.AppendLog(macroName, message);
     }
 
     private void BtnClearLog_Click(object sender, RoutedEventArgs e) => TxtLogConsole.Text = string.Empty;
@@ -3547,6 +3566,9 @@ public partial class MainWindow : Window
 
         VisionEngine.Shutdown();
         SchedulerService.UnregisterAll();
+
+        _logWindow?.Close();
+        _logWindow = null;
     }
 
     private static string FormatWaitCardDetail(WaitAction w)

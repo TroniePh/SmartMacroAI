@@ -48,6 +48,7 @@ public enum ClickMode
 [JsonDerivedType(typeof(KeyPressAction), "KeyPress")]
 [JsonDerivedType(typeof(TelegramAction), "Telegram")]
 [JsonDerivedType(typeof(CallMacroAction), "CallMacro")]
+[JsonDerivedType(typeof(ResetVariablesAction), "ResetVars")]
 public abstract class MacroAction
 {
     public string DisplayName { get; set; } = string.Empty;
@@ -390,6 +391,15 @@ public class ClearVariableAction : MacroAction
     public ClearVariableAction()
     {
         DisplayName = "Xóa biến";
+    }
+}
+
+/// <summary>Resets all runtime variables (<c>VariableManager</c> and <c>VariableStore</c>) to initial state.</summary>
+public class ResetVariablesAction : MacroAction
+{
+    public ResetVariablesAction()
+    {
+        DisplayName = "Reset biến";
     }
 }
 
