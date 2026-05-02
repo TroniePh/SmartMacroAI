@@ -36,6 +36,16 @@ public class MacroScript
     /// </summary>
     public string TargetWindowTitle { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Default click mode for actions in this script. Auto-set to DriverLevel when a game window is detected.
+    /// </summary>
+    public ClickMode DefaultClickMode { get; set; } = ClickMode.Stealth;
+
+    /// <summary>
+    /// Default key input mode for actions in this script. Auto-set to DriverLevel when a game window is detected.
+    /// </summary>
+    public KeyInputMode DefaultKeyPressMode { get; set; } = KeyInputMode.Auto;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
 

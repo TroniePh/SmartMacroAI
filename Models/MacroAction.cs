@@ -19,6 +19,9 @@ public enum ClickMode
 
     /// <summary>SetCursorPos + mouse_event + SetForegroundWindow — full hardware, pulls window to foreground.</summary>
     Hardware = 2,
+
+    /// <summary>Interception driver — kernel-level HID emulation, bypasses anti-cheat (HackShield, NGS, EAC).</summary>
+    DriverLevel = 3,
 }
 
 /// <summary>
@@ -556,6 +559,9 @@ public enum KeyInputMode
 
     /// <summary>SendInput with ScanCode only — for DirectX games and Anti-Cheat systems.</summary>
     RawInput = 2,
+
+    /// <summary>Interception driver — kernel-level HID emulation, bypasses anti-cheat (HackShield, NGS, EAC).</summary>
+    DriverLevel = 3,
 }
 
 /// <summary>

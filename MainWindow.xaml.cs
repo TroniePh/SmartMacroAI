@@ -82,7 +82,7 @@ public partial class MainWindow : Window
     // ── Update Checker ──
     /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
     public static string AppVersion => CurrentVersion;
-    private const string CurrentVersion   = "v1.5.3";
+    private const string CurrentVersion   = "v1.5.4";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
     /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
@@ -2831,7 +2831,96 @@ public partial class MainWindow : Window
     private void CmbTargetWindow_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (CmbTargetWindow.SelectedItem is WindowEntry entry)
+        {
             _editorTargetHwnd = entry.Handle;
+            OnTargetWindowSelectedAsync(entry.Handle).ContinueWith(t =>
+            {
+                if (t.Exception != null)
+                    Dispatcher.BeginInvoke(() => AppendLog($"[AutoDetect] Error: {t.Exception.InnerException?.Message}"));
+            }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+    }
+
+    /// <summary>
+    /// Auto-detect game window and apply Driver Level mode when a game is selected as target.
+    /// </summary>
+    private async Task OnTargetWindowSelectedAsync(IntPtr hwnd)
+    {
+        var detectResult = GameWindowDetector.Detect(hwnd);
+        bool isGame = detectResult != GameDetectResult.NotGame;
+
+        await Dispatcher.InvokeAsync(() =>
+        {
+            GameDetectedBadge.Visibility = isGame ? Visibility.Visible : Visibility.Collapsed;
+            if (isGame)
+            {
+                TxtGameDetectedSub.Text = detectResult switch
+                {
+                    GameDetectResult.KnownGame        => $"Game đã biết: {Win32Api.GetWindowTitle(hwnd)}",
+                    GameDetectResult.DetectedAntiCheat => "Phát hiện anti-cheat DLL trong process",
+                    GameDetectResult.LikelyGame        => "Cửa sổ fullscreen/borderless — có thể là game",
+                    _ => ""
+                };
+            }
+        });
+
+        if (!isGame) return;
+
+        AppendLog($"[AutoDetect] Phát hiện game: \"{Win32Api.GetWindowTitle(hwnd)}\" ({detectResult})");
+
+        if (!InterceptionInstaller.IsReady())
+        {
+            // Ask user to install driver
+            bool? yesNo = null;
+            await Dispatcher.InvokeAsync(() =>
+            {
+                var result = MessageBox.Show(
+                    $"Đã phát hiện game:\n{Win32Api.GetWindowTitle(hwnd)}\n\n" +
+                    "Để macro hoạt động với game này, cần cài Driver Level.\n" +
+                    "Cài đặt ngay? (Cần restart máy sau khi cài)",
+                    "Phát hiện Game — Cài Driver?",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+                yesNo = result == MessageBoxResult.Yes;
+            });
+
+            if (yesNo == true)
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    var dialog = new DriverInstallDialog { Owner = this };
+                    dialog.ShowDialog();
+                });
+            }
+
+            // Use DriverLevel if installed, else fall back to Raw
+            if (InterceptionInstaller.IsReady())
+            {
+                ApplyDefaultModeToCurrentScript(Models.ClickMode.DriverLevel, Models.KeyInputMode.DriverLevel);
+                AppendLog("[AutoDetect] Driver cài xong — dùng Driver Level mode");
+            }
+            else
+            {
+                ApplyDefaultModeToCurrentScript(Models.ClickMode.Raw, Models.KeyInputMode.SendInput);
+                AppendLog("[AutoDetect] Driver Level không khả dụng — fallback Raw mode");
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    TxtGameDetectedSub.Text = "⚠️ Driver chưa cài được — đang dùng Raw mode (game có thể không nhận)";
+                });
+            }
+        }
+        else
+        {
+            ApplyDefaultModeToCurrentScript(Models.ClickMode.DriverLevel, Models.KeyInputMode.DriverLevel);
+            AppendLog("[AutoDetect] Driver đã sẵn sàng — tự động dùng Driver Level");
+        }
+    }
+
+    private void ApplyDefaultModeToCurrentScript(Models.ClickMode clickMode, Models.KeyInputMode keyMode)
+    {
+        if (_currentScript == null) return;
+        _currentScript.DefaultClickMode = clickMode;
+        _currentScript.DefaultKeyPressMode = keyMode;
     }
 
     private void DashRowWindowCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

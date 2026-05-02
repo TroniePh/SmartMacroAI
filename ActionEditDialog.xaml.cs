@@ -842,6 +842,7 @@ public partial class ActionEditDialog : Window
                 if (tag == "Auto") return KeyInputMode.Auto;
                 if (tag == "SendInput") return KeyInputMode.SendInput;
                 if (tag == "RawInput") return KeyInputMode.RawInput;
+                if (tag == "DriverLevel") return KeyInputMode.DriverLevel;
             }
         }
         return KeyInputMode.Auto;
@@ -869,6 +870,7 @@ public partial class ActionEditDialog : Window
                 if (tag == prefix + "_Stealth") return Models.ClickMode.Stealth;
                 if (tag == prefix + "_Raw")     return Models.ClickMode.Raw;
                 if (tag == prefix + "_Hardware") return Models.ClickMode.Hardware;
+                if (tag == prefix + "_DriverLevel") return Models.ClickMode.DriverLevel;
             }
         }
         return Models.ClickMode.Stealth;
@@ -1009,6 +1011,27 @@ public partial class ActionEditDialog : Window
         FieldsPanel.Children.Add(rbSendInput);
         FieldsPanel.Children.Add(rbRawInput);
 
+        var rbDriverKey = new System.Windows.Controls.RadioButton
+        {
+            Content = "🎮 Driver Level — game anti-cheat (cần cài Interception driver)",
+            IsChecked = kpa.InputMode == KeyInputMode.DriverLevel,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = "DriverLevel",
+            ToolTip = "Giả lập bàn phím ở tầng kernel driver — bypass HackShield, NGS, EAC. Cần cài Interception Driver 1 lần với quyền Admin."
+        };
+        rbDriverKey.Checked += (s, e) =>
+        {
+            if (InterceptionInstaller.IsReady()) return;
+            var dialog = new DriverInstallDialog { Owner = Window.GetWindow(this) };
+            dialog.ShowDialog();
+            if (!dialog.InstallSucceeded)
+            {
+                rbAuto.IsChecked = true;
+            }
+        };
+        FieldsPanel.Children.Add(rbDriverKey);
+
         FieldsPanel.Children.Add(new TextBlock
         {
             Text = "↑ Cửa sổ sẽ được đưa lên foreground khi dùng SendInput hoặc Raw Input.",
@@ -1132,6 +1155,27 @@ public partial class ActionEditDialog : Window
         FieldsPanel.Children.Add(rbStealth);
         FieldsPanel.Children.Add(rbRaw);
         FieldsPanel.Children.Add(rbHw);
+
+        var rbDriver = new System.Windows.Controls.RadioButton
+        {
+            Content = "🎮 Driver Level — game anti-cheat nhận được (cần cài Interception driver)",
+            IsChecked = currentMode == Models.ClickMode.DriverLevel,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_DriverLevel",
+            ToolTip = "Giả lập chuột ở tầng kernel driver — bypass HackShield, NGS, EAC. Cần cài Interception Driver 1 lần với quyền Admin."
+        };
+        rbDriver.Checked += (s, e) =>
+        {
+            if (InterceptionInstaller.IsReady()) return;
+            var dialog = new DriverInstallDialog { Owner = Window.GetWindow(this) };
+            dialog.ShowDialog();
+            if (!dialog.InstallSucceeded)
+            {
+                rbStealth.IsChecked = true;
+            }
+        };
+        FieldsPanel.Children.Add(rbDriver);
     }
 
     private void AddRetrySettingsPanel(IfImageAction img)

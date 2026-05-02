@@ -2,6 +2,7 @@
 
 using System.IO;
 using System.Windows;
+using SmartMacroAI.Core;
 using SmartMacroAI.Localization;
 
 namespace SmartMacroAI;
@@ -35,6 +36,15 @@ public partial class App : Application
         try
         {
             LanguageManager.ApplySavedLanguage();
+
+            // Initialize Interception driver if DLL + driver already installed (non-blocking)
+            try
+            {
+                if (InterceptionInstaller.IsReady())
+                    InterceptionService.Instance.Initialize();
+            }
+            catch { }
+
             base.OnStartup(e);
         }
         catch (Exception ex)
@@ -43,5 +53,11 @@ public partial class App : Application
             MessageBox.Show($"Lỗi OnStartup:\n\n{ex.Message}\n\n{ex.StackTrace}", "SmartMacroAI — Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
         }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        try { InterceptionService.Instance.Dispose(); } catch { }
+        base.OnExit(e);
     }
 }

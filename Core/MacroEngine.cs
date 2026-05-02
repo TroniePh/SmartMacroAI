@@ -1428,6 +1428,46 @@ public sealed class MacroEngine
             return;
         }
 
+        // ── DRIVER LEVEL MODE: Interception kernel driver — bypasses anti-cheat ────
+        if (click.Mode == ClickMode.DriverLevel)
+        {
+            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
+            {
+                OnLog("[WARN] OS resource lock timeout on click/Driver — skipping");
+                return;
+            }
+            try
+            {
+                var pt = new POINT { X = click.X, Y = click.Y };
+                ClientToScreen(hwnd, ref pt);
+
+                if (!InterceptionService.Instance.IsInitialized)
+                {
+                    OnLog("[WARN] Interception driver chưa cài — fallback sang Raw mode");
+                    // Fallback to Raw
+                    int screenW = GetSystemMetrics(0);
+                    int screenH = GetSystemMetrics(1);
+                    int absX = (int)((pt.X + 0.5) * 65536.0 / screenW);
+                    int absY = (int)((pt.Y + 0.5) * 65536.0 / screenH);
+                    var inputs = new[]
+                    {
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = click.IsRightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_LEFTDOWN } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = click.IsRightClick ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_LEFTUP } } }
+                    };
+                    SendInput(3, inputs, Marshal.SizeOf<INPUT>());
+                }
+                else
+                {
+                    InterceptionService.Instance.SendMouseClick(pt.X, pt.Y, 50, click.IsRightClick);
+                }
+
+                Log?.Invoke($"[Click/Driver] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
+            }
+            finally { _osResourceLock.Release(); }
+            return;
+        }
+
         // ── STEALTH MODE (default): PostMessage — no cursor hijack, runs in background ─
         IntPtr lParam = Win32Api.MakeLParam(click.X, click.Y);
         if (click.IsRightClick)
@@ -2052,6 +2092,82 @@ public sealed class MacroEngine
     }
 
     /// <summary>
+    /// Sends a key press via Interception driver — kernel-level HID emulation.
+    /// Bypasses anti-cheat (HackShield, NGS, EAC). Falls back to RawInput if driver not installed.
+    /// </summary>
+    private async Task ExecuteKeyPressDriverLevelAsync(KeyPressAction kpa, IntPtr hwnd, CancellationToken token)
+    {
+        if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
+        {
+            OnLog("[WARN] OS resource lock timeout on keypress/Driver — skipping");
+            return;
+        }
+        try
+        {
+            if (!InterceptionService.Instance.IsInitialized)
+            {
+                OnLog("[WARN] Interception driver chưa cài — fallback sang RawInput");
+                // Reuse existing RawInput logic inline (without nested lock — already holding it)
+                uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
+                uint ourThreadId = GetCurrentThreadId();
+
+                IntPtr focusedChild;
+                if (AttachThreadInput(ourThreadId, targetThreadId, true))
+                {
+                    focusedChild = GetFocusedChildWindow(hwnd);
+                    SetFocus(focusedChild);
+
+                    var inputs = new List<INPUT>();
+                    void AddKey(int v, bool keyUp)
+                    {
+                        uint sc = MapVirtualKey((uint)v, 0);
+                        bool isExt = v is 0x21 or 0x22 or 0x23 or 0x24 or 0x25 or 0x26 or 0x27 or 0x28 or 0x2D or 0x2E or 0xA1 or 0xA3 or 0xA5;
+                        uint flags = KEYEVENTF_SCANCODE;
+                        if (keyUp) flags |= KEYEVENTF_KEYUP;
+                        if (isExt) flags |= 0x0001;
+                        inputs.Add(new INPUT { type = INPUT_KEYBOARD, u = new INPUTUNION { ki = new KEYBDINPUT { wVk = 0, wScan = (ushort)sc, dwFlags = flags, time = 0, dwExtraInfo = IntPtr.Zero } } });
+                    }
+
+                    if (kpa.Modifiers.Shift) AddKey(0x10, false);
+                    if (kpa.Modifiers.Ctrl) AddKey(0x11, false);
+                    if (kpa.Modifiers.Alt) AddKey(0x12, false);
+                    AddKey(kpa.VirtualKeyCode, false);
+                    AddKey(kpa.VirtualKeyCode, true);
+                    if (kpa.Modifiers.Alt) AddKey(0x12, true);
+                    if (kpa.Modifiers.Ctrl) AddKey(0x11, true);
+                    if (kpa.Modifiers.Shift) AddKey(0x10, true);
+
+                    SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+                    ReleaseAllModifiers();
+                    AttachThreadInput(ourThreadId, targetThreadId, false);
+                }
+                await Task.Delay(Math.Max(kpa.HoldDurationMs, 50), token);
+                OnLog($"[KeyPress/Driver→RawInput fallback] {kpa.KeyName}");
+                return;
+            }
+
+            // ── Driver level path ──
+            uint scanCode = MapVirtualKey((uint)kpa.VirtualKeyCode, 0);
+            bool isExtended = kpa.VirtualKeyCode is 0x21 or 0x22 or 0x23 or 0x24 or
+                                          0x25 or 0x26 or 0x27 or 0x28 or
+                                          0x2D or 0x2E or 0xA1 or 0xA3 or 0xA5;
+
+            if (kpa.Modifiers.Shift) InterceptionService.Instance.SendKey(0x2A, true);  // LShift scan
+            if (kpa.Modifiers.Ctrl) InterceptionService.Instance.SendKey(0x1D, true, extended: true);
+            if (kpa.Modifiers.Alt) InterceptionService.Instance.SendKey(0x38, true, extended: true);
+
+            InterceptionService.Instance.TapKey((ushort)scanCode, Math.Max(kpa.HoldDurationMs, 50), isExtended);
+
+            if (kpa.Modifiers.Alt) InterceptionService.Instance.SendKey(0x38, false, extended: true);
+            if (kpa.Modifiers.Ctrl) InterceptionService.Instance.SendKey(0x1D, false, extended: true);
+            if (kpa.Modifiers.Shift) InterceptionService.Instance.SendKey(0x2A, false);
+
+            OnLog($"[KeyPress/Driver] {kpa.KeyName} SC=0x{scanCode:X2}");
+        }
+        finally { _osResourceLock.Release(); }
+    }
+
+    /// <summary>
     /// Safety: releases all modifier keys (Shift, Ctrl, Alt) after SendInput.
     /// Sends KEYUP for all modifiers regardless of whether they were pressed,
     /// to unstick any leaked modifier state from previous actions.
@@ -2113,6 +2229,9 @@ public sealed class MacroEngine
                 return;
             case KeyInputMode.SendInput:
                 await ExecuteKeyPressSendInputAsync(kpa, hwnd, token);
+                return;
+            case KeyInputMode.DriverLevel:
+                await ExecuteKeyPressDriverLevelAsync(kpa, hwnd, token);
                 return;
         }
 

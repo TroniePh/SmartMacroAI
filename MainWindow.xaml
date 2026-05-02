@@ -927,6 +927,22 @@
                                                  DropDownOpened="CmbTargetWindow_DropDownOpened"
                                                  SelectionChanged="CmbTargetWindow_SelectionChanged" />
                                     </DockPanel>
+                                    <!-- Game Detected Badge -->
+                                    <Border x:Name="GameDetectedBadge" Visibility="Collapsed"
+                                            Background="#1a2a1a" BorderBrush="#4a8a4a"
+                                            BorderThickness="1" CornerRadius="4"
+                                            Padding="8,5" Margin="0,4,0,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🎮" Margin="0,0,6,0" FontSize="14"/>
+                                            <StackPanel>
+                                                <TextBlock x:Name="TxtGameDetected"
+                                                           Text="Phát hiện game — đang dùng Driver Level mode"
+                                                           FontWeight="SemiBold" FontSize="12" Foreground="#6daa45"/>
+                                                <TextBlock x:Name="TxtGameDetectedSub"
+                                                           Text="" FontSize="11" Foreground="#888"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
                                 </StackPanel>
                                 <StackPanel Margin="0,0,16,0">
                                     <StackPanel Orientation="Horizontal">

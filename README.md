@@ -8,7 +8,7 @@
 
 **Tự động hóa mọi thứ. Hoàn toàn tàng hình.**
 
-[![Version](https://img.shields.io/badge/version-v1.5.3-blue?style=for-the-badge&logo=windows)](https://github.com/TroniePh/SmartMacroAI/releases)
+[![Version](https://img.shields.io/badge/version-v1.5.4-blue?style=for-the-badge&logo=windows)](https://github.com/TroniePh/SmartMacroAI/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-lightblue?style=for-the-badge&logo=windows)](https://github.com/TroniePh/SmartMacroAI)
 [![Framework](https://img.shields.io/badge/.NET-8.0%20WPF-purple?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
@@ -127,13 +127,13 @@ Tự động kiểm tra phiên bản mới từ GitHub khi khởi động. Nếu
 
 **Cách 1 — ZIP (Khuyến nghị)**
 
-1. Tải file `SmartMacroAI-v1.5.3-win-x64.zip` từ [**Releases**](https://github.com/TroniePh/SmartMacroAI/releases/latest)
+1. Tải file `SmartMacroAI-v1.5.4-win-x64.zip` từ [**Releases**](https://github.com/TroniePh/SmartMacroAI/releases/latest)
 2. Giải nén vào thư mục bất kỳ
 3. Chạy `SmartMacroAI.exe` — chấp nhận UAC prompt khi khởi động
 
 **Cách 2 — Installer (.exe cài đặt)**
 
-1. Tải file `SmartMacroAI_Setup_v1.5.3.exe` từ [**Releases**](https://github.com/TroniePh/SmartMacroAI/releases/latest)
+1. Tải file `SmartMacroAI_Setup_v1.5.4.exe` từ [**Releases**](https://github.com/TroniePh/SmartMacroAI/releases/latest)
 2. Chạy installer, làm theo hướng dẫn trên màn hình
 3. Shortcut Desktop và Start Menu được tạo tự động
 
@@ -248,6 +248,7 @@ Lệnh `PostMessage` gửi trực tiếp sự kiện vào **message queue** củ
 
 | Phiên bản | Ngày | Highlights |
 |-----------|------|-----------|
+| **v1.5.4** | 05/2026 | Interception Driver Level mode for game anti-cheat, Auto-detect game window → Driver Level, Auto-install driver dialog, Game Detected badge UI |
 | **v1.5.3** | 05/2026 | Fix concurrent macro OS resource contention — wrap _osResourceLock on Clipboard/SetForegroundWindow/SendInput/AttachThreadInput, TypeViaClipboardAndPasteAsync thread-safe |
 | **v1.5.2** | 04/2026 | Bug fixes: ClickAction ClickMode enum (Stealth/Raw/Hardware), IfImageFound RetryUntilFound loop, DialogResult safety verified, credit lines added |
 | **v1.5.1** | 04/2026 | Per-instance MacroRunnerState for dashboard |
