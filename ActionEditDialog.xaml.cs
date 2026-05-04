@@ -33,7 +33,7 @@ public partial class ActionEditDialog : Window
         InitializeComponent();
         _action = action;
         _targetHwnd = targetHwnd;
-        TxtDialogTitle.Text = $"Chỉnh sửa: {action.DisplayName}";
+        TxtDialogTitle.Text = string.Format(Localization.LanguageManager.GetString("ui_ActionEdit_EditPrefix"), action.DisplayName);
         BuildFields();
     }
 
@@ -42,16 +42,16 @@ public partial class ActionEditDialog : Window
         switch (_action)
         {
             case ClickAction c:
-                AddFieldWithPickerButton("X", c.X.ToString(), "Tọa độ X");
-                AddFieldWithPickerButton("Y", c.Y.ToString(), "Tọa độ Y");
-                AddCheckField("IsRightClick", c.IsRightClick, "Nhấp chuột phải thay vì trái");
+                AddFieldWithPickerButton("X", c.X.ToString(), Localization.LanguageManager.GetString("ui_ActionEdit_CoordX"));
+                AddFieldWithPickerButton("Y", c.Y.ToString(), Localization.LanguageManager.GetString("ui_ActionEdit_CoordY"));
+                AddMouseButtonSelector("MouseButton", c.Button);
                 AddClickModeSelector("ClickMode", c.Mode);
                 break;
             case TypeAction t:
-                AddField("Text", t.Text, displayCaption: "Nội dung gõ");
+                AddField("Text", t.Text, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_TypeContent"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Cách nhập:",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_InputMethod"),
                     FontSize = 11,
                     FontWeight = FontWeights.SemiBold,
                     Foreground = LabelBrush,
@@ -60,7 +60,7 @@ public partial class ActionEditDialog : Window
 
                 var clipboardRb = new System.Windows.Controls.RadioButton
                 {
-                    Content = "📋 Dán từ clipboard (Khuyến nghị cho tiếng Việt/Unikey)",
+                    Content = Localization.LanguageManager.GetString("ui_ActionEdit_Clipboard"),
                     Foreground = InputFg,
                     IsChecked = t.InputMethod == TypeInputMethod.Clipboard,
                     Margin = new Thickness(0, 2, 0, 2),
@@ -68,7 +68,7 @@ public partial class ActionEditDialog : Window
                 };
                 var wmcharRb = new System.Windows.Controls.RadioButton
                 {
-                    Content = "⌨ Gõ từng ký tự qua WM_CHAR",
+                    Content = Localization.LanguageManager.GetString("ui_ActionEdit_WmChar"),
                     Foreground = InputFg,
                     IsChecked = t.InputMethod == TypeInputMethod.WmChar,
                     Margin = new Thickness(0, 2, 0, 2),
@@ -77,10 +77,10 @@ public partial class ActionEditDialog : Window
                 FieldsPanel.Children.Add(clipboardRb);
                 FieldsPanel.Children.Add(wmcharRb);
 
-                AddField("KeyDelayMs", t.KeyDelayMs.ToString(), displayCaption: "Độ trễ mỗi ký tự (ms, chỉ WM_CHAR)");
+                AddField("KeyDelayMs", t.KeyDelayMs.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_KeyDelay"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Nếu dùng \"Dán clipboard\": bỏ trống hoặc để 0. Nếu dùng \"WM_CHAR\": nhập số ms (vd: 30).",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_KeyDelayHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -88,19 +88,19 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case WaitAction w:
-                AddField("Milliseconds", (w.DelayMin == w.DelayMax ? w.DelayMin : w.Milliseconds).ToString(), displayCaption: "Thời gian chờ cố định (ms)");
-                AddField("WaitForImage", w.WaitForImage, browse: true, displayCaption: "Chờ ảnh mẫu (đường dẫn)");
-                AddField("WaitThreshold", w.WaitThreshold.ToString("F2"), displayCaption: "Ngưỡng khớp ảnh");
-                AddField("WaitTimeoutMs", w.WaitTimeoutMs.ToString(), displayCaption: "Hết thời chờ tối đa (ms)");
-                AddField("WaitForOcrContains", w.WaitForOcrContains, displayCaption: "Chờ OCR chứa chuỗi (để trống nếu không dùng)");
-                AddField("OcrRegionX", w.OcrRegionX.ToString(), displayCaption: "OCR vùng X (màn hình)");
-                AddField("OcrRegionY", w.OcrRegionY.ToString(), displayCaption: "OCR vùng Y (màn hình)");
-                AddField("OcrRegionWidth", w.OcrRegionWidth.ToString(), displayCaption: "OCR vùng rộng");
-                AddField("OcrRegionHeight", w.OcrRegionHeight.ToString(), displayCaption: "OCR vùng cao");
-                AddField("OcrPollIntervalMs", w.OcrPollIntervalMs.ToString(), displayCaption: "OCR poll (ms)");
+                AddField("Milliseconds", (w.DelayMin == w.DelayMax ? w.DelayMin : w.Milliseconds).ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_WaitFixed"));
+                AddField("WaitForImage", w.WaitForImage, browse: true, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_WaitImage"));
+                AddField("WaitThreshold", w.WaitThreshold.ToString("F2"), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_WaitThreshold"));
+                AddField("WaitTimeoutMs", w.WaitTimeoutMs.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_Timeout"));
+                AddField("WaitForOcrContains", w.WaitForOcrContains, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_WaitOcr"));
+                AddField("OcrRegionX", w.OcrRegionX.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OcrX"));
+                AddField("OcrRegionY", w.OcrRegionY.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OcrY"));
+                AddField("OcrRegionWidth", w.OcrRegionWidth.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OcrW"));
+                AddField("OcrRegionHeight", w.OcrRegionHeight.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OcrH"));
+                AddField("OcrPollIntervalMs", w.OcrPollIntervalMs.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OcrPoll"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Để trống \"Chờ ảnh mẫu\" nếu chỉ cần chờ cố định (ms). Khi có đường dẫn, macro sẽ quét cho đến khi thấy ảnh hoặc hết thời gian. Khi điền \"Chờ OCR chứa chuỗi\" và kích thước vùng > 0, macro sẽ poll OCR trên vùng màn hình đó.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_WaitHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -110,7 +110,7 @@ public partial class ActionEditDialog : Window
                 {
                     FieldsPanel.Children.Add(new TextBlock
                     {
-                        Text = $"Lưu ý: kịch bản cũ đang dùng chờ ngẫu nhiên ({w.DelayMin}–{w.DelayMax} ms). Lưu từ hộp thoại này sẽ chuyển sang một giá trị cố định ở trên.",
+                        Text = string.Format(Localization.LanguageManager.GetString("ui_ActionEdit_RandomDelayNote"), w.DelayMin, w.DelayMax),
                         Foreground = AccentBrush,
                         FontSize = 10,
                         TextWrapping = TextWrapping.Wrap,
@@ -119,13 +119,13 @@ public partial class ActionEditDialog : Window
                 }
                 break;
             case RepeatAction rep:
-                AddField("RepeatCount", rep.RepeatCount.ToString(), displayCaption: "Số lần lặp (0 = vô hạn)");
-                AddField("IntervalMs", rep.IntervalMs.ToString(), displayCaption: "Khoảng cách giữa các lần (ms)");
-                AddField("BreakIfImagePath", rep.BreakIfImagePath, browse: true, displayCaption: "Ảnh thoát vòng lặp (tuỳ chọn)");
-                AddSliderField("BreakThreshold", rep.BreakThreshold, 0.5, 1.0, "Ngưỡng ảnh thoát (0,5–1,0)");
+                AddField("RepeatCount", rep.RepeatCount.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_RepeatCount"));
+                AddField("IntervalMs", rep.IntervalMs.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_RepeatInterval"));
+                AddField("BreakIfImagePath", rep.BreakIfImagePath, browse: true, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_BreakImage"));
+                AddSliderField("BreakThreshold", rep.BreakThreshold, 0.5, 1.0, Localization.LanguageManager.GetString("ui_ActionEdit_BreakThreshold"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Số lần lặp = 0 nghĩa là lặp vô hạn. Các bước trong vòng lặp chỉnh trên sơ đồ macro, không phải ở đây.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_RepeatHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -133,21 +133,20 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case IfImageAction img:
-                AddField("ImagePath", img.ImagePath, browse: true, displayCaption: "Đường dẫn ảnh mẫu");
-                AddField("Threshold", img.Threshold.ToString("F2"), displayCaption: "Ngưỡng khớp");
+                AddField("ImagePath", img.ImagePath, browse: true, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_TemplatePath"));
+                AddField("Threshold", img.Threshold.ToString("F2"), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_MatchThreshold"));
                 AddCheckField("ClickOnFound", img.ClickOnFound,
-                    "Tự nhấp vào tâm ảnh khi tìm thấy");
+                    Localization.LanguageManager.GetString("ui_ActionEdit_ClickOnFound"));
                 AddClickModeSelector("IfImageClickMode", img.ClickMode);
-                AddField("RandomOffset", img.RandomOffset.ToString(), displayCaption: "Độ lệch ngẫu nhiên (px)");
+                AddField("RandomOffset", img.RandomOffset.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_RandomOffset"));
                 AddCheckField("RetryUntilFound", img.RetryUntilFound,
-                    "🔄 Lặp lại tìm cho đến khi thấy (Retry until found)");
+                    Localization.LanguageManager.GetString("ui_ActionEdit_RetryUntilFound"));
                 AddRetrySettingsPanel(img);
-                AddField("TimeoutMs", img.TimeoutMs.ToString(), displayCaption: "Hết thời chờ tối đa (ms)");
+                AddField("TimeoutMs", img.TimeoutMs.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_Timeout"));
                 AddRoiExpander(img);
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "RetryUntilFound: macro tiếp tục tìm lại ảnh trong vòng lặp cho đến khi thấy, " +
-                           "rồi mới chạy Then. Nếu MaxRetryCount > 0 và đạt giới hạn → chạy Else.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_RetryHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -155,21 +154,21 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case IfTextAction txt:
-                AddField("Text", txt.Text, displayCaption: "Chuỗi cần nhận dạng");
-                AddCheckField("IgnoreCase", txt.IgnoreCase, "Không phân biệt hoa thường");
-                AddCheckField("PartialMatch", txt.PartialMatch, "Khớp nếu chuỗi xuất hiện ở bất kỳ đâu (chuỗi con)");
+                AddField("Text", txt.Text, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OcrText"));
+                AddCheckField("IgnoreCase", txt.IgnoreCase, Localization.LanguageManager.GetString("ui_ActionEdit_IgnoreCase"));
+                AddCheckField("PartialMatch", txt.PartialMatch, Localization.LanguageManager.GetString("ui_ActionEdit_PartialMatch"));
                 break;
             case WebAction wa:
                 AddComboField("ActionType",
                     ["Navigate", "Click", "Type", "Scrape"],
                     wa.ActionType.ToString(),
-                    displayCaption: "Loại thao tác web");
+                    displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_WebType"));
                 AddField("Url", wa.Url, displayCaption: "URL");
-                AddField("Selector", wa.Selector, displayCaption: "Bộ chọn (CSS / xpath=)");
-                AddField("TextToType", wa.TextToType, displayCaption: "Nội dung gõ (Type)");
+                AddField("Selector", wa.Selector, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_Selector"));
+                AddField("TextToType", wa.TextToType, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_TypeText"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Điều hướng: điền URL. Nhấp/Gõ/Trích: điền bộ chọn. Gõ: thêm nội dung cần gõ.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_WebHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -180,10 +179,10 @@ public partial class ActionEditDialog : Window
                 AddField("Url", wn.Url, displayCaption: "URL");
                 break;
             case WebClickAction wc:
-                AddField("CssSelector", wc.CssSelector, displayCaption: "Bộ chọn CSS");
+                AddField("CssSelector", wc.CssSelector, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CssSelector"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Dùng CSS (#id, .class) hoặc Playwright text= / xpath=.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_CssHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -191,11 +190,11 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case WebTypeAction wt:
-                AddField("CssSelector", wt.CssSelector, displayCaption: "Bộ chọn CSS");
-                AddField("TextToType", wt.TextToType, displayCaption: "Nội dung gõ");
+                AddField("CssSelector", wt.CssSelector, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CssSelector"));
+                AddField("TextToType", wt.TextToType, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_TypeContent"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Trường được xoá rồi điền (FillAsync).",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_FillHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -203,22 +202,22 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case SetVariableAction sv:
-                AddField("VarName", sv.VarName, displayCaption: "Tên biến");
-                AddField("Value", sv.Value, displayCaption: "Giá trị");
+                AddField("VarName", sv.VarName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_VarName"));
+                AddField("Value", sv.Value, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_VarValue"));
                 AddComboFieldTagged("ValueSource",
                 [
-                    ("Manual", "Nhập tay (Manual)"),
+                    ("Manual", Localization.LanguageManager.GetString("ui_ActionEdit_Manual")),
                     ("Clipboard", "Clipboard"),
-                ], sv.ValueSource, "Nguồn giá trị");
+                ], sv.ValueSource, Localization.LanguageManager.GetString("ui_ActionEdit_ValueSource"));
                 AddComboFieldTagged("Operation",
                 [
-                    ("Set", "Thiết lập (Set)"),
-                    ("Increment", "Tăng (Increment)"),
-                    ("Decrement", "Giảm (Decrement)"),
-                ], sv.Operation, "Thao tác");
+                    ("Set", Localization.LanguageManager.GetString("ui_ActionEdit_Set")),
+                    ("Increment", Localization.LanguageManager.GetString("ui_ActionEdit_Increment")),
+                    ("Decrement", Localization.LanguageManager.GetString("ui_ActionEdit_Decrement")),
+                ], sv.Operation, Localization.LanguageManager.GetString("ui_ActionEdit_Operation"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Giá trị hỗ trợ {biến_khác}, {{tên}}, và ${biến_kịch_bản}. Nguồn Clipboard bỏ qua ô Giá trị.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_VarHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -226,12 +225,12 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case IfVariableAction iv:
-                AddField("VarName", iv.VarName, displayCaption: "Tên biến");
-                AddComboField("CompareOp", ["==", "!=", "contains", "notcontains", ">", "<", ">=", "<="], iv.CompareOp, displayCaption: "Toán tử so sánh");
-                AddField("Value", iv.Value, displayCaption: "Giá trị so sánh");
+                AddField("VarName", iv.VarName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_VarName"));
+                AddComboField("CompareOp", ["==", "!=", "contains", "notcontains", ">", "<", ">=", "<="], iv.CompareOp, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CompareOp"));
+                AddField("Value", iv.Value, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CompareValue"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Nhánh THỎA MÃN / TRÁI LẠI chỉnh trên sơ đồ macro.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_BranchHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -239,10 +238,10 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case LogAction lg:
-                AddField("Message", lg.Message, displayCaption: "Nội dung ghi");
+                AddField("Message", lg.Message, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_LogContent"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Hỗ trợ {tên_biến} và ${biến_kịch_bản}.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_LogHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -255,7 +254,7 @@ public partial class ActionEditDialog : Window
             case TryCatchAction:
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Khối THỬ NGHIỆM và XỬ LÝ LỖI chỉnh trên sơ đồ macro (không phải ở đây).",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_TryCatchHint"),
                     Foreground = LabelBrush,
                     FontSize = 11,
                     TextWrapping = TextWrapping.Wrap,
@@ -263,20 +262,20 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case OcrRegionAction ocr:
-                AddField("ScreenX", ocr.ScreenX.ToString(), displayCaption: "Vùng màn hình X");
-                AddField("ScreenY", ocr.ScreenY.ToString(), displayCaption: "Vùng màn hình Y");
-                AddField("ScreenWidth", ocr.ScreenWidth.ToString(), displayCaption: "Rộng (px)");
-                AddField("ScreenHeight", ocr.ScreenHeight.ToString(), displayCaption: "Cao (px)");
-                AddField("OutputVariableName", ocr.OutputVariableName, displayCaption: "Tên biến lưu kết quả (không cần {{ }})");
+                AddField("ScreenX", ocr.ScreenX.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_ScreenX"));
+                AddField("ScreenY", ocr.ScreenY.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_ScreenY"));
+                AddField("ScreenWidth", ocr.ScreenWidth.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_Width"));
+                AddField("ScreenHeight", ocr.ScreenHeight.ToString(), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_Height"));
+                AddField("OutputVariableName", ocr.OutputVariableName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_OutputVar"));
                 var btnSnip = new Button
                 {
-                    Content = "Chọn vùng màn hình (kéo thả)",
+                    Content = Localization.LanguageManager.GetString("ui_ActionEdit_PickRegion"),
                     Margin = new Thickness(0, 8, 0, 0),
                     Padding = new Thickness(12, 8, 12, 8),
                     Background = AccentBrush,
                     Foreground = Brushes.White,
                     BorderThickness = new Thickness(0),
-                    ToolTip = "Kéo chọn vùng; tọa độ màn hình sẽ điền vào các ô phía trên.",
+                    ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_RoiTip"),
                 };
                 btnSnip.Click += (_, _) =>
                 {
@@ -292,7 +291,7 @@ public partial class ActionEditDialog : Window
                 FieldsPanel.Children.Add(btnSnip);
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Windows.Media.Ocr — kết quả lưu vào {{tên_biến}} và last_ocr.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_OcrHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -300,10 +299,10 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case ClearVariableAction cv:
-                AddField("VarName", cv.VarName, displayCaption: "Tên biến (để trống = xóa hết)");
+                AddField("VarName", cv.VarName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_ClearVarName"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Để trống tên: xóa toàn bộ biến chuỗi runtime.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_ClearHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -311,18 +310,15 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case LogVariableAction lv:
-                AddField("VarName", lv.VarName, displayCaption: "Tên biến");
+                AddField("VarName", lv.VarName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_VarName"));
                 break;
             case TelegramAction tg:
                 AddFieldPassword("BotToken", tg.BotToken, displayCaption: "Bot Token");
                 AddField("ChatId", tg.ChatId, displayCaption: "Chat ID");
-                AddFieldMultiLine("Message", tg.Message, displayCaption: "Nội dung tin nhắn (hỗ trợ {{biến}})");
+                AddFieldMultiLine("Message", tg.Message, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_TelegramMsg"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Hướng dẫn: 1) Mở Telegram, tìm @BotFather → /newbot để lấy Bot Token. " +
-                           "2) Thêm bot vào nhóm/channel, lấy Chat ID (vd: 123456789). " +
-                           "Nội dung hỗ trợ HTML: <b>bold</b>, <code>code</code>, <i>italic</i>. " +
-                           "Dùng {{tên_cột}} để chèn biến từ CSV.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_TelegramHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -331,7 +327,7 @@ public partial class ActionEditDialog : Window
 
                 var btnTest = new Button
                 {
-                    Content = "Test ngay",
+                    Content = Localization.LanguageManager.GetString("ui_ActionEdit_TestNow"),
                     Margin = new Thickness(0, 12, 0, 0),
                     Padding = new Thickness(16, 8, 16, 8),
                     Background = AccentBrush,
@@ -345,7 +341,7 @@ public partial class ActionEditDialog : Window
 
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = $"PC hiện tại: {Environment.MachineName} — tin nhắn test sẽ gửi \"Kết nối thành công!\" từ máy này.",
+                    Text = string.Format(Localization.LanguageManager.GetString("ui_ActionEdit_PcTestInfo"), Environment.MachineName),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -353,14 +349,13 @@ public partial class ActionEditDialog : Window
                 });
                 break;
             case CallMacroAction cma:
-                AddFieldWithFileBrowse("MacroFilePath", cma.MacroFilePath, "Kịch bản (.json)", "JSON Files|*.json|All Files|*.*");
-                AddField("MacroName", cma.MacroName, displayCaption: "Tên macro (tự động điền)");
-                AddCheckField("PassVariables", cma.PassVariables, "Truyền biến CSV / runtime sang macro con");
-                AddCheckField("WaitForFinish", cma.WaitForFinish, "Chờ macro con chạy xong (bỏ chọn = chạy song song)");
+                AddFieldWithFileBrowse("MacroFilePath", cma.MacroFilePath, Localization.LanguageManager.GetString("ui_ActionEdit_ScriptFile"), "JSON Files|*.json|All Files|*.*");
+                AddField("MacroName", cma.MacroName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_MacroName"));
+                AddCheckField("PassVariables", cma.PassVariables, Localization.LanguageManager.GetString("ui_ActionEdit_PassVars"));
+                AddCheckField("WaitForFinish", cma.WaitForFinish, Localization.LanguageManager.GetString("ui_ActionEdit_WaitChild"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
-                    Text = "Khi \"Truyền biến\" được bật, các biến {{username}}, {{password}} từ CSV của macro cha sẽ " +
-                           "được chuyển sang macro con. Macro con có thể dùng các biến này bình thường.",
+                    Text = Localization.LanguageManager.GetString("ui_ActionEdit_CallMacroHint"),
                     Foreground = LabelBrush,
                     FontSize = 10,
                     TextWrapping = TextWrapping.Wrap,
@@ -410,7 +405,7 @@ public partial class ActionEditDialog : Window
             };
             btn.Click += (_, _) =>
             {
-                var dlg = new OpenFileDialog { Filter = "Ảnh|*.png;*.jpg;*.jpeg;*.bmp|Tất cả|*.*" };
+                var dlg = new OpenFileDialog { Filter = Localization.LanguageManager.GetString("ui_ActionEdit_ImageFilter") + "|*.png;*.jpg;*.jpeg;*.bmp|" + Localization.LanguageManager.GetString("ui_ActionEdit_AllFilter") + "|*.*" };
                 if (dlg.ShowDialog() == true) textBox.Text = dlg.FileName;
             };
             DockPanel.SetDock(btn, Dock.Right);
@@ -452,7 +447,7 @@ public partial class ActionEditDialog : Window
         var panel = new DockPanel();
         var btn = new Button
         {
-            Content = "Chọn...",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_Browse"),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#313244")),
             Foreground = InputFg,
             BorderThickness = new Thickness(0),
@@ -506,7 +501,7 @@ public partial class ActionEditDialog : Window
         var panel = new DockPanel();
         var btnPick = new Button
         {
-            Content = "\U0001F4CD Lấy tọa độ",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_PickCoord"),
             Background = AccentBrush,
             Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#11111B")),
             BorderThickness = new Thickness(0),
@@ -619,23 +614,23 @@ public partial class ActionEditDialog : Window
 
         if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
         {
-            MessageBox.Show("Vui lòng nhập Bot Token và Chat ID trước khi test.",
-                "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_TelegramEnterCredentials"),
+                Localization.LanguageManager.GetString("ui_Msg_InvalidInput"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        string testMessage = "✅ SmartMacroAI kết nối thành công!";
-        Log?.Invoke("[Telegram] Đang gửi tin nhắn test...");
+        string testMessage = Localization.LanguageManager.GetString("ui_ActionEdit_TelegramTestMsg");
+        Log?.Invoke(Localization.LanguageManager.GetString("ui_ActionEdit_SendingTest"));
 
         bool ok = await TelegramService.SendAsync(botToken, chatId, testMessage, msg =>
             Dispatcher.Invoke(() => Log?.Invoke(msg)));
 
         if (ok)
-            MessageBox.Show("Tin nhắn test đã gửi thành công! Kiểm tra Telegram.",
-                "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_TelegramSent"),
+                Localization.LanguageManager.GetString("ui_Msg_ShareTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         else
-            MessageBox.Show("Gửi thất bại. Kiểm tra Bot Token, Chat ID và kết nối Internet.",
-                "Lỗi gửi", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_TelegramFailed"),
+                Localization.LanguageManager.GetString("ui_Msg_Error"), MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     private void AddCheckField(string key, bool value, string description)
@@ -661,7 +656,7 @@ public partial class ActionEditDialog : Window
     {
         var exp = new Expander
         {
-            Header = "\U0001F50D Vùng tìm (ROI) — tuỳ chọn, để trống = toàn cửa sổ",
+            Header = Localization.LanguageManager.GetString("ui_ActionEdit_RoiHeader"),
             IsExpanded = false,
             Margin = new Thickness(0, 8, 0, 0),
             Foreground = InputFg,
@@ -673,7 +668,7 @@ public partial class ActionEditDialog : Window
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        string[] labels = ["X", "Y", "Rộng", "Cao"];
+        string[] labels = ["X", "Y", Localization.LanguageManager.GetString("ui_ActionEdit_RoiW"), Localization.LanguageManager.GetString("ui_ActionEdit_RoiH")];
         for (int i = 0; i < 4; i++)
         {
             var labelTb = new TextBlock
@@ -881,7 +876,7 @@ public partial class ActionEditDialog : Window
     {
         FieldsPanel.Children.Add(new TextBlock
         {
-            Text = "Phím cần nhấn",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_KeyPressLabel"),
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
             Foreground = LabelBrush,
@@ -897,7 +892,7 @@ public partial class ActionEditDialog : Window
             Focusable = true,
             IsTabStop = true,
             Text = string.IsNullOrEmpty(kpa.KeyName)
-                ? "Nhấp vào đây và nhấn 1 phím..."
+                ? Localization.LanguageManager.GetString("ui_ActionEdit_KeyPressPlaceholder")
                 : kpa.KeyName,
             Foreground = string.IsNullOrEmpty(kpa.KeyName)
                 ? Brushes.Gray
@@ -922,7 +917,7 @@ public partial class ActionEditDialog : Window
 
         var btnClear = new Button
         {
-            Content = "✕ Xóa",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_ClearBtn"),
             Margin = new Thickness(4, 0, 0, 0),
             Padding = new Thickness(10, 6, 10, 6),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#313244")),
@@ -938,7 +933,7 @@ public partial class ActionEditDialog : Window
 
         FieldsPanel.Children.Add(new TextBlock
         {
-            Text = "Giữ phím (ms):",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_HoldMs"),
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
             Foreground = LabelBrush,
@@ -963,7 +958,7 @@ public partial class ActionEditDialog : Window
 
         FieldsPanel.Children.Add(new TextBlock
         {
-            Text = "Nhấn phím nóng hoặc phím thường (F1–F24, Ctrl, Alt, Shift, Enter…). Không dùng cho chuỗi văn bản — dùng \"Gõ chữ (Type)\" thay thế.",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_KeyPressHint"),
             Foreground = LabelBrush,
             FontSize = 10,
             TextWrapping = TextWrapping.Wrap,
@@ -973,7 +968,7 @@ public partial class ActionEditDialog : Window
         // 3-way Input Mode selector
         FieldsPanel.Children.Add(new TextBlock
         {
-            Text = "Chế độ gửi phím:",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_KeySendMode"),
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
             Foreground = LabelBrush,
@@ -982,7 +977,7 @@ public partial class ActionEditDialog : Window
 
         var rbAuto = new System.Windows.Controls.RadioButton
         {
-            Content = "Tự động / Stealth (PostMessage)",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_AutoStealth"),
             IsChecked = kpa.InputMode == KeyInputMode.Auto,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
@@ -990,21 +985,21 @@ public partial class ActionEditDialog : Window
         };
         var rbSendInput = new System.Windows.Controls.RadioButton
         {
-            Content = "⚡ SendInput (Discord, Chrome, Electron, VS Code)",
+            Content = Localization.LanguageManager.GetString("str_mode_sendinput_key"),
             IsChecked = kpa.InputMode == KeyInputMode.SendInput,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
             Tag = "SendInput",
-            ToolTip = "Dùng SendInput cho Discord, trình duyệt Chromium, Electron, Unity. Cần cửa sổ ở foreground."
+            ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_SendInputTip")
         };
         var rbRawInput = new System.Windows.Controls.RadioButton
         {
-            Content = "🎮 Raw Input / Scan Code (game DirectX, Anti-Cheat)",
+            Content = Localization.LanguageManager.GetString("str_mode_raw_key"),
             IsChecked = kpa.InputMode == KeyInputMode.RawInput,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
             Tag = "RawInput",
-            ToolTip = "SendInput với scan code thuần cho game DirectX và Anti-Cheat. Cần cửa sổ ở foreground."
+            ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_RawInputTip")
         };
 
         FieldsPanel.Children.Add(rbAuto);
@@ -1013,12 +1008,12 @@ public partial class ActionEditDialog : Window
 
         var rbDriverKey = new System.Windows.Controls.RadioButton
         {
-            Content = "🎮 Driver Level — game anti-cheat (cần cài Interception driver)",
+            Content = Localization.LanguageManager.GetString("str_mode_driver_key"),
             IsChecked = kpa.InputMode == KeyInputMode.DriverLevel,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
             Tag = "DriverLevel",
-            ToolTip = "Giả lập bàn phím ở tầng kernel driver — bypass HackShield, NGS, EAC. Cần cài Interception Driver 1 lần với quyền Admin."
+            ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_DriverTip")
         };
         rbDriverKey.Checked += (s, e) =>
         {
@@ -1034,7 +1029,7 @@ public partial class ActionEditDialog : Window
 
         FieldsPanel.Children.Add(new TextBlock
         {
-            Text = "↑ Cửa sổ sẽ được đưa lên foreground khi dùng SendInput hoặc Raw Input.",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_ForegroundNote"),
             Foreground = LabelBrush,
             FontSize = 10,
             TextWrapping = TextWrapping.Wrap,
@@ -1075,7 +1070,7 @@ public partial class ActionEditDialog : Window
     private void txtKeyCapture_GotFocus(object sender, RoutedEventArgs e)
     {
         var keyBox = (TextBox)sender;
-        if (keyBox.Text == "Nhấp vào đây và nhấn 1 phím...")
+        if (keyBox.Text == Localization.LanguageManager.GetString("ui_ActionEdit_KeyPressPlaceholder"))
             keyBox.Text = string.Empty;
         keyBox.Focus();
         Keyboard.Focus(keyBox);
@@ -1094,7 +1089,7 @@ public partial class ActionEditDialog : Window
         var keyBox = (TextBox)sender;
         if (string.IsNullOrEmpty(keyBox.Text))
         {
-            keyBox.Text = "Nhấp vào đây và nhấn 1 phím...";
+            keyBox.Text = Localization.LanguageManager.GetString("ui_ActionEdit_KeyPressPlaceholder");
             keyBox.Foreground = Brushes.Gray;
         }
     }
@@ -1104,7 +1099,7 @@ public partial class ActionEditDialog : Window
         if (!_fields.TryGetValue("KeyName", out var keyBox))
             return;
 
-        keyBox.Text = "Nhấp vào đây và nhấn 1 phím...";
+        keyBox.Text = Localization.LanguageManager.GetString("ui_ActionEdit_KeyPressPlaceholder");
         keyBox.Foreground = Brushes.Gray;
 
         if (_fields.TryGetValue("VirtualKeyCode", out var vkBox))
@@ -1118,7 +1113,7 @@ public partial class ActionEditDialog : Window
     {
         FieldsPanel.Children.Add(new TextBlock
         {
-            Text = "Chế độ click:",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_ClickMode"),
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
             Foreground = LabelBrush,
@@ -1127,7 +1122,7 @@ public partial class ActionEditDialog : Window
 
         var rbStealth = new System.Windows.Controls.RadioButton
         {
-            Content = "🔇 Stealth — chạy ngầm, không chiếm chuột (khuyến nghị)",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_ClickStealth"),
             IsChecked = currentMode == Models.ClickMode.Stealth,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
@@ -1135,16 +1130,16 @@ public partial class ActionEditDialog : Window
         };
         var rbRaw = new System.Windows.Controls.RadioButton
         {
-            Content = "⚡ Raw — chiếm chuột vật lý, game nhận được",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_ClickRaw"),
             IsChecked = currentMode == Models.ClickMode.Raw,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
             Tag = dictKey + "_Raw",
-            ToolTip = "SendInput chiếm chuột vật lý — game nhận được, cần cửa sổ ở foreground."
+            ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_ClickRawTip")
         };
         var rbHw = new System.Windows.Controls.RadioButton
         {
-            Content = "🖥️ Hardware — full HW mode (kéo foreground)",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_ClickHw"),
             IsChecked = currentMode == Models.ClickMode.Hardware,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
@@ -1158,12 +1153,12 @@ public partial class ActionEditDialog : Window
 
         var rbDriver = new System.Windows.Controls.RadioButton
         {
-            Content = "🎮 Driver Level — game anti-cheat nhận được (cần cài Interception driver)",
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_ClickDriver"),
             IsChecked = currentMode == Models.ClickMode.DriverLevel,
             Foreground = InputFg,
             Margin = new Thickness(0, 2, 0, 2),
             Tag = dictKey + "_DriverLevel",
-            ToolTip = "Giả lập chuột ở tầng kernel driver — bypass HackShield, NGS, EAC. Cần cài Interception Driver 1 lần với quyền Admin."
+            ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_ClickDriverTip")
         };
         rbDriver.Checked += (s, e) =>
         {
@@ -1178,11 +1173,67 @@ public partial class ActionEditDialog : Window
         FieldsPanel.Children.Add(rbDriver);
     }
 
+    // ── MouseButton selector for ClickAction ────────────────────────────
+
+    private void AddMouseButtonSelector(string dictKey, Core.MouseButton current)
+    {
+        FieldsPanel.Children.Add(new TextBlock
+        {
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_MouseButton"),
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = LabelBrush,
+            Margin = new Thickness(0, 12, 0, 4),
+        });
+
+        var rbLeft = new System.Windows.Controls.RadioButton
+        {
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_MouseLeft"),
+            IsChecked = current == Core.MouseButton.Left,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_Left"
+        };
+        var rbRight = new System.Windows.Controls.RadioButton
+        {
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_MouseRight"),
+            IsChecked = current == Core.MouseButton.Right,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_Right"
+        };
+        var rbMiddle = new System.Windows.Controls.RadioButton
+        {
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_MouseMiddle"),
+            IsChecked = current == Core.MouseButton.Middle,
+            Foreground = InputFg,
+            Margin = new Thickness(0, 2, 0, 2),
+            Tag = dictKey + "_Middle"
+        };
+        FieldsPanel.Children.Add(rbLeft);
+        FieldsPanel.Children.Add(rbRight);
+        FieldsPanel.Children.Add(rbMiddle);
+    }
+
+    private Core.MouseButton GetMouseButtonValue(string prefix)
+    {
+        foreach (var child in FieldsPanel.Children)
+        {
+            if (child is System.Windows.Controls.RadioButton rb && rb.IsChecked == true)
+            {
+                string? tag = rb.Tag as string;
+                if (tag == prefix + "_Right") return Core.MouseButton.Right;
+                if (tag == prefix + "_Middle") return Core.MouseButton.Middle;
+            }
+        }
+        return Core.MouseButton.Left;
+    }
+
     private void AddRetrySettingsPanel(IfImageAction img)
     {
         var exp = new Expander
         {
-            Header = "⚙️ Cài đặt Retry (khi bật \"Lặp lại tìm cho đến khi thấy\")",
+            Header = Localization.LanguageManager.GetString("ui_ActionEdit_RetrySettings"),
             IsExpanded = true,
             Margin = new Thickness(0, 4, 0, 0),
             Foreground = InputFg,
@@ -1220,7 +1271,7 @@ public partial class ActionEditDialog : Window
 
         var lblInterval = new TextBlock
         {
-            Text = "Khoảng cách retry (ms):",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_RetryInterval"),
             Foreground = LabelBrush,
             FontSize = 11,
             Margin = new Thickness(0, 0, 4, 4),
@@ -1232,7 +1283,7 @@ public partial class ActionEditDialog : Window
 
         var lblMax = new TextBlock
         {
-            Text = "Số lần tối đa (0=vô hạn):",
+            Text = Localization.LanguageManager.GetString("ui_ActionEdit_MaxRetry"),
             Foreground = LabelBrush,
             FontSize = 11,
             Margin = new Thickness(8, 0, 4, 4),
@@ -1260,7 +1311,7 @@ public partial class ActionEditDialog : Window
                 case ClickAction c:
                     c.X = int.Parse(GetFieldValue("X"));
                     c.Y = int.Parse(GetFieldValue("Y"));
-                    c.IsRightClick = GetCheckValue("IsRightClick");
+                    c.Button = GetMouseButtonValue("MouseButton");
                     c.Mode = GetClickModeValue("ClickMode");
                     break;
                 case TypeAction t:
@@ -1384,7 +1435,7 @@ public partial class ActionEditDialog : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Dữ liệu không hợp lệ: {ex.Message}", "Lỗi nhập liệu",
+            MessageBox.Show($"{Localization.LanguageManager.GetString("ui_Msg_InvalidData")} {ex.Message}", Localization.LanguageManager.GetString("ui_Msg_InvalidInput"),
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

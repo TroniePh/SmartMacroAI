@@ -44,7 +44,7 @@ public partial class LogWindow : Window
         InitializeComponent();
         DataContext = this;
         LogList.ItemsSource = _entries;
-        TxtCount.Text = "0 dòng";
+        TxtCount.Text = string.Format(Localization.LanguageManager.GetString("ui_LogWin_LineCount"), 0);
     }
 
     public void AppendLog(string macroName, string message, LogLevel level = LogLevel.Info)
@@ -73,7 +73,7 @@ public partial class LogWindow : Window
         };
 
         _entries.Add(entry);
-        TxtCount.Text = $"{_entries.Count} dòng";
+        TxtCount.Text = string.Format(Localization.LanguageManager.GetString("ui_LogWin_LineCount"), _entries.Count);
 
         if (_entries.Count > MaxEntries)
             _entries.RemoveAt(0);
@@ -85,7 +85,7 @@ public partial class LogWindow : Window
     private void BtnClear_Click(object sender, RoutedEventArgs e)
     {
         _entries.Clear();
-        TxtCount.Text = "0 dòng";
+        TxtCount.Text = string.Format(Localization.LanguageManager.GetString("ui_LogWin_LineCount"), 0);
     }
 
     private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -94,7 +94,7 @@ public partial class LogWindow : Window
         {
             Filter = "Text files|*.txt",
             FileName = $"log_{DateTime.Now:yyyyMMdd_HHmmss}.txt",
-            Title = "Lưu nhật ký log"
+            Title = Localization.LanguageManager.GetString("ui_Msg_SaveLogTitle")
         };
 
         if (dlg.ShowDialog() == true)
@@ -102,7 +102,7 @@ public partial class LogWindow : Window
             var lines = _entries.Select(entry =>
                 $"[{entry.Time}] [{entry.MacroName}] {entry.Message}");
             File.WriteAllLines(dlg.FileName, lines);
-            AppendLog("LogWindow", $"Đã lưu log vào: {Path.GetFileName(dlg.FileName)}", LogLevel.Ok);
+            AppendLog("LogWindow", string.Format(Localization.LanguageManager.GetString("ui_LogWin_Saved"), Path.GetFileName(dlg.FileName)), LogLevel.Ok);
         }
     }
 

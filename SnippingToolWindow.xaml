@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.SnippingToolWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Snip Area" WindowStyle="None" AllowsTransparency="True"
+        Title="{DynamicResource ui_Snip_Title}" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Topmost="True" ResizeMode="NoResize"
         WindowState="Maximized" ShowInTaskbar="False" Cursor="Cross"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
@@ -15,7 +15,7 @@
             <Border x:Name="SelectionRect" BorderBrush="#89B4FA" BorderThickness="2"
                     Background="#2289B4FA" Visibility="Collapsed" />
         </Canvas>
-        <TextBlock Text="Click and drag to select an area. Press Esc to cancel."
+        <TextBlock Text="{DynamicResource ui_Snip_Instruction}"
                    Foreground="White" FontSize="16" FontWeight="SemiBold"
                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0">
             <TextBlock.Effect>

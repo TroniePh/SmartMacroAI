@@ -1,0 +1,44 @@
+name: Build & Package
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore
+      run: dotnet restore SmartMacroAI/SmartMacroAI.csproj
+
+    - name: Publish
+      run: |
+        dotnet publish SmartMacroAI/SmartMacroAI.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained true `
+          -o SmartMacroAI/publish
+
+    - name: Install Inno Setup
+      run: choco install innosetup -y
+
+    - name: Build Installer
+      run: |
+        $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+        & $iscc "SmartMacroAI/installer/SmartMacroAI_Setup.iss"
+
+    - name: Upload Installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: SmartMacroAI-Setup
+        path: SmartMacroAI/installer_out/*.exe

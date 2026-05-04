@@ -27,13 +27,13 @@ public partial class RunHistoryDialog : Window
 
         if (!string.IsNullOrWhiteSpace(macroName))
         {
-            Title = $"📊 Lịch sử: {macroName}";
+            Title = string.Format(Localization.LanguageManager.GetString("ui_History_TitleFmt"), macroName);
             TxtMacroNameFilter.Text = $"Macro: {macroName}";
         }
         else
         {
-            Title = "📊 Toàn bộ lịch sử chạy";
-            TxtMacroNameFilter.Text = "Hiển thị tất cả macro";
+            Title = Localization.LanguageManager.GetString("ui_History_TitleAll");
+            TxtMacroNameFilter.Text = Localization.LanguageManager.GetString("ui_History_ShowAll");
         }
 
         LoadHistory();
@@ -58,12 +58,12 @@ public partial class RunHistoryDialog : Window
         if (HistoryGrid.SelectedItem is MacroRunRecord record)
         {
             TxtLogPreview.Text = string.IsNullOrWhiteSpace(record.LogSnapshot)
-                ? "(Không có log)"
+                ? Localization.LanguageManager.GetString("ui_History_NoLog")
                 : record.LogSnapshot;
         }
         else
         {
-            TxtLogPreview.Text = "(Chọn một bản ghi để xem log)";
+            TxtLogPreview.Text = Localization.LanguageManager.GetString("ui_History_SelectRecord");
         }
     }
 
@@ -73,7 +73,7 @@ public partial class RunHistoryDialog : Window
         {
             if (string.IsNullOrWhiteSpace(record.LogSnapshot))
             {
-                MessageBox.Show("Không có log cho bản ghi này.", "Log", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_NoLogForRecord"), "Log", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -125,7 +125,7 @@ public partial class RunHistoryDialog : Window
         {
             if (string.IsNullOrWhiteSpace(record.ScreenshotPath) || !File.Exists(record.ScreenshotPath))
             {
-                MessageBox.Show("Ảnh chụp màn hình không tồn tại.", "Screenshot", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_ScreenshotNotFound"), "Screenshot", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -139,7 +139,7 @@ public partial class RunHistoryDialog : Window
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Không thể mở ảnh: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(Localization.LanguageManager.GetString("ui_Msg_CannotOpenImage"), ex.Message), Localization.LanguageManager.GetString("ui_Msg_Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
@@ -147,15 +147,15 @@ public partial class RunHistoryDialog : Window
     private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
     {
         string message = string.IsNullOrWhiteSpace(_macroNameFilter)
-            ? "Bạn có chắc muốn xóa toàn bộ lịch sử chạy?"
-            : $"Bạn có chắc muốn xóa lịch sử của macro '{_macroNameFilter}'?";
+            ? Localization.LanguageManager.GetString("ui_Msg_DeleteHistoryConfirm")
+            : string.Format(Localization.LanguageManager.GetString("ui_Msg_DeleteHistoryMacroConfirm"), _macroNameFilter);
 
-        var result = MessageBox.Show(message, "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        var result = MessageBox.Show(message, Localization.LanguageManager.GetString("ui_Msg_ConfirmDelete"), MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (result == MessageBoxResult.Yes)
         {
             _historyService.Clear(_macroNameFilter);
             LoadHistory();
-            TxtLogPreview.Text = "(Đã xóa lịch sử)";
+            TxtLogPreview.Text = Localization.LanguageManager.GetString("ui_History_Deleted");
         }
     }
 }

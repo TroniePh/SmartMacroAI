@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Core;
 
@@ -50,7 +51,7 @@ public static class ScriptShareService
     public static string Import(string code)
     {
         if (string.IsNullOrWhiteSpace(code))
-            throw new ShareCodeException("Mã SMA- trống. Vui lòng dán mã đầy đủ.");
+            throw new ShareCodeException(LanguageManager.GetString("ui_Share_EmptyCode"));
 
         string trimmed = code.Trim()
             .Replace("\r", "")
@@ -59,12 +60,12 @@ public static class ScriptShareService
 
         if (!trimmed.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
             throw new ShareCodeException(
-                $"Mã không hợp lệ — phải bắt đầu bằng \"{Prefix}\". Mã bạn dán: \"{Truncate(trimmed, 10)}...\"");
+                string.Format(LanguageManager.GetString("ui_Share_InvalidPrefix"), Prefix, Truncate(trimmed, 10)));
 
         string base64 = trimmed.Substring(Prefix.Length);
 
         if (base64.Length < 4)
-            throw new ShareCodeException("Mã quá ngắn — có thể bị cắt mất. Vui lòng copy lại toàn bộ.");
+            throw new ShareCodeException(LanguageManager.GetString("ui_Share_TooShort"));
 
         byte[] compressed;
         try
@@ -73,11 +74,11 @@ public static class ScriptShareService
         }
         catch (FormatException ex)
         {
-            throw new ShareCodeException($"Mã không đúng định dạng Base64Url: {ex.Message}", ex);
+            throw new ShareCodeException(string.Format(LanguageManager.GetString("ui_Share_InvalidBase64"), ex.Message), ex);
         }
 
         if (compressed.Length < 2)
-            throw new ShareCodeException("Dữ liệu nén bị lỗi (quá ngắn). Kiểm tra lại mã.");
+            throw new ShareCodeException(LanguageManager.GetString("ui_Share_DecompressShort"));
 
         string json;
         try
@@ -91,11 +92,11 @@ public static class ScriptShareService
         }
         catch (InvalidDataException ex)
         {
-            throw new ShareCodeException("Dữ liệu nén bị lỗi — mã có thể bị hỏng hoặc không phải định dạng SmartMacroAI.", ex);
+            throw new ShareCodeException(LanguageManager.GetString("ui_Share_DecompressError"), ex);
         }
 
         if (string.IsNullOrWhiteSpace(json))
-            throw new ShareCodeException("Nội dung giải nén trống.");
+            throw new ShareCodeException(LanguageManager.GetString("ui_Share_EmptyContent"));
 
         try
         {
@@ -103,7 +104,7 @@ public static class ScriptShareService
         }
         catch (JsonException ex)
         {
-            throw new ShareCodeException($"Nội dung không phải JSON hợp lệ: {ex.Message}", ex);
+            throw new ShareCodeException(string.Format(LanguageManager.GetString("ui_Share_InvalidJson"), ex.Message), ex);
         }
 
         return json;

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Core;
 
@@ -51,12 +52,12 @@ public sealed class AdsPowerService : IDisposable
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException(
-                "AdsPower khởi động browser profile quá chậm (>15s). Kiểm tra AdsPower đã bật và profile có hợp lệ không.");
+                LanguageManager.GetString("ui_AdsPower_Timeout"));
         }
         catch (HttpRequestException ex)
         {
             throw new IOException(
-                $"Không thể kết nối AdsPower Local API tại {BaseUrl}. Đảm bảo AdsPower đang chạy và Local API được bật trong Cài đặt.", ex);
+                string.Format(LanguageManager.GetString("ui_AdsPower_ConnectionFailed"), BaseUrl), ex);
         }
     }
 
@@ -99,7 +100,7 @@ public sealed class AdsPowerService : IDisposable
                     ? msgEl.GetString() ?? "Unknown error"
                     : "Unknown error";
                 throw new InvalidOperationException(
-                    $"AdsPower API lỗi (code={code}): {msg}");
+                    string.Format(LanguageManager.GetString("ui_AdsPower_ApiError"), code, msg));
             }
 
             if (root.TryGetProperty("data", out JsonElement data))
@@ -138,12 +139,12 @@ public sealed class AdsPowerService : IDisposable
             }
 
             throw new InvalidOperationException(
-                "Không tìm thấy WebSocket CDP endpoint trong phản hồi AdsPower. Response: " +
+                LanguageManager.GetString("ui_AdsPower_NoWebSocket") +
                 Truncate(json, 200));
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException($"Phản hồi AdsPower không phải JSON hợp lệ: {ex.Message}", ex);
+            throw new InvalidOperationException(string.Format(LanguageManager.GetString("ui_AdsPower_InvalidJson"), ex.Message), ex);
         }
     }
 

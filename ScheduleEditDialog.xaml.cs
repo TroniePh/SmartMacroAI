@@ -60,14 +60,16 @@ public partial class ScheduleEditDialog : Window
         {
             if (!int.TryParse(TxtHour.Text.Trim(), out hour) || hour < 0 || hour > 23)
             {
-                MessageBox.Show("Giờ không hợp lệ (0–23).", "Lỗi nhập liệu",
+                MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_InvalidHour"),
+                    Localization.LanguageManager.GetString("ui_Msg_InvalidInput"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 TxtHour.Focus();
                 return;
             }
             if (!int.TryParse(TxtMinute.Text.Trim(), out minute) || minute < 0 || minute > 59)
             {
-                MessageBox.Show("Phút không hợp lệ (0–59).", "Lỗi nhập liệu",
+                MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_InvalidMinute"),
+                    Localization.LanguageManager.GetString("ui_Msg_InvalidInput"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 TxtMinute.Focus();
                 return;
@@ -79,7 +81,8 @@ public partial class ScheduleEditDialog : Window
         {
             if (!int.TryParse(TxtInterval.Text.Trim(), out interval) || interval < 1)
             {
-                MessageBox.Show("Số phút phải >= 1.", "Lỗi nhập liệu",
+                MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_InvalidInterval"),
+                    Localization.LanguageManager.GetString("ui_Msg_InvalidInput"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 TxtInterval.Focus();
                 return;

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using SmartMacroAI.Core;
+using SmartMacroAI.Localization;
 using SmartMacroAI.Models;
 
 namespace SmartMacroAI.ViewModels;
@@ -122,11 +123,11 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
 
     public string ScheduleSummary => Script.Schedule?.Enabled == true ? Script.Schedule.Mode switch
     {
-        "Daily" => $"Hàng ngày {Script.Schedule.RunAt:hh\\:mm}",
-        "Interval" => $"Mỗi {Script.Schedule.IntervalMinutes} phút",
-        "Once" => Script.Schedule.RunOnce.HasValue ? $"1 lần {Script.Schedule.RunOnce:dd/MM HH:mm}" : "1 lần",
-        "OnStartup" => "Khởi động",
-        _ => "Đã lên lịch"
+        "Daily" => string.Format(LanguageManager.GetString("ui_Schedule_DailyFmt"), Script.Schedule.RunAt.ToString("hh\\:mm")),
+        "Interval" => string.Format(LanguageManager.GetString("ui_Schedule_IntervalFmt"), Script.Schedule.IntervalMinutes),
+        "Once" => Script.Schedule.RunOnce.HasValue ? string.Format(LanguageManager.GetString("ui_Schedule_OnceFmt"), Script.Schedule.RunOnce.Value.ToString("dd/MM HH:mm")) : LanguageManager.GetString("ui_Schedule_Once"),
+        "OnStartup" => LanguageManager.GetString("ui_Schedule_OnStartup"),
+        _ => LanguageManager.GetString("ui_Schedule_Scheduled")
     } : "—";
 
     private bool _stealthMode;
@@ -177,8 +178,8 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
     /// <summary>Run button text based on current macro status.</summary>
     public string RunButtonText => Status switch
     {
-        "Running" => "Dừng",
-        _ => "Chạy"
+        "Running" => LanguageManager.GetString("ui_Dash_StopBtn"),
+        _ => LanguageManager.GetString("ui_Dash_RunBtn")
     };
 
     /// <summary>Whether the primary action should show Stop (true) or Run (false).</summary>

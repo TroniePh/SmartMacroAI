@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.RecordToolbar"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SmartMacroAI Recorder"
+        Title="{DynamicResource ui_Record_Title}"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -73,13 +73,13 @@
                     </Button.Style>
                     <TextBlock>
                         <Run Text="&#x23F9;" />
-                        <Run Text=" Stop (F10)" />
+                        <Run Text="{DynamicResource ui_Record_Stop}" />
                     </TextBlock>
                 </Button>
             </StackPanel>
 
             <!-- Credit footer -->
-            <TextBlock Text="Created by Phạm Duy - Giải pháp tự động hóa thông minh."
+            <TextBlock Text="{DynamicResource ui_Footer_Credit}"
                        FontSize="8" Foreground="#6C7086" HorizontalAlignment="Center"
                        Margin="0,6,0,0" />
         </StackPanel>

@@ -42,7 +42,7 @@ public static class BehaviorRandomizer
                     int breakMin = Math.Max(1, app.AntiDetectionSessionBreakMinMinutes);
                     int breakMax = Math.Max(breakMin, app.AntiDetectionSessionBreakMaxMinutes);
                     int pauseMin = rng.Next(breakMin, breakMax + 1);
-                    log($"[Anti-Detection] Nghỉ phiên ~{pauseMin} phút (mô hình người dùng).");
+                    log(string.Format(LanguageManager.GetString("ui_AntiLog_SessionBreak"), pauseMin));
                     state.SessionLongBreakTaken = true;
                     await humanDelayAsync(
                         (int)(pauseMin * 60_000),
@@ -97,7 +97,7 @@ public static class BehaviorRandomizer
             else
                 delta *= 120;
 
-            log("[Anti-Detection] Cuộn nhẹ trước khi nhấp (mô phỏng theo dõi mắt).");
+            log(LanguageManager.GetString("ui_AntiLog_EyeTracking"));
             InputSpoofingService.SendMouseWheel(delta);
             await Task.Delay(rng.Next(40, 120), cancellationToken).ConfigureAwait(false);
         }

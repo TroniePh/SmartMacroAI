@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.RunHistoryDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="📊 Lịch sử chạy"
+        Title="{DynamicResource ui_History_Title}"
         Height="500" Width="700"
         WindowStartupLocation="CenterOwner"
         Background="#1E1E2E"
@@ -24,7 +24,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="📊 Lịch sử chạy macro"
+                <TextBlock Grid.Column="0" Text="{DynamicResource ui_History_Header}"
                            Foreground="#CDD6F4" FontSize="14" FontWeight="Bold"
                            VerticalAlignment="Center"/>
 
@@ -32,7 +32,7 @@
                            Foreground="#FAB387" FontSize="13"
                            VerticalAlignment="Center" Margin="12,0,0,0"/>
 
-                <Button Grid.Column="2" Content="🗑 Xóa lịch sử"
+                <Button Grid.Column="2" Content="{DynamicResource ui_History_ClearBtn}"
                         Click="BtnClearHistory_Click"
                         Padding="12,6"
                         Background="#45475A" Foreground="#CDD6F4"
@@ -56,7 +56,7 @@
                   BorderThickness="0">
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Kết quả" Binding="{Binding StatusIcon}" Width="60">
+                <DataGridTextColumn Header="{DynamicResource ui_History_Result}" Binding="{Binding StatusIcon}" Width="60">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontSize" Value="16"/>
@@ -66,7 +66,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Thời gian"
+                <DataGridTextColumn Header="{DynamicResource ui_History_Time}"
                     Binding="{Binding StartTime, StringFormat='{}{0:dd/MM HH:mm:ss}'}"
                     Width="130">
                     <DataGridTextColumn.ElementStyle>
@@ -78,7 +78,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Tên macro" Binding="{Binding MacroName}" Width="*">
+                <DataGridTextColumn Header="{DynamicResource ui_History_MacroName}" Binding="{Binding MacroName}" Width="*">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground" Value="#CDD6F4"/>
@@ -89,7 +89,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Thời lượng" Binding="{Binding Duration}" Width="80">
+                <DataGridTextColumn Header="{DynamicResource ui_History_Duration}" Binding="{Binding Duration}" Width="80">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground" Value="#89B4FA"/>
@@ -99,7 +99,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Bước" Binding="{Binding StepsSummary}" Width="70">
+                <DataGridTextColumn Header="{DynamicResource ui_History_Steps}" Binding="{Binding StepsSummary}" Width="70">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground" Value="#A6ADC8"/>
@@ -109,7 +109,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTemplateColumn Header="Chi tiết" Width="130">
+                <DataGridTemplateColumn Header="{DynamicResource ui_History_Details}" Width="130">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0">
@@ -139,7 +139,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="📋 Log xem trước"
+                <TextBlock Grid.Row="0" Text="{DynamicResource ui_History_LogPreview}"
                            Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold"
                            Margin="0,0,0,6"/>
 

@@ -435,7 +435,7 @@ public sealed class MacroEngine
         // Validate window handle — fail fast with a clear message instead of silent crash
         if (hwnd != IntPtr.Zero && !Win32Api.IsWindow(hwnd))
         {
-            OnLog("❌ [LỖI] Cửa sổ mục tiêu không tồn tại hoặc đã bị đóng! Vui lòng chọn lại cửa sổ.");
+            OnLog($"❌ {LanguageManager.GetString("ui_Engine_TargetWindowGone")}");
             return;
         }
 
@@ -454,7 +454,7 @@ public sealed class MacroEngine
             _runtimeTargetHwnd = hwnd;
             InitializeTargetHwnd(hwnd); // FIX 2: pin HWND at execution start
             string windowTitle = Win32Api.GetWindowTitle(hwnd);
-            OnLog($"Target acquired: \"{windowTitle}\" (HWND=0x{hwnd:X}) — PostMessage (stealth)");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_TargetAcquired"), windowTitle, hwnd));
         }
         else
         {
@@ -520,8 +520,8 @@ public sealed class MacroEngine
                     _currentRunRecord.CompletedSteps = _currentRunRecord.TotalSteps;
                     _runHistoryService.Save(_currentRunRecord);
                     NotificationService.Instance.PushSuccess(
-                        "Macro hoàn thành",
-                        $"'{script.Name}' đã chạy thành công",
+                        LanguageManager.GetString("ui_Engine_MacroComplete"),
+                        string.Format(LanguageManager.GetString("ui_Engine_MacroSuccess"), script.Name),
                         script.Name);
                 }
             }
@@ -549,8 +549,8 @@ public sealed class MacroEngine
                     _currentRunRecord.CompletedSteps = _totalRowsDone;
                     _runHistoryService.Save(_currentRunRecord);
                     NotificationService.Instance.PushError(
-                        "Macro thất bại",
-                        $"'{script.Name}' lỗi: {Truncate(ex.Message, 80)}",
+                        LanguageManager.GetString("ui_Engine_MacroFailed"),
+                        string.Format(LanguageManager.GetString("ui_Engine_MacroError"), script.Name, Truncate(ex.Message, 80)),
                         script.Name);
                 }
 
@@ -599,7 +599,7 @@ public sealed class MacroEngine
     {
         string t = MacroVariableInterpolator.Expand(s ?? "", _runtimeVariables);
         Action<string>? onMissing = key =>
-            OnLog("    ⚠ Biến '{{" + key + "}}' chưa có giá trị — thay bằng chuỗi rỗng");
+            OnLog($"    ⚠ {string.Format(LanguageManager.GetString("ui_Engine_VarNotSet"), key)}");
         for (int round = 0; round < 8; round++)
         {
             string prev = t;
@@ -653,7 +653,7 @@ public sealed class MacroEngine
             token.ThrowIfCancellationRequested();
 
             if (_runtimeTargetHwnd != IntPtr.Zero && !Win32Api.IsWindow(_runtimeTargetHwnd))
-                throw new InvalidOperationException("Target window was closed during execution.");
+                throw new InvalidOperationException(LanguageManager.GetString("ui_Engine_TargetWindowClosed"));
 
             ApplyIterationVariables(script, i);
             _currentMacroIteration = i;
@@ -710,7 +710,7 @@ public sealed class MacroEngine
             token.ThrowIfCancellationRequested();
 
             if (_runtimeTargetHwnd != IntPtr.Zero && !Win32Api.IsWindow(_runtimeTargetHwnd))
-                throw new InvalidOperationException("Target window was closed during execution.");
+                throw new InvalidOperationException(LanguageManager.GetString("ui_Engine_TargetWindowClosed"));
 
             var row = dataRows[rowIdx];
             int rowNum = rowIdx + 1;
@@ -1177,9 +1177,9 @@ public sealed class MacroEngine
                     case ClearVariableAction clearVar:
                     {
                         if (string.IsNullOrWhiteSpace(clearVar.VarName))
-                        { _variableStore.Clear(); OnLog("    → Xóa tất cả biến chuỗi {{…}} (VariableStore)"); }
+                        { _variableStore.Clear(); OnLog(LanguageManager.GetString("ui_Engine_ClearAllVars")); }
                         else
-                        { string n = clearVar.VarName.Trim(); _variableStore.Remove(n); _vars.Remove(n); OnLog($"    → Xóa biến '{n}'"); }
+                        { string n = clearVar.VarName.Trim(); _variableStore.Remove(n); _vars.Remove(n); OnLog(string.Format(LanguageManager.GetString("ui_Engine_ClearVar"), n)); }
                         break;
                     }
 
@@ -1187,7 +1187,7 @@ public sealed class MacroEngine
                     {
                         _vars.Clear();
                         _variableStore.Clear();
-                        OnLog("    → [ResetVars] Đã xóa tất cả biến");
+                        OnLog(LanguageManager.GetString("ui_Engine_ResetAllVars"));
                         FireVariablesUpdated();
                         break;
                     }
@@ -1274,8 +1274,8 @@ public sealed class MacroEngine
                         if (AppSettings.Instance.HasTelegramToken)
                         {
                             string caption = $"❌ <b>{_currentScript?.Name ?? "Macro"}</b>\n" +
-                                $"Bước {currentIdx + 1}: {actionName}\n" +
-                                $"Lỗi: <code>{Truncate(ex.Message, 100)}</code>\n" +
+                                $"{string.Format(LanguageManager.GetString("ui_Engine_TelegramCaptionStep"), currentIdx + 1, actionName)}\n" +
+                                $"{string.Format(LanguageManager.GetString("ui_Engine_TelegramCaptionError"), $"<code>{Truncate(ex.Message, 100)}</code>")}\n" +
                                 $"🕐 {DateTime.Now:HH:mm:ss dd/MM/yyyy}";
 
                             _ = Task.Run(async () =>
@@ -1314,7 +1314,7 @@ public sealed class MacroEngine
         var bounds = new Rectangle(vx, vy, vw, vh);
         if (!bounds.IntersectsWith(region))
         {
-            OnLog($"    ⚠ OCR vùng ngoài màn hình — bỏ qua bước ({region})");
+            OnLog($"    ⚠ {string.Format(LanguageManager.GetString("ui_Engine_OcrRegionOutOfBounds"), region)}");
             return;
         }
 
@@ -1327,7 +1327,7 @@ public sealed class MacroEngine
                 .ReadTextFromRegionWithConfidenceAsync(region, TimeSpan.FromSeconds(5), token)
                 .ConfigureAwait(false);
             if (conf < 0.6)
-                OnLog("    ⚠ Kết quả OCR có thể không chính xác (confidence < 60%)");
+                OnLog(LanguageManager.GetString("ui_Engine_OcrLowConfidence"));
 
             _lastOcrText = text;
             _vars.Set(varName, text);
@@ -1341,7 +1341,7 @@ public sealed class MacroEngine
         }
         catch (Exception ex)
         {
-            OnLog($"    ⚠ OCR lỗi: {ex.Message}");
+            OnLog($"    ⚠ {string.Format(LanguageManager.GetString("ui_Engine_OcrError"), ex.Message)}");
         }
     }
 
@@ -1373,9 +1373,21 @@ public sealed class MacroEngine
 
                 SetCursorPos(pt.X, pt.Y);
                 await Task.Delay(20, token);
-                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
+                uint hwDown = click.Button switch
+                {
+                    MouseButton.Right => MOUSEEVENTF_RIGHTDOWN,
+                    MouseButton.Middle => MOUSEEVENTF_MIDDLEDOWN,
+                    _ => MOUSEEVENTF_LEFTDOWN,
+                };
+                uint hwUp = click.Button switch
+                {
+                    MouseButton.Right => MOUSEEVENTF_RIGHTUP,
+                    MouseButton.Middle => MOUSEEVENTF_MIDDLEUP,
+                    _ => MOUSEEVENTF_LEFTUP,
+                };
+                mouse_event(hwDown, 0, 0, 0, UIntPtr.Zero);
                 await Task.Delay(30, token);
-                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
+                mouse_event(hwUp, 0, 0, 0, UIntPtr.Zero);
 
                 if (prevFg != IntPtr.Zero && prevFg != hwnd) SetForegroundWindow(prevFg);
                 Log?.Invoke($"[Click/Hardware] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
@@ -1402,25 +1414,24 @@ public sealed class MacroEngine
                 int absX = (int)((pt.X + 0.5) * 65536.0 / screenW);
                 int absY = (int)((pt.Y + 0.5) * 65536.0 / screenH);
 
-                INPUT[] inputs;
-                if (click.IsRightClick)
+                uint rawDown = click.Button switch
                 {
-                    inputs = new[]
-                    {
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_RIGHTDOWN } } },
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_RIGHTUP } } }
-                    };
-                }
-                else
+                    MouseButton.Right => MOUSEEVENTF_RIGHTDOWN,
+                    MouseButton.Middle => MOUSEEVENTF_MIDDLEDOWN,
+                    _ => MOUSEEVENTF_LEFTDOWN,
+                };
+                uint rawUp = click.Button switch
                 {
-                    inputs = new[]
-                    {
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTDOWN } } },
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTUP } } }
-                    };
-                }
+                    MouseButton.Right => MOUSEEVENTF_RIGHTUP,
+                    MouseButton.Middle => MOUSEEVENTF_MIDDLEUP,
+                    _ => MOUSEEVENTF_LEFTUP,
+                };
+                var inputs = new[]
+                {
+                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
+                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = rawDown } } },
+                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = rawUp } } }
+                };
                 SendInput(3, inputs, Marshal.SizeOf<INPUT>());
                 Log?.Invoke($"[Click/Raw] ({click.X},{click.Y})");
             }
@@ -1443,23 +1454,35 @@ public sealed class MacroEngine
 
                 if (!InterceptionService.Instance.IsInitialized)
                 {
-                    OnLog("[WARN] Interception driver chưa cài — fallback sang Raw mode");
+                    OnLog(string.Format(LanguageManager.GetString("ui_Engine_InterceptionNotInstalled"), "Raw mode"));
                     // Fallback to Raw
                     int screenW = GetSystemMetrics(0);
                     int screenH = GetSystemMetrics(1);
                     int absX = (int)((pt.X + 0.5) * 65536.0 / screenW);
                     int absY = (int)((pt.Y + 0.5) * 65536.0 / screenH);
+                    uint drvDown = click.Button switch
+                    {
+                        MouseButton.Right => MOUSEEVENTF_RIGHTDOWN,
+                        MouseButton.Middle => MOUSEEVENTF_MIDDLEDOWN,
+                        _ => MOUSEEVENTF_LEFTDOWN,
+                    };
+                    uint drvUp = click.Button switch
+                    {
+                        MouseButton.Right => MOUSEEVENTF_RIGHTUP,
+                        MouseButton.Middle => MOUSEEVENTF_MIDDLEUP,
+                        _ => MOUSEEVENTF_LEFTUP,
+                    };
                     var inputs = new[]
                     {
                         new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = click.IsRightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_LEFTDOWN } } },
-                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = click.IsRightClick ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_LEFTUP } } }
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = drvDown } } },
+                        new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = drvUp } } }
                     };
                     SendInput(3, inputs, Marshal.SizeOf<INPUT>());
                 }
                 else
                 {
-                    InterceptionService.Instance.SendMouseClick(pt.X, pt.Y, 50, click.IsRightClick);
+                    InterceptionService.Instance.SendMouseClick(pt.X, pt.Y, 50, click.Button);
                 }
 
                 Log?.Invoke($"[Click/Driver] ({click.X},{click.Y}) → screen ({pt.X},{pt.Y})");
@@ -1470,19 +1493,24 @@ public sealed class MacroEngine
 
         // ── STEALTH MODE (default): PostMessage — no cursor hijack, runs in background ─
         IntPtr lParam = Win32Api.MakeLParam(click.X, click.Y);
-        if (click.IsRightClick)
+        Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
+        await Task.Delay(20, token);
+        if (click.Button == MouseButton.Right)
         {
-            Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
-            await Task.Delay(20, token);
             Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONDOWN, (IntPtr)Win32Api.MK_RBUTTON, lParam);
             await Task.Delay(50, token);
             Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONUP, IntPtr.Zero, lParam);
             Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y}) right-click");
         }
+        else if (click.Button == MouseButton.Middle)
+        {
+            Win32Api.PostMessage(hwnd, Win32Api.WM_MBUTTONDOWN, (IntPtr)Win32Api.MK_MBUTTON, lParam);
+            await Task.Delay(50, token);
+            Win32Api.PostMessage(hwnd, Win32Api.WM_MBUTTONUP, IntPtr.Zero, lParam);
+            Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y}) middle-click");
+        }
         else
         {
-            Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
-            await Task.Delay(20, token);
             Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONDOWN, (IntPtr)Win32Api.MK_LBUTTON, lParam);
             await Task.Delay(50, token);
             Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
@@ -1510,10 +1538,10 @@ public sealed class MacroEngine
                         .ReadTextFromRegionWithConfidenceAsync(region, TimeSpan.FromSeconds(5), token)
                         .ConfigureAwait(false);
                     if (conf < 0.6)
-                        OnLog("    ⚠ Kết quả OCR có thể không chính xác (confidence < 60%)");
+                        OnLog(LanguageManager.GetString("ui_Engine_OcrLowConfidence"));
                     if (text.Contains(needle, StringComparison.OrdinalIgnoreCase))
                     {
-                        OnLog($"    → OCR khớp sau {elapsed}ms");
+                        OnLog(string.Format(LanguageManager.GetString("ui_Engine_OcrMatchedAfter"), elapsed));
                         return;
                     }
                 }
@@ -1564,7 +1592,7 @@ public sealed class MacroEngine
                     if (match.HasValue)
                     {
                         found = true;
-                        OnLog($"    → Ảnh đã hiện sau {elapsed}ms — tiếp tục");
+                        OnLog(string.Format(LanguageManager.GetString("ui_Engine_WaitImageFound"), elapsed));
                         break;
                     }
                 }
@@ -1690,7 +1718,7 @@ public sealed class MacroEngine
         string text = ExpandRuntime(type.Text);
         if (string.IsNullOrEmpty(text))
         {
-            OnLog("  TypeText — bỏ qua (text trống)");
+            OnLog(LanguageManager.GetString("ui_Engine_TypeTextEmpty"));
             return;
         }
 
@@ -1751,7 +1779,7 @@ public sealed class MacroEngine
             Win32Api.PostMessage(target, Win32Api.WM_CHAR, (IntPtr)c, IntPtr.Zero);
             await Task.Delay(Math.Max(delayMs, 30), token);
         }
-        OnLog($"    → Stealth WM_CHAR: {text.Length} ký tự (delay={delayMs}ms)");
+        OnLog(string.Format(LanguageManager.GetString("ui_Engine_WmCharLog"), text.Length, delayMs));
     }
 
     /// <summary>
@@ -1801,7 +1829,7 @@ public sealed class MacroEngine
                     AttachThreadInput(currentThread, targetThread, false);
             }
 
-            OnLog($"    → Clipboard paste: {text.Length} ký tự → Electron app (WM_PASTE)");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_ClipboardPasteElectron"), text.Length));
         }
         finally { _osResourceLock.Release(); }
     }
@@ -1868,7 +1896,7 @@ public sealed class MacroEngine
         }
         finally { _osResourceLock.Release(); }
 
-        OnLog($"    → Clipboard paste: {text.Length} ký tự");
+        OnLog(string.Format(LanguageManager.GetString("ui_Engine_ClipboardPaste"), text.Length));
     }
 
     private async Task TypeViaWmCharAsync(IntPtr target, string text, int delayMs, CancellationToken token)
@@ -1879,7 +1907,7 @@ public sealed class MacroEngine
             Win32Api.PostMessage(target, Win32Api.WM_CHAR, (IntPtr)c, IntPtr.Zero);
             await Task.Delay(Math.Max(delayMs, 30), token);
         }
-        OnLog($"    → WM_CHAR: {text.Length} ký tự (delay={delayMs}ms)");
+        OnLog(string.Format(LanguageManager.GetString("ui_Engine_WmCharLog2"), text.Length, delayMs));
     }
 
     /// <summary>
@@ -1932,7 +1960,7 @@ public sealed class MacroEngine
         }
         finally { _osResourceLock.Release(); }
 
-        OnLog($"    → SendInput+Attach/Unicode: {text.Length} ký tự");
+        OnLog(string.Format(LanguageManager.GetString("ui_Engine_SendInputUnicode"), text.Length));
     }
 
     // ═══════════════════════════════════════════════
@@ -2106,7 +2134,7 @@ public sealed class MacroEngine
         {
             if (!InterceptionService.Instance.IsInitialized)
             {
-                OnLog("[WARN] Interception driver chưa cài — fallback sang RawInput");
+                OnLog(string.Format(LanguageManager.GetString("ui_Engine_InterceptionNotInstalled"), "RawInput"));
                 // Reuse existing RawInput logic inline (without nested lock — already holding it)
                 uint targetThreadId = GetWindowThreadProcessId(hwnd, out _);
                 uint ourThreadId = GetCurrentThreadId();
@@ -2893,14 +2921,14 @@ public sealed class MacroEngine
     {
         if (string.IsNullOrWhiteSpace(tg.BotToken) || string.IsNullOrWhiteSpace(tg.ChatId))
         {
-            OnLog("  Telegram — SKIPPED (BotToken hoặc ChatId trống)");
+            OnLog(LanguageManager.GetString("ui_Engine_TelegramSkippedEmpty"));
             return Task.CompletedTask;
         }
 
         string rawMessage = tg.Message ?? string.Empty;
         if (string.IsNullOrWhiteSpace(rawMessage))
         {
-            OnLog("  Telegram — SKIPPED (message trống)");
+            OnLog(LanguageManager.GetString("ui_Engine_TelegramSkippedEmptyMsg"));
             return Task.CompletedTask;
         }
 
@@ -2976,7 +3004,7 @@ public sealed class MacroEngine
             }
             catch (Exception ex)
             {
-                Log?.Invoke($"[Telegram] Gửi thông báo thất bại: {ex.Message}");
+                Log?.Invoke(string.Format(LanguageManager.GetString("ui_Engine_TelegramFail"), ex.Message));
             }
         });
     }
@@ -3200,6 +3228,8 @@ public sealed class MacroEngine
     private const uint MOUSEEVENTF_LEFTUP     = 0x0004;
     private const uint MOUSEEVENTF_RIGHTDOWN  = 0x0008;
     private const uint MOUSEEVENTF_RIGHTUP    = 0x0010;
+    private const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+    private const uint MOUSEEVENTF_MIDDLEUP   = 0x0040;
     private const uint MOUSEEVENTF_MOVE       = 0x0001;
     private const uint MOUSEEVENTF_ABSOLUTE    = 0x8000;
     private const uint MOUSEEVENTF_VIRTUALDESKTOP = 0x4000;
@@ -3238,21 +3268,20 @@ public sealed class MacroEngine
         // Guard: prevent infinite recursion from deep nesting
         if (_subMacroDepth >= MaxSubMacroDepth)
         {
-            OnLog($"  [Sub-macro] ❌ Đệ quy quá sâu ({_subMacroDepth} tầng) — " +
-                  "phát hiện vòng lặp vô tận! Dừng để bảo vệ bộ nhớ.");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_SubMacroTooDeep"), _subMacroDepth));
             return;
         }
 
         if (string.IsNullOrWhiteSpace(cma.MacroFilePath))
         {
-            OnLog("  [Sub-macro] ❌ Chưa chọn kịch bản con");
+            OnLog(LanguageManager.GetString("ui_Engine_SubMacroNoScript"));
             return;
         }
 
         string resolvedPath = VariableResolver.Resolve(cma.MacroFilePath, _runtimeVariables);
         if (!File.Exists(resolvedPath))
         {
-            OnLog($"  [Sub-macro] ❌ Không tìm thấy file: {resolvedPath}");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_SubMacroFileNotFound"), resolvedPath));
             return;
         }
 
@@ -3260,18 +3289,18 @@ public sealed class MacroEngine
         if (_currentScript?.FilePath != null &&
             Path.GetFullPath(resolvedPath) == Path.GetFullPath(_currentScript.FilePath))
         {
-            OnLog($"  [Sub-macro] ❌ Macro không thể tự gọi chính nó!");
+            OnLog(LanguageManager.GetString("ui_Engine_SubMacroSelfCall"));
             return;
         }
 
         var subScript = ScriptManager.Load(resolvedPath);
         if (subScript == null)
         {
-            OnLog($"  [Sub-macro] ❌ Không đọc được: {resolvedPath}");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_SubMacroReadFailed"), resolvedPath));
             return;
         }
 
-        OnLog($"  [Sub-macro] ▶ Tầng {_subMacroDepth + 1}/{MaxSubMacroDepth}: {cma.MacroName ?? subScript.Name}");
+        OnLog(string.Format(LanguageManager.GetString("ui_Engine_SubMacroStarted"), _subMacroDepth + 1, MaxSubMacroDepth, cma.MacroName ?? subScript.Name));
 
         var subEngine = new MacroEngine(this, subScript, _runtimeTargetHwnd, Log);
 
@@ -3286,12 +3315,12 @@ public sealed class MacroEngine
         if (cma.WaitForFinish)
         {
             await subEngine.ExecuteScriptAsync(subScript, _runtimeTargetHwnd, token).ConfigureAwait(false);
-            OnLog($"  [Sub-macro] ✅ Hoàn thành tầng {_subMacroDepth + 1}: {cma.MacroName ?? subScript.Name}");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_SubMacroComplete"), _subMacroDepth + 1, cma.MacroName ?? subScript.Name));
         }
         else
         {
             _ = subEngine.ExecuteScriptAsync(subScript, _runtimeTargetHwnd, token);
-            OnLog($"  [Sub-macro] 🚀 Đã khởi động (song song): {cma.MacroName ?? subScript.Name}");
+            OnLog(string.Format(LanguageManager.GetString("ui_Engine_SubMacroLaunched"), cma.MacroName ?? subScript.Name));
         }
     }
 
@@ -3469,6 +3498,6 @@ public sealed class MacroEngine
         }
         finally { _osResourceLock.Release(); }
 
-        OnLog($"    → Clipboard paste: {text.Length} ký tự → Electron app (flash fallback)");
+        OnLog(string.Format(LanguageManager.GetString("ui_Engine_ClipboardPasteFlash"), text.Length));
     }
 }

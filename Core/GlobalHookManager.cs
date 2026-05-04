@@ -15,6 +15,7 @@ public sealed class GlobalHookManager : IDisposable
 
     private const int WM_LBUTTONDOWN = 0x0201;
     private const int WM_RBUTTONDOWN = 0x0204;
+    private const int WM_MBUTTONDOWN = 0x0207;
     private const int WM_KEYDOWN = 0x0100;
     private const int WM_SYSKEYDOWN = 0x0104;
 
@@ -83,9 +84,9 @@ public sealed class GlobalHookManager : IDisposable
     // ═══════════════════════════════════════════════
 
     /// <summary>
-    /// Fires on every left/right mouse click. Coordinates are screen-absolute.
+    /// Fires on every left/right/middle mouse click. Coordinates are screen-absolute.
     /// </summary>
-    public event Action<int, int, bool>? MouseClicked;
+    public event Action<int, int, MouseButton>? MouseClicked;
 
     /// <summary>
     /// Fires on every key-down. Provides both the virtual-key code and the
@@ -197,10 +198,16 @@ public sealed class GlobalHookManager : IDisposable
         if (nCode >= 0)
         {
             int msg = (int)wParam;
-            if (msg is WM_LBUTTONDOWN or WM_RBUTTONDOWN)
+            if (msg is WM_LBUTTONDOWN or WM_RBUTTONDOWN or WM_MBUTTONDOWN)
             {
                 var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
-                MouseClicked?.Invoke(data.pt.X, data.pt.Y, msg == WM_RBUTTONDOWN);
+                var btn = msg switch
+                {
+                    WM_RBUTTONDOWN => MouseButton.Right,
+                    WM_MBUTTONDOWN => MouseButton.Middle,
+                    _ => MouseButton.Left,
+                };
+                MouseClicked?.Invoke(data.pt.X, data.pt.Y, btn);
             }
         }
         return CallNextHookEx(_mouseHookHandle, nCode, wParam, lParam);

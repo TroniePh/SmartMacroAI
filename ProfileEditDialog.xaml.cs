@@ -41,7 +41,7 @@ public sealed class ProfileEditDialog : Window
 
         var titleBlock = new TextBlock
         {
-            Text = "Thêm / Sửa AdsPower Profile",
+            Text = Localization.LanguageManager.GetString("ui_ProfileEdit_Title"),
             FontSize = 16,
             FontWeight = FontWeights.SemiBold,
             Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CDD6F4")),
@@ -49,8 +49,8 @@ public sealed class ProfileEditDialog : Window
         };
         panel.Children.Add(titleBlock);
 
-        AddField(panel, "Profile ID *", _txtProfileId, "ID từ AdsPower (user_id trong danh sách profile)");
-        AddField(panel, "Tên gợi nhớ", _txtName, "Tên dễ nhớ, ví dụ: Tài khoản Gmail 1");
+        AddField(panel, "Profile ID *", _txtProfileId, Localization.LanguageManager.GetString("ui_ProfileEdit_ProfileIdHint"));
+        AddField(panel, Localization.LanguageManager.GetString("ui_ProfileEdit_Nickname"), _txtName, Localization.LanguageManager.GetString("ui_ProfileEdit_NicknameHint"));
         panel.Children.Add(new Border
         {
             Height = 1,
@@ -60,7 +60,7 @@ public sealed class ProfileEditDialog : Window
 
         var proxyTitle = new TextBlock
         {
-            Text = "Proxy (tùy chọn)",
+            Text = Localization.LanguageManager.GetString("ui_ProfileEdit_ProxyOptional"),
             FontSize = 13,
             FontWeight = FontWeights.SemiBold,
             Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A6ADC8")),
@@ -70,7 +70,7 @@ public sealed class ProfileEditDialog : Window
 
         var proxyNote = new TextBlock
         {
-            Text = "Điền thông tin proxy nếu cần thay đổi IP cho profile này. Để trống = dùng proxy mặc định của AdsPower.",
+            Text = Localization.LanguageManager.GetString("ui_ProfileEdit_ProxyNote"),
             FontSize = 11,
             Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6C7086")),
             TextWrapping = TextWrapping.Wrap,
@@ -78,8 +78,8 @@ public sealed class ProfileEditDialog : Window
         };
         panel.Children.Add(proxyNote);
 
-        AddField(panel, "Proxy Host", _txtProxyHost, "Ví dụ: proxy.example.com");
-        AddField(panel, "Proxy Port", _txtProxyPort, "Ví dụ: 8080");
+        AddField(panel, "Proxy Host", _txtProxyHost, Localization.LanguageManager.GetString("ui_ProfileEdit_ProxyHostHint"));
+        AddField(panel, "Proxy Port", _txtProxyPort, Localization.LanguageManager.GetString("ui_ProfileEdit_ProxyPortHint"));
 
         var proxyAuth = new Grid();
         proxyAuth.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -113,7 +113,7 @@ public sealed class ProfileEditDialog : Window
 
         var btnCancel = new Button
         {
-            Content = "Hủy",
+            Content = Localization.LanguageManager.GetString("ui_CancelBtn"),
             Padding = new Thickness(16, 8, 16, 8),
             Margin = new Thickness(0, 0, 8, 0),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#45475A")),
@@ -125,7 +125,7 @@ public sealed class ProfileEditDialog : Window
 
         var btnOk = new Button
         {
-            Content = "Lưu",
+            Content = Localization.LanguageManager.GetString("ui_Save"),
             Padding = new Thickness(20, 8, 20, 8),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
             Foreground = Brushes.White,
@@ -188,7 +188,7 @@ public sealed class ProfileEditDialog : Window
     {
         if (string.IsNullOrWhiteSpace(_txtProfileId.Text))
         {
-            MessageBox.Show("Profile ID không được để trống.", "Thiếu thông tin",
+            MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_ProfileIdEmpty"), Localization.LanguageManager.GetString("ui_Msg_InvalidInput"),
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }

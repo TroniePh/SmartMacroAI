@@ -19,7 +19,8 @@ public partial class RenameMacroDialog : Window
         NewName = TxtNewName.Text.Trim();
         if (string.IsNullOrWhiteSpace(NewName))
         {
-            MessageBox.Show("Please enter a name.", "Rename Macro",
+            MessageBox.Show(Localization.LanguageManager.GetString("ui_Msg_EnterName"),
+                Localization.LanguageManager.GetString("ui_Rename_Title"),
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }

@@ -50,6 +50,7 @@
     <system:String x:Key="ui_OcrLang_Auto">Tự động (hồ sơ Windows)</system:String>
     <system:String x:Key="ui_OcrLang_Vi">Tiếng Việt (vi-VN)</system:String>
     <system:String x:Key="ui_OcrLang_En">English (en-US)</system:String>
+    <system:String x:Key="ui_OcrLang_Both">English + Tiếng Việt</system:String>
     <system:String x:Key="ui_Ok">OK</system:String>
     <system:String x:Key="ui_Cancel">Huỷ</system:String>
     <system:String x:Key="ui_Dashboard_AddVar_SelectRow">Chọn một dòng macro trên lưới trước.</system:String>
@@ -196,7 +197,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Xem trước đường đi</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Đã lưu cài đặt chuột.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.5.0 — Công cụ tự động RPA</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.5.5 — Công cụ tự động RPA</system:String>
     <system:String x:Key="ui_About_Description">Tự động hóa không chiếm chuột/bàn phím vật lý trên Windows 10/11. Dùng Win32 API để gửi click và phím tới cửa sổ nền.</system:String>
     <system:String x:Key="ui_About_TechStack">Công nghệ</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -204,7 +205,7 @@
     <system:String x:Key="ui_About_Contact">Liên hệ hỗ trợ</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Kiểm tra cập nhật</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Cập nhật phần mềm</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.5.0</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.5.5</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Mời cà phê</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Mời tác giả một ly cà phê nếu phần mềm này giúp ích cho bạn!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
@@ -214,7 +215,7 @@
     <system:String x:Key="ui_LogConsole">NHẬT KÝ</system:String>
     <system:String x:Key="ui_Log_Clear">Xóa</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.0</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.5</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Tác giả Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
@@ -255,4 +256,713 @@
     <system:String x:Key="ui_Settings_Telegram_TestTitle">Gửi thử nhanh</system:String>
     <system:String x:Key="ui_Settings_Telegram_TestButton">📨 Gửi thử Telegram ngay</system:String>
     <system:String x:Key="ui_Settings_Telegram_TestDesc">Gửi tin nhắn test "SmartMacroAI kết nối thành công!" đến Chat ID đã lưu. Mỗi tin nhắn ghi kèm tên máy tính [PC: ...].</system:String>
+
+    <!-- Driver Install Dialog -->
+    <system:String x:Key="ui_Drv_Title">Cài đặt Driver Level Mode</system:String>
+    <system:String x:Key="ui_Drv_ModeLabel">Driver Level Mode</system:String>
+    <system:String x:Key="ui_Drv_Subtitle">Cho phép click/nhấn phím vào game anti-cheat</system:String>
+    <system:String x:Key="ui_Drv_Desc1">Tính năng này cần cài một </system:String>
+    <system:String x:Key="ui_Drv_DescBold">driver cấp hệ thống</system:String>
+    <system:String x:Key="ui_Drv_Desc2"> để giả lập thiết bị chuột/bàn phím thật.</system:String>
+    <system:String x:Key="ui_Drv_Feat1">Hoàn toàn tự động — chỉ cần bấm </system:String>
+    <system:String x:Key="ui_Drv_Feat1Bold">Cài đặt ngay</system:String>
+    <system:String x:Key="ui_Drv_Feat2">Cần quyền Administrator (Windows sẽ hỏi 1 lần)</system:String>
+    <system:String x:Key="ui_Drv_Feat3">Cần khởi động lại máy sau khi cài</system:String>
+    <system:String x:Key="ui_Drv_Compat">Tương thích: MapleStory, PUBG, và các game có HackShield / EasyAntiCheat</system:String>
+    <system:String x:Key="ui_Drv_LaterBtn">Để sau</system:String>
+    <system:String x:Key="ui_Drv_InstallBtn">⚡ Cài đặt ngay</system:String>
+
+    <!-- Action Edit Dialog -->
+    <system:String x:Key="ui_ActionEdit_Title">Chỉnh sửa thao tác</system:String>
+    <system:String x:Key="ui_CancelBtn">Hủy</system:String>
+    <system:String x:Key="ui_ApplyBtn">Áp dụng</system:String>
+
+    <!-- Action Type Picker -->
+    <system:String x:Key="ui_ActionType_Title">Thêm thao tác</system:String>
+    <system:String x:Key="ui_ActionType_Prompt">Chọn loại thao tác:</system:String>
+    <system:String x:Key="ui_SelectBtn">Chọn</system:String>
+
+    <!-- Coordinate Picker -->
+    <system:String x:Key="ui_CoordPicker_Title">Lấy tọa độ</system:String>
+    <system:String x:Key="ui_CoordPicker_Instruction">Di chuyển chuột đến vị trí cần lấy tọa độ. Nhấp chuột trái để xác nhận. ESC để hủy.</system:String>
+
+    <!-- Log Window -->
+    <system:String x:Key="ui_LogWin_Title">📋 Nhật ký — SmartMacroAI</system:String>
+    <system:String x:Key="ui_LogWin_ClearBtn">🗑 Xóa log</system:String>
+    <system:String x:Key="ui_LogWin_SaveBtn">💾 Lưu .txt</system:String>
+    <system:String x:Key="ui_LogWin_AutoScroll">Tự cuộn</system:String>
+    <system:String x:Key="ui_LogWin_LineCount">{0} dòng</system:String>
+
+    <!-- Macro Lock Dialog -->
+    <system:String x:Key="ui_Lock_Title">🔒 Khóa Macro</system:String>
+    <system:String x:Key="ui_Lock_Header">🔒 Đặt mật khẩu khóa macro</system:String>
+    <system:String x:Key="ui_Lock_NewPwd">Mật khẩu mới:</system:String>
+    <system:String x:Key="ui_Lock_ConfirmPwd">Xác nhận mật khẩu:</system:String>
+    <system:String x:Key="ui_Lock_RemoveBtn">Xóa khóa</system:String>
+
+    <!-- Password Dialog -->
+    <system:String x:Key="ui_Pwd_Title">🔑 Nhập mật khẩu</system:String>
+    <system:String x:Key="ui_Pwd_Prompt">Nhập mật khẩu để tiếp tục:</system:String>
+    <system:String x:Key="ui_ConfirmBtn">Xác nhận</system:String>
+
+    <!-- Record Toolbar -->
+    <system:String x:Key="ui_Record_Title">SmartMacroAI Recorder</system:String>
+    <system:String x:Key="ui_Record_Stop">Dừng (F10)</system:String>
+
+    <!-- Rename Macro Dialog -->
+    <system:String x:Key="ui_Rename_Title">Đổi tên Macro</system:String>
+    <system:String x:Key="ui_Rename_Prompt">Tên macro mới</system:String>
+
+    <!-- Run History Dialog -->
+    <system:String x:Key="ui_History_Title">📊 Lịch sử chạy</system:String>
+    <system:String x:Key="ui_History_Header">📊 Lịch sử chạy macro</system:String>
+    <system:String x:Key="ui_History_Result">Kết quả</system:String>
+    <system:String x:Key="ui_History_Time">Thời gian</system:String>
+    <system:String x:Key="ui_History_MacroName">Tên macro</system:String>
+    <system:String x:Key="ui_History_Duration">Thời lượng</system:String>
+    <system:String x:Key="ui_History_Steps">Bước</system:String>
+    <system:String x:Key="ui_History_Details">Chi tiết</system:String>
+    <system:String x:Key="ui_History_ClearBtn">🗑 Xóa lịch sử</system:String>
+    <system:String x:Key="ui_History_LogPreview">📋 Log xem trước</system:String>
+
+    <!-- Schedule Edit Dialog -->
+    <system:String x:Key="ui_Schedule_Title">⏰ Đặt lịch chạy</system:String>
+    <system:String x:Key="ui_Schedule_Header">⏰ Đặt lịch chạy tự động</system:String>
+    <system:String x:Key="ui_Schedule_Enable">Bật lịch chạy tự động</system:String>
+    <system:String x:Key="ui_Schedule_Mode">CHẾ ĐỘ</system:String>
+    <system:String x:Key="ui_Schedule_Daily">Hàng ngày</system:String>
+    <system:String x:Key="ui_Schedule_Interval">Lặp lại theo phút</system:String>
+    <system:String x:Key="ui_Schedule_Once">Chạy một lần</system:String>
+    <system:String x:Key="ui_Schedule_OnStartup">Chạy khi khởi động app</system:String>
+    <system:String x:Key="ui_Schedule_DailyTime">GIỜ CHẠY (HẰNG NGÀY)</system:String>
+    <system:String x:Key="ui_Schedule_IntervalLabel">LẶP LẠI MỖI (PHÚT)</system:String>
+    <system:String x:Key="ui_Schedule_Minutes">phút</system:String>
+    <system:String x:Key="ui_Schedule_SaveBtn">💾 Lưu lịch</system:String>
+
+    <!-- Snipping Tool -->
+    <system:String x:Key="ui_Snip_Title">Cắt vùng</system:String>
+    <system:String x:Key="ui_Snip_Instruction">Click và kéo để chọn vùng. Nhấn Esc để hủy.</system:String>
+
+    <!-- Template Picker Dialog -->
+    <system:String x:Key="ui_Template_Title">Chọn mẫu kịch bản</system:String>
+    <system:String x:Key="ui_Template_Header">📋 Chọn mẫu kịch bản</system:String>
+    <system:String x:Key="ui_Template_Category">Danh mục:</system:String>
+    <system:String x:Key="ui_Template_Choose">Chọn</system:String>
+    <system:String x:Key="ui_Template_Blank">Bỏ qua (macro trống)</system:String>
+
+    <!-- MainWindow: File Menu -->
+    <system:String x:Key="ui_Menu_File">File</system:String>
+    <system:String x:Key="ui_Menu_NewMacro">📄 Macro mới</system:String>
+    <system:String x:Key="ui_Menu_OpenMacro">📂 Mở macro</system:String>
+    <system:String x:Key="ui_Menu_SaveMacro">💾 Lưu macro</system:String>
+    <system:String x:Key="ui_Menu_Share">📤 Chia sẻ kịch bản (Copy mã SMA-)</system:String>
+    <system:String x:Key="ui_Menu_Import">📥 Nhập từ mã SMA-</system:String>
+
+    <!-- MainWindow: Notifications -->
+    <system:String x:Key="ui_Notification_Btn">Thông báo</system:String>
+    <system:String x:Key="ui_Notification_Header">🔔 Thông báo</system:String>
+    <system:String x:Key="ui_Notification_MarkAll">Đọc tất cả</system:String>
+    <system:String x:Key="ui_Notification_ClearAll">Xóa tất cả thông báo</system:String>
+
+    <!-- MainWindow: Dashboard -->
+    <system:String x:Key="ui_Dash_ProfileName">Profile Manager</system:String>
+    <system:String x:Key="ui_Dash_History">Lịch sử</system:String>
+    <system:String x:Key="ui_Dash_ScheduledFmt">{0} macro đã lên lịch</system:String>
+    <system:String x:Key="ui_Dash_RunningFmt">{0} macro đang chạy</system:String>
+    <system:String x:Key="ui_Dash_TooltipRename">Double-click để đổi tên</system:String>
+    <system:String x:Key="ui_Dash_Actions">thao tác</system:String>
+    <system:String x:Key="ui_Dash_TooltipStealth">Stealth Mode</system:String>
+    <system:String x:Key="ui_Dash_TooltipHW">Hardware Mode</system:String>
+    <system:String x:Key="ui_Dash_TooltipRepeat">Số lần lặp</system:String>
+    <system:String x:Key="ui_Dash_TooltipInterval">Giãn cách (phút)</system:String>
+    <system:String x:Key="ui_Dash_Col_Name">Tên kịch bản</system:String>
+    <system:String x:Key="ui_Dash_Col_Target">Cửa sổ mục tiêu</system:String>
+    <system:String x:Key="ui_Dash_Col_Mode">Chế độ</system:String>
+    <system:String x:Key="ui_Dash_Col_Repeat">Lặp / Giãn(phút)</system:String>
+    <system:String x:Key="ui_Dash_Col_Status">Trạng thái</system:String>
+    <system:String x:Key="ui_Dash_Col_Controls">Điều khiển</system:String>
+    <system:String x:Key="ui_Dash_TooltipRun">Chạy macro</system:String>
+    <system:String x:Key="ui_Dash_TooltipStop">Dừng macro</system:String>
+    <system:String x:Key="ui_Dash_TooltipEdit">Sửa macro</system:String>
+    <system:String x:Key="ui_Dash_TooltipHistory">Lịch sử chạy</system:String>
+    <system:String x:Key="ui_Dash_TooltipTelegram">Thông báo Telegram</system:String>
+    <system:String x:Key="ui_Dash_TooltipDelete">Xóa macro</system:String>
+    <system:String x:Key="ui_Dash_RunBtn">Chạy</system:String>
+    <system:String x:Key="ui_Dash_StopBtn">Dừng</system:String>
+    <system:String x:Key="ui_Dash_EditBtn">Sửa</system:String>
+
+    <!-- MainWindow: Macro Editor Actions -->
+    <system:String x:Key="ui_Action_KeyPress">Nhấn phím</system:String>
+    <system:String x:Key="ui_Action_Repeat">Lặp lại</system:String>
+    <system:String x:Key="ui_Action_SetVariable">Gán biến</system:String>
+    <system:String x:Key="ui_Action_IfVariable">Nếu biến thỏa mãn</system:String>
+    <system:String x:Key="ui_Action_Log">Ghi nhật ký</system:String>
+    <system:String x:Key="ui_Action_TryCatch">Bẫy lỗi (Try/Catch)</system:String>
+
+    <!-- MainWindow: Game Detection -->
+    <system:String x:Key="ui_GameDetected">Phát hiện game — đang dùng Driver Level mode</system:String>
+
+    <!-- MainWindow: Share / Import tooltips -->
+    <system:String x:Key="ui_Tooltip_Share">Chia sẻ kịch bản (Copy mã SMA-)</system:String>
+    <system:String x:Key="ui_Tooltip_Import">Nhập từ mã SMA-</system:String>
+    <system:String x:Key="ui_Tooltip_ViewLog">Xem log hoạt động real-time</system:String>
+
+    <!-- MainWindow: Profile Manager -->
+    <system:String x:Key="ui_Profile_Title">AdsPower Profile Manager</system:String>
+    <system:String x:Key="ui_Profile_Subtitle">Quản lý danh sách AdsPower profile để chạy multi-account. Mỗi profile = 1 browser riêng biệt.</system:String>
+    <system:String x:Key="ui_Profile_Add">+ Thêm</system:String>
+    <system:String x:Key="ui_Profile_Delete">Xóa</system:String>
+    <system:String x:Key="ui_Profile_Test">Test kết nối</system:String>
+    <system:String x:Key="ui_Profile_Col_ProfileId">Profile ID</system:String>
+    <system:String x:Key="ui_Profile_Col_Name">Tên gợi nhớ</system:String>
+    <system:String x:Key="ui_Profile_Col_Proxy">Proxy</system:String>
+    <system:String x:Key="ui_Profile_Col_Status">Trạng thái</system:String>
+
+    <!-- MainWindow: Settings - Screenshot -->
+    <system:String x:Key="ui_Settings_Screenshot">📸 Chụp màn hình tự động khi macro lỗi</system:String>
+    <system:String x:Key="ui_Settings_ScreenshotDesc">Ảnh lỗi lưu tại: logs/errors/ và gửi kèm Telegram (nếu bật)</system:String>
+
+    <!-- MainWindow: Settings - Tabs -->
+    <system:String x:Key="ui_Settings_Tab_DataCSV">Data CSV</system:String>
+    <system:String x:Key="ui_Settings_Tab_Telegram">Telegram</system:String>
+
+    <!-- MainWindow: Help -->
+    <system:String x:Key="ui_About_HelpDesc">📖 Hướng dẫn sử dụng chi tiết</system:String>
+
+    <!-- MainWindow: Log Console -->
+    <system:String x:Key="ui_Log_CopyBtn">📋 Copy Log</system:String>
+    <system:String x:Key="ui_Log_TooltipCopy">Copy toàn bộ log ra clipboard</system:String>
+
+    <!-- Code-behind messages -->
+    <system:String x:Key="ui_Msg_InitError">Lỗi khởi động:</system:String>
+    <system:String x:Key="ui_Msg_UiError">Lỗi UI:</system:String>
+    <system:String x:Key="ui_Msg_OnStartupError">Lỗi OnStartup:</system:String>
+    <system:String x:Key="ui_Msg_DeleteProfileConfirm">Xóa profile "{0}"?</system:String>
+    <system:String x:Key="ui_Msg_ConfirmDelete">Xác nhận xóa</system:String>
+    <system:String x:Key="ui_Msg_ShareSuccess">Đã copy! Mã SMA-:</system:String>
+    <system:String x:Key="ui_Msg_ShareTitle">Chia sẻ thành công</system:String>
+    <system:String x:Key="ui_Msg_DeleteMacroConfirm">Bạn có chắc muốn xóa kịch bản?</system:String>
+    <system:String x:Key="ui_Msg_WrongPassword">Mật khẩu không đúng!</system:String>
+    <system:String x:Key="ui_Msg_Error">Lỗi</system:String>
+    <system:String x:Key="ui_Msg_GameDetected">Đã phát hiện game! Cài đặt driver Interception ngay?</system:String>
+    <system:String x:Key="ui_Msg_GameDetectTitle">Phát hiện Game — Cài Driver?</system:String>
+    <system:String x:Key="ui_Msg_UpdateAvailable">Đã có bản cập nhật mới.</system:String>
+    <system:String x:Key="ui_Msg_UpdateTitle">SmartMacroAI — Cập nhật mới</system:String>
+    <system:String x:Key="ui_Msg_UpToDate">✅ Bạn đang dùng phiên bản mới nhất.</system:String>
+    <system:String x:Key="ui_Msg_UpToDateTitle">SmartMacroAI — Kiểm tra cập nhật</system:String>
+    <system:String x:Key="ui_Msg_UpdateError">Không thể kiểm tra cập nhật.</system:String>
+    <system:String x:Key="ui_Msg_UpdateErrorTitle">SmartMacroAI — Lỗi kết nối</system:String>
+    <system:String x:Key="ui_Msg_LogEmpty">Log trống.</system:String>
+    <system:String x:Key="ui_Msg_CopyLogTitle">Copy Log</system:String>
+    <system:String x:Key="ui_Msg_CopyFailed">Không thể copy:</system:String>
+    <system:String x:Key="ui_Msg_Copied">✅ Đã copy!</system:String>
+    <system:String x:Key="ui_Msg_InvalidHour">Giờ không hợp lệ (0-23).</system:String>
+    <system:String x:Key="ui_Msg_InvalidMinute">Phút không hợp lệ (0-59).</system:String>
+    <system:String x:Key="ui_Msg_InvalidInterval">Số phút phải >= 1.</system:String>
+    <system:String x:Key="ui_Msg_ProfileIdEmpty">Profile ID không được để trống.</system:String>
+    <system:String x:Key="ui_Msg_EnterName">Vui lòng nhập tên.</system:String>
+    <system:String x:Key="ui_Msg_NoLogForRecord">Không có log cho bản ghi này.</system:String>
+    <system:String x:Key="ui_Msg_ScreenshotNotFound">Ảnh chụp màn hình không tồn tại.</system:String>
+    <system:String x:Key="ui_Msg_CannotOpenImage">Không thể mở ảnh: {0}</system:String>
+    <system:String x:Key="ui_Msg_DeleteHistoryConfirm">Bạn có chắc muốn xóa toàn bộ lịch sử chạy?</system:String>
+    <system:String x:Key="ui_Msg_DeleteHistoryMacroConfirm">Bạn có chắc muốn xóa lịch sử của macro '{0}'?</system:String>
+    <system:String x:Key="ui_Msg_FileEmpty">File trống hoặc không có dòng dữ liệu.</system:String>
+    <system:String x:Key="ui_Msg_FileFormatError">Lỗi định dạng file</system:String>
+    <system:String x:Key="ui_Msg_TelegramEnterCredentials">Vui lòng nhập Bot Token và Chat ID trước khi test.</system:String>
+    <system:String x:Key="ui_Msg_TelegramSent">Tin nhắn test đã gửi thành công! Kiểm tra Telegram.</system:String>
+    <system:String x:Key="ui_Msg_TelegramFailed">Gửi thất bại. Kiểm tra Bot Token, Chat ID và kết nối Internet.</system:String>
+    <system:String x:Key="ui_Msg_InvalidData">Dữ liệu không hợp lệ:</system:String>
+    <system:String x:Key="ui_Msg_InvalidInput">Lỗi nhập liệu</system:String>
+    <system:String x:Key="ui_Msg_OcrError">Lỗi OCR gốc:</system:String>
+    <system:String x:Key="ui_Msg_OcrInitHint">Kiểm tra:
+1. Thư mục x86/ x64 có cạnh SmartMacroAI.exe không?
+2. File tessdata/{0}.traineddata có trong thư mục SmartMacroAI không?</system:String>
+    <system:String x:Key="ui_Msg_SaveLogTitle">Lưu nhật ký log</system:String>
+
+    <!-- ActionEditDialog code-behind -->
+    <system:String x:Key="ui_ActionEdit_EditPrefix">Chỉnh sửa: {0}</system:String>
+    <system:String x:Key="ui_ActionEdit_CoordX">Tọa độ X</system:String>
+    <system:String x:Key="ui_ActionEdit_CoordY">Tọa độ Y</system:String>
+    <system:String x:Key="ui_ActionEdit_RightClick">Nhấp chuột phải thay vì trái</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseButton">Nút chuột:</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseLeft">Trái</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseRight">Phải</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseMiddle">Giữa</system:String>
+    <system:String x:Key="ui_ActionEdit_TypeContent">Nội dung gõ</system:String>
+    <system:String x:Key="ui_ActionEdit_InputMethod">Cách nhập:</system:String>
+    <system:String x:Key="ui_ActionEdit_Clipboard">📋 Dán từ clipboard (Khuyến nghị cho tiếng Việt/Unikey)</system:String>
+    <system:String x:Key="ui_ActionEdit_WmChar">⌨ Gõ từng ký tự qua WM_CHAR</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyDelay">Độ trễ mỗi ký tự (ms, chỉ WM_CHAR)</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyDelayHint">Nếu dùng "Dán clipboard": bỏ trống hoặc để 0. Nếu dùng "WM_CHAR": nhập số ms (vd: 30).</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitFixed">Thời gian chờ cố định (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitImage">Chờ ảnh mẫu (đường dẫn)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitThreshold">Ngưỡng khớp ảnh</system:String>
+    <system:String x:Key="ui_ActionEdit_Timeout">Hết thời chờ tối đa (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitOcr">Chờ OCR chứa chuỗi (để trống nếu không dùng)</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrX">OCR vùng X (màn hình)</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrY">OCR vùng Y (màn hình)</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrW">OCR vùng rộng</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrH">OCR vùng cao</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrPoll">OCR poll (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitHint">Để trống "Chờ ảnh mẫu" nếu chỉ cần chờ cố định (ms). Khi có đường dẫn, macro sẽ quét cho đến khi thấy ảnh hoặc hết thời gian. Khi điền "Chờ OCR chứa chuỗi" và kích thước vùng > 0, macro sẽ poll OCR trên vùng màn hình đó.</system:String>
+    <system:String x:Key="ui_ActionEdit_RandomDelayNote">Lưu ý: kịch bản cũ đang dùng chờ ngẫu nhiên ({0}–{1} ms). Lưu từ hộp thoại này sẽ chuyển sang một giá trị cố định ở trên.</system:String>
+    <system:String x:Key="ui_ActionEdit_RepeatCount">Số lần lặp (0 = vô hạn)</system:String>
+    <system:String x:Key="ui_ActionEdit_RepeatInterval">Khoảng cách giữa các lần (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_BreakImage">Ảnh thoát vòng lặp (tuỳ chọn)</system:String>
+    <system:String x:Key="ui_ActionEdit_BreakThreshold">Ngưỡng ảnh thoát (0,5–1,0)</system:String>
+    <system:String x:Key="ui_ActionEdit_RepeatHint">Số lần lặp = 0 nghĩa là lặp vô hạn. Các bước trong vòng lặp chỉnh trên sơ đồ macro, không phải ở đây.</system:String>
+    <system:String x:Key="ui_ActionEdit_TemplatePath">Đường dẫn ảnh mẫu</system:String>
+    <system:String x:Key="ui_ActionEdit_MatchThreshold">Ngưỡng khớp</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickOnFound">Tự nhấp vào tâm ảnh khi tìm thấy</system:String>
+    <system:String x:Key="ui_ActionEdit_RandomOffset">Độ lệch ngẫu nhiên (px)</system:String>
+    <system:String x:Key="ui_ActionEdit_RetryUntilFound">🔄 Lặp lại tìm cho đến khi thấy (Retry until found)</system:String>
+    <system:String x:Key="ui_ActionEdit_RetryHint">RetryUntilFound: macro tiếp tục tìm lại ảnh trong vòng lặp cho đến khi thấy, rồi mới chạy Then. Nếu MaxRetryCount > 0 và đạt giới hạn → chạy Else.</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrText">Chuỗi cần nhận dạng</system:String>
+    <system:String x:Key="ui_ActionEdit_IgnoreCase">Không phân biệt hoa thường</system:String>
+    <system:String x:Key="ui_ActionEdit_PartialMatch">Khớp nếu chuỗi xuất hiện ở bất kỳ đâu (chuỗi con)</system:String>
+    <system:String x:Key="ui_ActionEdit_WebType">Loại thao tác web</system:String>
+    <system:String x:Key="ui_ActionEdit_Selector">Bộ chọn (CSS / xpath=)</system:String>
+    <system:String x:Key="ui_ActionEdit_TypeText">Nội dung gõ (Type)</system:String>
+    <system:String x:Key="ui_ActionEdit_WebHint">Điều hướng: điền URL. Nhấp/Gõ/Trích: điền bộ chọn. Gõ: thêm nội dung cần gõ.</system:String>
+    <system:String x:Key="ui_ActionEdit_CssSelector">Bộ chọn CSS</system:String>
+    <system:String x:Key="ui_ActionEdit_CssHint">Dùng CSS (#id, .class) hoặc Playwright text= / xpath=.</system:String>
+    <system:String x:Key="ui_ActionEdit_FillHint">Trường được xoá rồi điền (FillAsync).</system:String>
+    <system:String x:Key="ui_ActionEdit_VarName">Tên biến</system:String>
+    <system:String x:Key="ui_ActionEdit_Value">Giá trị</system:String>
+    <system:String x:Key="ui_ActionEdit_Manual">Nhập tay (Manual)</system:String>
+    <system:String x:Key="ui_ActionEdit_ValueSource">Nguồn giá trị</system:String>
+    <system:String x:Key="ui_ActionEdit_Set">Thiết lập (Set)</system:String>
+    <system:String x:Key="ui_ActionEdit_Increment">Tăng (Increment)</system:String>
+    <system:String x:Key="ui_ActionEdit_Decrement">Giảm (Decrement)</system:String>
+    <system:String x:Key="ui_ActionEdit_Operation">Thao tác</system:String>
+    <system:String x:Key="ui_ActionEdit_VarHint">Giá trị hỗ trợ {biến_khác}, {{tên}}, và ${biến_kịch_bản}. Nguồn Clipboard bỏ qua ô Giá trị.</system:String>
+    <system:String x:Key="ui_ActionEdit_CompareOp">Toán tử so sánh</system:String>
+    <system:String x:Key="ui_ActionEdit_CompareValue">Giá trị so sánh</system:String>
+    <system:String x:Key="ui_ActionEdit_BranchHint">Nhánh THỎA MÃN / TRÁI LẠI chỉnh trên sơ đồ macro.</system:String>
+    <system:String x:Key="ui_ActionEdit_LogContent">Nội dung ghi</system:String>
+    <system:String x:Key="ui_ActionEdit_LogHint">Hỗ trợ {tên_biến} và ${biến_kịch_bản}.</system:String>
+    <system:String x:Key="ui_ActionEdit_TryCatchHint">Khối THỬ NGHIỆM và XỬ LÝ LỖI chỉnh trên sơ đồ macro (không phải ở đây).</system:String>
+    <system:String x:Key="ui_ActionEdit_ScreenX">Vùng màn hình X</system:String>
+    <system:String x:Key="ui_ActionEdit_ScreenY">Vùng màn hình Y</system:String>
+    <system:String x:Key="ui_ActionEdit_Width">Rộng (px)</system:String>
+    <system:String x:Key="ui_ActionEdit_Height">Cao (px)</system:String>
+    <system:String x:Key="ui_ActionEdit_OutputVar">Tên biến lưu kết quả (không cần {{ }})</system:String>
+    <system:String x:Key="ui_ActionEdit_PickRegion">Chọn vùng màn hình (kéo thả)</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiTip">Kéo chọn vùng; tọa độ màn hình sẽ điền vào các ô phía trên.</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrHint">Windows.Media.Ocr — kết quả lưu vào {{tên_biến}} và last_ocr.</system:String>
+    <system:String x:Key="ui_ActionEdit_ClearVarName">Tên biến (để trống = xóa hết)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClearHint">Để trống tên: xóa toàn bộ biến chuỗi runtime.</system:String>
+    <system:String x:Key="ui_ActionEdit_TelegramMsg">Nội dung tin nhắn (hỗ trợ {{biến}})</system:String>
+    <system:String x:Key="ui_ActionEdit_TelegramHint">Hướng dẫn: 1) Mở Telegram, tìm @BotFather → /newbot để lấy Bot Token. 2) Thêm bot vào nhóm/channel, lấy Chat ID (vd: 123456789). Nội dung hỗ trợ HTML: &lt;b&gt;bold&lt;/b&gt;, &lt;code&gt;code&lt;/code&gt;, &lt;i&gt;italic&lt;/i&gt;. Dùng {{tên_cột}} để chèn biến từ CSV.</system:String>
+    <system:String x:Key="ui_ActionEdit_TestNow">Test ngay</system:String>
+    <system:String x:Key="ui_ActionEdit_PcTestInfo">PC hiện tại: {0} — tin nhắn test sẽ gửi "Kết nối thành công!" từ máy này.</system:String>
+    <system:String x:Key="ui_ActionEdit_ScriptFile">Kịch bản (.json)</system:String>
+    <system:String x:Key="ui_ActionEdit_MacroName">Tên macro (tự động điền)</system:String>
+    <system:String x:Key="ui_ActionEdit_PassVars">Truyền biến CSV / runtime sang macro con</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitChild">Chờ macro con chạy xong (bỏ chọn = chạy song song)</system:String>
+    <system:String x:Key="ui_ActionEdit_CallMacroHint">Khi "Truyền biến" được bật, các biến {{username}}, {{password}} từ CSV của macro cha sẽ được chuyển sang macro con. Macro con có thể dùng các biến này bình thường.</system:String>
+    <system:String x:Key="ui_ActionEdit_Browse">Chọn...</system:String>
+    <system:String x:Key="ui_ActionEdit_PickCoord">📍 Lấy tọa độ</system:String>
+    <system:String x:Key="ui_ActionEdit_TelegramTestMsg">✅ SmartMacroAI kết nối thành công!</system:String>
+    <system:String x:Key="ui_ActionEdit_SendingTest">[Telegram] Đang gửi tin nhắn test...</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiHeader">🔍 Vùng tìm (ROI) — tuỳ chọn, để trống = toàn cửa sổ</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiX">X</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiY">Y</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiW">Rộng</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiH">Cao</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyPressLabel">Phím cần nhấn</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyPressPlaceholder">Nhấp vào đây và nhấn 1 phím...</system:String>
+    <system:String x:Key="ui_ActionEdit_ClearBtn">✕ Xóa</system:String>
+    <system:String x:Key="ui_ActionEdit_HoldMs">Giữ phím (ms):</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyPressHint">Nhấn phím nóng hoặc phím thường (F1–F24, Ctrl, Alt, Shift, Enter…). Không dùng cho chuỗi văn bản — dùng "Gõ chữ (Type)" thay thế.</system:String>
+    <system:String x:Key="ui_ActionEdit_KeySendMode">Chế độ gửi phím:</system:String>
+    <system:String x:Key="ui_ActionEdit_AutoStealth">Tự động / Stealth (PostMessage)</system:String>
+    <system:String x:Key="ui_ActionEdit_SendInputTip">Dùng SendInput cho Discord, trình duyệt Chromium, Electron, Unity. Cần cửa sổ ở foreground.</system:String>
+    <system:String x:Key="ui_ActionEdit_RawInputTip">SendInput với scan code thuần cho game DirectX và Anti-Cheat. Cần cửa sổ ở foreground.</system:String>
+    <system:String x:Key="ui_ActionEdit_DriverLevel">🎮 Driver Level — game anti-cheat (cần cài Interception driver)</system:String>
+    <system:String x:Key="ui_ActionEdit_DriverTip">Giả lập bàn phím ở tầng kernel driver — bypass HackShield, NGS, EAC. Cần cài Interception Driver 1 lần với quyền Admin.</system:String>
+    <system:String x:Key="ui_ActionEdit_ForegroundNote">↑ Cửa sổ sẽ được đưa lên foreground khi dùng SendInput hoặc Raw Input.</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickMode">Chế độ click:</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickStealth">🔇 Stealth — chạy ngầm, không chiếm chuột (khuyến nghị)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickRaw">⚡ Raw — chiếm chuột vật lý, game nhận được</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickRawTip">SendInput chiếm chuột vật lý — game nhận được, cần cửa sổ ở foreground.</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickHw">🖥️ Hardware — full HW mode (kéo foreground)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickDriver">🎮 Driver Level — game anti-cheat nhận được (cần cài Interception driver)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickDriverTip">Giả lập chuột ở tầng kernel driver — bypass HackShield, NGS, EAC. Cần cài Interception Driver 1 lần với quyền Admin.</system:String>
+    <system:String x:Key="ui_ActionEdit_RetrySettings">⚙️ Cài đặt Retry (khi bật "Lặp lại tìm cho đến khi thấy")</system:String>
+    <system:String x:Key="ui_ActionEdit_RetryInterval">Khoảng cách retry (ms):</system:String>
+    <system:String x:Key="ui_ActionEdit_MaxRetry">Số lần tối đa (0=vô hạn):</system:String>
+    <system:String x:Key="ui_ActionEdit_ImageFilter">Ảnh</system:String>
+    <system:String x:Key="ui_ActionEdit_AllFilter">Tất cả</system:String>
+
+    <!-- MainWindow code-behind -->
+    <system:String x:Key="ui_Log_ProfileAdded">[AdsPower] Đã thêm profile: {0} ({1})</system:String>
+    <system:String x:Key="ui_Msg_SelectProfileDelete">Chọn một profile để xóa.</system:String>
+    <system:String x:Key="ui_Log_ProfileDeleted">[AdsPower] Đã xóa profile: {0}</system:String>
+    <system:String x:Key="ui_Msg_SelectProfileTest">Chọn một profile để test.</system:String>
+    <system:String x:Key="ui_Msg_ProfileTestOk">Profile {0} — kết nối thành công!</system:String>
+    <system:String x:Key="ui_Log_ProfileTestFailed">[AdsPower] Test thất bại: {0}</system:String>
+    <system:String x:Key="ui_Msg_ErrorPrefix">Lỗi: {0}</system:String>
+    <system:String x:Key="ui_Msg_NoStepsToShare">Không có bước nào để chia sẻ.</system:String>
+    <system:String x:Key="ui_Log_ShareCopied">[Share] Đã copy SMA- code: {0}</system:String>
+    <system:String x:Key="ui_Msg_ShareExportError">Lỗi export: {0}</system:String>
+    <system:String x:Key="ui_Msg_ImportTitle">Nhập mã SMA-</system:String>
+    <system:String x:Key="ui_Msg_ImportPrompt">Dán mã SMA- vào đây:</system:String>
+    <system:String x:Key="ui_Msg_InvalidCode">Mã không hợp lệ — không thể đọc kịch bản.</system:String>
+    <system:String x:Key="ui_Msg_ImportSuccessFmt">Nhập thành công! {0} bước — "{1}"</system:String>
+    <system:String x:Key="ui_Msg_ImportError">Mã không hợp lệ hoặc bị lỗi. Kiểm tra lại.</system:String>
+    <system:String x:Key="ui_Log_EditorOpened">[Editor] Đã mở: {0}</system:String>
+    <system:String x:Key="ui_Log_TemplateUsed">[Template] Đã tạo từ mẫu: {0}</system:String>
+    <system:String x:Key="ui_Toast_TelegramSaved">Đã lưu Telegram!</system:String>
+    <system:String x:Key="ui_Log_TelegramSending">[Telegram] Đang gửi test...</system:String>
+    <system:String x:Key="ui_Action_Run">chạy</system:String>
+    <system:String x:Key="ui_Msg_LockPasswordRequired">Bạn cần nhập mật khẩu để chạy macro này.</system:String>
+    <system:String x:Key="ui_Msg_SelectTargetWindow">Chọn cửa sổ mục tiêu cho macro này.</system:String>
+    <system:String x:Key="ui_Msg_WindowNotFound">Không tìm thấy cửa sổ: "{0}"</system:String>
+    <system:String x:Key="ui_Log_StealthOn">[{0}] Stealth ON — ẩn cửa sổ mục tiêu.</system:String>
+    <system:String x:Key="ui_Log_StealthOff">[{0}] Stealth OFF — hiện lại cửa sổ mục tiêu.</system:String>
+    <system:String x:Key="ui_Log_StopRequested">[{0}] Yêu cầu dừng.</system:String>
+    <system:String x:Key="ui_Msg_StopBeforeDelete">Dừng macro trước khi xóa.</system:String>
+    <system:String x:Key="ui_Log_MacroDeleted">Đã xóa: {0}</system:String>
+    <system:String x:Key="ui_Msg_MacroDeleted">Đã xóa "{0}".</system:String>
+    <system:String x:Key="ui_Msg_DeleteError">Lỗi khi xóa: {0}</system:String>
+    <system:String x:Key="ui_Log_ShareExportError">[Share] Lỗi export: {0}</system:String>
+    <system:String x:Key="ui_Msg_ImportError2">Lỗi import: {0}</system:String>
+    <system:String x:Key="ui_Msg_ShareCharCount">{0} ký tự</system:String>
+    <system:String x:Key="ui_Msg_ShareHint">Gửi mã này cho người khác để chia sẻ kịch bản macro.</system:String>
+
+    <!-- ProfileEditDialog -->
+    <system:String x:Key="ui_ProfileEdit_Title">Thêm / Sửa AdsPower Profile</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProfileIdHint">ID từ AdsPower (user_id trong danh sách profile)</system:String>
+    <system:String x:Key="ui_ProfileEdit_Nickname">Tên gợi nhớ</system:String>
+    <system:String x:Key="ui_ProfileEdit_NicknameHint">Tên dễ nhớ, ví dụ: Tài khoản Gmail 1</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyOptional">Proxy (tùy chọn)</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyNote">Điền thông tin proxy nếu cần thay đổi IP cho profile này. Để trống = dùng proxy mặc định của AdsPower.</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyHostHint">Ví dụ: proxy.example.com</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyPortHint">Ví dụ: 8080</system:String>
+
+    <!-- RunHistoryDialog -->
+    <system:String x:Key="ui_History_TitleFmt">📊 Lịch sử: {0}</system:String>
+    <system:String x:Key="ui_History_TitleAll">📊 Toàn bộ lịch sử chạy</system:String>
+    <system:String x:Key="ui_History_ShowAll">Hiển thị tất cả macro</system:String>
+    <system:String x:Key="ui_History_NoLog">(Không có log)</system:String>
+    <system:String x:Key="ui_History_SelectRecord">(Chọn một bản ghi để xem log)</system:String>
+    <system:String x:Key="ui_History_Deleted">(Đã xóa lịch sử)</system:String>
+
+    <!-- DriverInstallDialog code-behind -->
+    <system:String x:Key="ui_Drv_InstallSuccessMsg">Cài đặt thành công!
+
+Cần khởi động lại máy để hoàn tất.
+Khởi động lại ngay bây giờ?</system:String>
+    <system:String x:Key="ui_Drv_InstallComplete">Cài đặt hoàn tất</system:String>
+    <system:String x:Key="ui_Drv_RestartRequired">Vui lòng khởi động lại máy trước khi dùng Driver Level mode.</system:String>
+    <system:String x:Key="ui_Drv_Note">Lưu ý</system:String>
+    <system:String x:Key="ui_Drv_CancelledAdmin">Đã hủy — cần quyền Admin để cài driver</system:String>
+    <system:String x:Key="ui_Drv_Win11Hint">
+
+[Windows 11] Có thể do driver unsigned bị block.
+Thử chạy lệnh sau với quyền Admin rồi restart:
+bcdedit /set testsigning on</system:String>
+    <system:String x:Key="ui_Drv_InstallFailedMsg">Cài đặt thất bại.
+
+Chi tiết lỗi:
+</system:String>
+    <system:String x:Key="ui_Drv_FallbackMsg">Chuyển sang Raw mode tạm thời. Vui lòng chụp màn hình gửi cho hỗ trợ.</system:String>
+    <system:String x:Key="ui_Drv_InstallError">Lỗi cài đặt — Driver Level</system:String>
+
+    <!-- MacroAction / MacroEngine localized strings -->
+    <system:String x:Key="ui_Action_ResetVar">Reset biến</system:String>
+    <system:String x:Key="ui_Action_Telegram">Gửi Telegram</system:String>
+    <system:String x:Key="ui_Engine_TargetWindowGone">[LỖI] Cửa sổ mục tiêu không tồn tại hoặc đã bị đóng! Vui lòng chọn lại cửa sổ.</system:String>
+    <system:String x:Key="ui_Engine_MacroComplete">Macro hoàn thành</system:String>
+    <system:String x:Key="ui_Engine_MacroSuccess">'{0}' đã chạy thành công</system:String>
+    <system:String x:Key="ui_Engine_MacroFailed">Macro thất bại</system:String>
+    <system:String x:Key="ui_Engine_MacroError">'{0}' lỗi: {1}</system:String>
+    <system:String x:Key="ui_Engine_VarNotSet">Biến '{{{0}}}' chưa có giá trị — thay bằng chuỗi rỗng</system:String>
+    <system:String x:Key="ui_Engine_TargetAcquired">Đã tìm thấy mục tiêu: "{0}" (HWND=0x{1:X}) — PostMessage (stealth)</system:String>
+    <system:String x:Key="ui_Engine_TargetWindowClosed">Cửa sổ mục tiêu đã bị đóng trong khi chạy.</system:String>
+    <system:String x:Key="ui_Engine_OcrError">OCR lỗi: {0}</system:String>
+    <system:String x:Key="ui_Engine_TelegramFail">[Telegram] Gửi thông báo thất bại: {0}</system:String>
+    <system:String x:Key="ui_Engine_ClearAllVars">    → Xóa tất cả biến chuỗi {{…}} (VariableStore)</system:String>
+    <system:String x:Key="ui_Engine_ClearVar">    → Xóa biến '{0}'</system:String>
+    <system:String x:Key="ui_Engine_ResetAllVars">    → [ResetVars] Đã xóa tất cả biến</system:String>
+    <system:String x:Key="ui_Engine_TelegramCaptionStep">Bước {0}: {1}</system:String>
+    <system:String x:Key="ui_Engine_TelegramCaptionError">Lỗi: {0}</system:String>
+    <system:String x:Key="ui_Engine_OcrRegionOutOfBounds">    ⚠ OCR vùng ngoài màn hình — bỏ qua bước ({0})</system:String>
+    <system:String x:Key="ui_Engine_OcrLowConfidence">    ⚠ Kết quả OCR có thể không chính xác (confidence &lt; 60%)</system:String>
+    <system:String x:Key="ui_Engine_OcrMatchedAfter">    → OCR khớp sau {0}ms</system:String>
+    <system:String x:Key="ui_Engine_WaitImageFound">    → Ảnh đã hiện sau {0}ms — tiếp tục</system:String>
+    <system:String x:Key="ui_Engine_TypeTextEmpty">  TypeText — bỏ qua (text trống)</system:String>
+    <system:String x:Key="ui_Engine_WmCharLog">    → Stealth WM_CHAR: {0} ký tự (delay={1}ms)</system:String>
+    <system:String x:Key="ui_Engine_ClipboardPasteElectron">    → Clipboard paste: {0} ký tự → Electron app (WM_PASTE)</system:String>
+    <system:String x:Key="ui_Engine_ClipboardPaste">    → Clipboard paste: {0} ký tự</system:String>
+    <system:String x:Key="ui_Engine_WmCharLog2">    → WM_CHAR: {0} ký tự (delay={1}ms)</system:String>
+    <system:String x:Key="ui_Engine_SendInputUnicode">    → SendInput+Attach/Unicode: {0} ký tự</system:String>
+    <system:String x:Key="ui_Engine_InterceptionNotInstalled">[WARN] Interception driver chưa cài — fallback sang {0}</system:String>
+    <system:String x:Key="ui_Engine_TelegramSkippedEmpty">  Telegram — SKIPPED (BotToken hoặc ChatId trống)</system:String>
+    <system:String x:Key="ui_Engine_TelegramSkippedEmptyMsg">  Telegram — SKIPPED (message trống)</system:String>
+    <system:String x:Key="ui_Engine_SubMacroTooDeep">  [Sub-macro] ❌ Đệ quy quá sâu ({0} tầng) — phát hiện vòng lặp vô tận! Dừng để bảo vệ bộ nhớ.</system:String>
+    <system:String x:Key="ui_Engine_SubMacroNoScript">  [Sub-macro] ❌ Chưa chọn kịch bản con</system:String>
+    <system:String x:Key="ui_Engine_SubMacroFileNotFound">  [Sub-macro] ❌ Không tìm thấy file: {0}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroSelfCall">  [Sub-macro] ❌ Macro không thể tự gọi chính nó!</system:String>
+    <system:String x:Key="ui_Engine_SubMacroReadFailed">  [Sub-macro] ❌ Không đọc được: {0}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroStarted">  [Sub-macro] ▶ Tầng {0}/{1}: {2}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroComplete">  [Sub-macro] ✅ Hoàn thành tầng {0}: {1}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroLaunched">  [Sub-macro] 🚀 Đã khởi động (song song): {0}</system:String>
+    <system:String x:Key="ui_Engine_ClipboardPasteFlash">    → Clipboard paste: {0} ký tự → Electron app (flash fallback)</system:String>
+
+    <!-- Canvas: Stop All -->
+    <system:String x:Key="ui_Log_StopAll">Đã dừng tất cả macro.</system:String>
+
+    <!-- Canvas: Try/Catch block -->
+    <system:String x:Key="ui_Tooltip_EditTryCatch">Chỉnh sửa cấu hình khối Try/Catch</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteTryCatch">Xoá khối Try/Catch khỏi luồng</system:String>
+    <system:String x:Key="ui_Canvas_AddToTry">+ Thêm vào THỬ NGHIỆM (TRY)</system:String>
+    <system:String x:Key="ui_Tooltip_AddToTry">Thêm thao tác con vào nhánh thử nghiệm</system:String>
+    <system:String x:Key="ui_Canvas_AddToCatch">+ Thêm vào XỬ LÝ LỖI (CATCH)</system:String>
+    <system:String x:Key="ui_Tooltip_AddToCatch">Thêm thao tác con vào nhánh xử lý khi lỗi</system:String>
+    <system:String x:Key="ui_Tooltip_TryBranch">Các bước chạy trước; nếu lỗi sẽ chuyển sang nhánh xử lý lỗi</system:String>
+    <system:String x:Key="ui_Tooltip_CatchBranch">Chạy khi nhánh thử nghiệm báo lỗi (trừ khi bị hủy)</system:String>
+    <system:String x:Key="ui_Canvas_TryLabel">THỬ NGHIỆM</system:String>
+    <system:String x:Key="ui_Canvas_CatchLabel">XỬ LÝ LỖI</system:String>
+
+    <!-- Canvas: If/Variable block -->
+    <system:String x:Key="ui_Tooltip_EditVarCondition">Chỉnh sửa điều kiện biến</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteVarCondition">Xoá khối điều kiện biến</system:String>
+    <system:String x:Key="ui_Canvas_AddToThen">+ Thêm vào THỎA MÃN (THEN)</system:String>
+    <system:String x:Key="ui_Tooltip_AddToThen">Thêm thao tác khi điều kiện đúng</system:String>
+    <system:String x:Key="ui_Canvas_AddToElse">+ Thêm vào TRÁI LẠI (ELSE)</system:String>
+    <system:String x:Key="ui_Tooltip_AddToElse">Thêm thao tác khi điều kiện sai</system:String>
+    <system:String x:Key="ui_Tooltip_ThenBranch">Nhánh khi biến thỏa mãn điều kiện</system:String>
+    <system:String x:Key="ui_Tooltip_ElseBranch">Nhánh khi điều kiện không thỏa mãn</system:String>
+    <system:String x:Key="ui_Canvas_ThenLabel">THỎA MÃN</system:String>
+    <system:String x:Key="ui_Canvas_ElseLabel">TRÁI LẠI</system:String>
+
+    <!-- Canvas: Repeat block -->
+    <system:String x:Key="ui_Tooltip_EditRepeat">Chỉnh sửa số lần lặp, khoảng cách, ảnh thoát</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteRepeat">Xoá khối lặp lại</system:String>
+    <system:String x:Key="ui_Canvas_AddToLoop">+ Thêm thao tác vào vòng lặp</system:String>
+    <system:String x:Key="ui_Tooltip_AddToLoop">Chèn thao tác mới vào cuối vòng lặp</system:String>
+    <system:String x:Key="ui_Canvas_LoopBody">Thân vòng lặp</system:String>
+    <system:String x:Key="ui_Tooltip_LoopBody">Danh sách thao tác chạy lặp lại theo cấu hình phía trên</system:String>
+    <system:String x:Key="ui_Canvas_RepeatLabel">🔁 LẶP LẠI {0} (mỗi {1}ms){2}</system:String>
+    <system:String x:Key="ui_Canvas_BreakWhen"> | Thoát khi: {0}</system:String>
+
+    <!-- Canvas: Action card -->
+    <system:String x:Key="ui_Tooltip_DeleteAction">Xoá thao tác</system:String>
+    <system:String x:Key="ui_Tooltip_EditAction">Chỉnh sửa thao tác</system:String>
+    <system:String x:Key="ui_Canvas_ClearAll">Xóa tất cả</system:String>
+    <system:String x:Key="ui_Canvas_ClearVar">Xóa {{{0}}}</system:String>
+
+    <!-- Canvas: Log messages -->
+    <system:String x:Key="ui_Log_RemovedFromLoop">Đã xoá khỏi vòng lặp</system:String>
+    <system:String x:Key="ui_Log_RemovedFromTry">Đã xoá khỏi THỬ NGHIỆM</system:String>
+    <system:String x:Key="ui_Log_RemovedFromCatch">Đã xoá khỏi XỬ LÝ LỖI</system:String>
+    <system:String x:Key="ui_Log_RemovedFromThen">Đã xoá khỏi THỎA MÃN</system:String>
+    <system:String x:Key="ui_Log_RemovedFromElse">Đã xoá khỏi TRÁI LẠI</system:String>
+    <system:String x:Key="ui_Log_ActionDeleted">Đã xoá thao tác [{0}]: {1}</system:String>
+    <system:String x:Key="ui_Log_ActionEdited">Đã sửa: {0}</system:String>
+    <system:String x:Key="ui_Log_AddedToLoop">Đã thêm {0} vào vòng lặp</system:String>
+    <system:String x:Key="ui_Log_AddedToTryCatch">Đã thêm {0} vào {1}</system:String>
+    <system:String x:Key="ui_Log_AddedToThenElse">Đã thêm {0} vào {1}</system:String>
+
+    <!-- Scheduler -->
+    <system:String x:Key="ui_Log_SchedActivated">[⏰ Scheduler] Macro "{0}" kích hoạt lúc {1}</system:String>
+    <system:String x:Key="ui_Log_SchedAlreadyRunning">[Scheduler] "{0}" đang chạy, bỏ qua.</system:String>
+    <system:String x:Key="ui_Log_SchedWindowNotFound">[Scheduler] Không tìm thấy cửa sổ: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedFileReadError">[Scheduler] ❌ Không đọc được file: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedWindowNotFound2">[Scheduler] ❌ Không tìm thấy cửa sổ: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedCompleted">[Scheduler] ✅ "{0}" hoàn tất.</system:String>
+    <system:String x:Key="ui_Log_SchedError">[Scheduler] ❌ Lỗi: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedRegistered">[Scheduler] Đã đăng ký: {0} ({1})</system:String>
+
+    <!-- Schedule info -->
+    <system:String x:Key="ui_Toast_MacroInfoNotFound">Không tìm thấy thông tin macro.</system:String>
+    <system:String x:Key="ui_Toast_MacroFileReadError">Không đọc được file macro.</system:String>
+    <system:String x:Key="ui_Log_Scheduled">Đã lên lịch</system:String>
+    <system:String x:Key="ui_Log_Unscheduled">Đã tắt lịch</system:String>
+
+    <!-- Game detection -->
+    <system:String x:Key="ui_Game_KnownGame">Game đã biết: {0}</system:String>
+    <system:String x:Key="ui_Game_AntiCheatDll">Phát hiện anti-cheat DLL trong process</system:String>
+    <system:String x:Key="ui_Game_FullscreenLikely">Cửa sổ fullscreen/borderless — có thể là game</system:String>
+    <system:String x:Key="ui_Game_AutoDetectFound">[AutoDetect] Phát hiện game: "{0}" ({1})</system:String>
+    <system:String x:Key="ui_Game_DriverInstalled">[AutoDetect] Driver cài xong — dùng Driver Level mode</system:String>
+    <system:String x:Key="ui_Game_DriverUnavailable">[AutoDetect] Driver Level không khả dụng — fallback Raw mode</system:String>
+    <system:String x:Key="ui_Game_DriverWarning">⚠️ Driver chưa cài được — đang dùng Raw mode (game có thể không nhận)</system:String>
+    <system:String x:Key="ui_Game_DriverReady">[AutoDetect] Driver đã sẵn sàng — tự động dùng Driver Level</system:String>
+
+    <!-- Update checker -->
+    <system:String x:Key="ui_Update_CannotReadTag">[Update] Không đọc được tag_name từ GitHub: "{0}"</system:String>
+    <system:String x:Key="ui_Update_CannotDetermineVersion">[Update] Không xác định được phiên bản app để so sánh.</system:String>
+    <system:String x:Key="ui_Update_NewVersion">Đã có bản cập nhật mới: {0}</system:String>
+    <system:String x:Key="ui_Update_CurrentVersion">Phiên bản bạn đang dùng: {0}</system:String>
+    <system:String x:Key="ui_Update_OpenDownload">Bạn có muốn mở trang tải về để cập nhật không?</system:String>
+    <system:String x:Key="ui_Update_GitHubVersion">[Update] Phiên bản GitHub: {0} (đang chạy: {1})</system:String>
+    <system:String x:Key="ui_Update_UsingLatest">[Update] Đang dùng phiên bản mới nhất: {0} (GitHub: {1})</system:String>
+    <system:String x:Key="ui_Update_Details">Chi tiết: {0}</system:String>
+    <system:String x:Key="ui_Btn_Checking">Đang kiểm tra…</system:String>
+
+    <!-- Telegram tooltip -->
+    <system:String x:Key="ui_Telegram_On">Telegram: BẬT — Sẽ thông báo khi chạy xong</system:String>
+    <system:String x:Key="ui_Telegram_Off">Telegram: TẮT — Nhấn để bật</system:String>
+
+    <!-- Wait action descriptions -->
+    <system:String x:Key="ui_Wait_ImageDesc">Chờ ảnh hiện ≤{0}ms: {1}</system:String>
+    <system:String x:Key="ui_Wait_OcrDesc">Chờ OCR chứa "{0}" (màn hình {1},{2} {3}x{4}, mỗi {5}ms, ≤{6}ms)</system:String>
+
+    <!-- Misc -->
+    <system:String x:Key="ui_Toast_CannotOpenLink">Không thể mở liên kết: {0}</system:String>
+
+    <!-- ActionTypePicker -->
+    <system:String x:Key="ui_ActionType_WebNavigate">Web: Điều hướng</system:String>
+    <system:String x:Key="ui_ActionType_WebClick">Web: Nhấp</system:String>
+    <system:String x:Key="ui_ActionType_WebType">Web: Gõ chữ</system:String>
+    <system:String x:Key="ui_Action_CallMacro">📂 Gọi kịch bản con</system:String>
+
+    <!-- MacroLockDialog -->
+    <system:String x:Key="ui_Lock_EmptyPwd">Mật khẩu không được trống.</system:String>
+    <system:String x:Key="ui_Lock_PwdTooShort">Mật khẩu phải có ít nhất 4 ký tự.</system:String>
+    <system:String x:Key="ui_Lock_PwdMismatch">Mật khẩu xác nhận không khớp.</system:String>
+
+    <!-- PasswordDialog -->
+    <system:String x:Key="ui_Pwd_EnterPwd">Vui lòng nhập mật khẩu.</system:String>
+
+    <!-- MacroLockService -->
+    <system:String x:Key="ui_Lock_Locked">🔒 Đã khóa</system:String>
+    <system:String x:Key="ui_Lock_Unlocked">🔓 Mở</system:String>
+
+    <!-- AppNotification -->
+    <system:String x:Key="ui_Time_JustNow">vừa xong</system:String>
+    <system:String x:Key="ui_Time_MinutesAgo">{0} phút trước</system:String>
+    <system:String x:Key="ui_Time_HoursAgo">{0} giờ trước</system:String>
+
+    <!-- DashboardRowVm -->
+    <system:String x:Key="ui_Schedule_DailyFmt">Hàng ngày {0}</system:String>
+    <system:String x:Key="ui_Schedule_IntervalFmt">Mỗi {0} phút</system:String>
+    <system:String x:Key="ui_Schedule_OnceFmt">1 lần {0}</system:String>
+    <system:String x:Key="ui_Schedule_Scheduled">Đã lên lịch</system:String>
+
+    <!-- MacroRunnerState -->
+    <system:String x:Key="ui_Runner_Started">[{0}] Bắt đầu...</system:String>
+    <system:String x:Key="ui_Runner_Completed">[{0}] Hoàn tất.</system:String>
+    <system:String x:Key="ui_Runner_Stopped">[{0}] Đã dừng.</system:String>
+    <system:String x:Key="ui_Runner_Error">[{0}] Lỗi: {1}</system:String>
+
+    <!-- MacroScript Telegram templates -->
+    <system:String x:Key="ui_Telegram_SuccessTemplate">✅ &lt;b&gt;{MacroName}&lt;/b&gt; chạy xong!\n📊 Hoàn thành: &lt;b&gt;{RowsDone}/{RowsTotal}&lt;/b&gt; dòng\n⏱ Thời gian: &lt;code&gt;{Duration}&lt;/code&gt;\n💻 Máy: &lt;code&gt;{MachineName}&lt;/code&gt;</system:String>
+    <system:String x:Key="ui_Telegram_ErrorTemplate">❌ &lt;b&gt;{MacroName}&lt;/b&gt; bị lỗi!\n📊 Hoàn thành: &lt;b&gt;{RowsDone}/{RowsTotal}&lt;/b&gt; dòng\n🔴 Lỗi: &lt;code&gt;{ErrorMessage}&lt;/code&gt;\n💻 Máy: &lt;code&gt;{MachineName}&lt;/code&gt;</system:String>
+
+    <!-- MacroRecorder -->
+    <system:String x:Key="ui_Recorder_ManualInput">Nhập liệu thủ công</system:String>
+    <system:String x:Key="ui_Recorder_ManualInputPrompt">Nhập văn bản muốn chèn vào macro:</system:String>
+    <system:String x:Key="ui_Recorder_ManualInputLog">  [Nhập liệu thủ công] "{0}"</system:String>
+
+    <!-- ScriptShareService -->
+    <system:String x:Key="ui_Share_EmptyCode">Mã SMA- trống. Vui lòng dán mã đầy đủ.</system:String>
+    <system:String x:Key="ui_Share_InvalidPrefix">Mã không hợp lệ — phải bắt đầu bằng "{0}". Mã bạn dán: "{1}..."</system:String>
+    <system:String x:Key="ui_Share_TooShort">Mã quá ngắn — có thể bị cắt mất. Vui lòng copy lại toàn bộ.</system:String>
+    <system:String x:Key="ui_Share_InvalidBase64">Mã không đúng định dạng Base64Url: {0}</system:String>
+    <system:String x:Key="ui_Share_DecompressShort">Dữ liệu nén bị lỗi (quá ngắn). Kiểm tra lại mã.</system:String>
+    <system:String x:Key="ui_Share_DecompressError">Dữ liệu nén bị lỗi — mã có thể bị hỏng hoặc không phải định dạng SmartMacroAI.</system:String>
+    <system:String x:Key="ui_Share_EmptyContent">Nội dung giải nén trống.</system:String>
+    <system:String x:Key="ui_Share_InvalidJson">Nội dung không phải JSON hợp lệ: {0}</system:String>
+
+    <!-- AdsPowerService -->
+    <system:String x:Key="ui_AdsPower_Timeout">AdsPower khởi động browser profile quá chậm (&gt;15s). Kiểm tra AdsPower đã bật và profile có hợp lệ không.</system:String>
+    <system:String x:Key="ui_AdsPower_ConnectionFailed">Không thể kết nối AdsPower Local API tại {0}. Đảm bảo AdsPower đang chạy và Local API được bật trong Cài đặt.</system:String>
+    <system:String x:Key="ui_AdsPower_ApiError">AdsPower API lỗi (code={0}): {1}</system:String>
+    <system:String x:Key="ui_AdsPower_NoWebSocket">Không tìm thấy WebSocket CDP endpoint trong phản hồi AdsPower. Response: </system:String>
+    <system:String x:Key="ui_AdsPower_InvalidJson">Phản hồi AdsPower không phải JSON hợp lệ: {0}</system:String>
+
+    <!-- TelegramService -->
+    <system:String x:Key="ui_TgLog_EmptyCredentials">[Telegram] BotToken hoặc ChatId trống — bỏ qua gửi.</system:String>
+    <system:String x:Key="ui_TgLog_EmptyMessage">[Telegram] Message trống — bỏ qua gửi.</system:String>
+    <system:String x:Key="ui_TgLog_Sent">[Telegram] Đã gửi thành công → {0}</system:String>
+    <system:String x:Key="ui_TgLog_SendError">[Telegram] Lỗi gửi: {0}</system:String>
+    <system:String x:Key="ui_TgLog_Timeout">[Telegram] Lỗi: hết thời gian kết nối (10s). Kiểm tra Internet hoặc Bot Token.</system:String>
+    <system:String x:Key="ui_TgLog_ConnectionError">[Telegram] Lỗi kết nối: {0}</system:String>
+    <system:String x:Key="ui_TgLog_UnknownError">[Telegram] Lỗi không xác định: {0}</system:String>
+    <system:String x:Key="ui_TgLog_EmptyCredentialsPhoto">[Telegram] BotToken hoặc ChatId trống — bỏ qua gửi ảnh.</system:String>
+    <system:String x:Key="ui_TgLog_PhotoNotFound">[Telegram] File ảnh không tồn tại: {0}</system:String>
+    <system:String x:Key="ui_TgLog_PhotoSent">[Telegram] Đã gửi ảnh thành công → {0}</system:String>
+    <system:String x:Key="ui_TgLog_PhotoSendError">[Telegram] Lỗi gửi ảnh: {0}</system:String>
+    <system:String x:Key="ui_TgLog_PhotoError">[Telegram] Lỗi gửi ảnh: {0}</system:String>
+
+    <!-- InterceptionInstaller -->
+    <system:String x:Key="ui_Install_NoInstallerResource">[ERROR] install-interception.exe không có trong embedded resources!</system:String>
+    <system:String x:Key="ui_Install_ExtractInstaller">Extracting installer từ embedded: {0}</system:String>
+    <system:String x:Key="ui_Install_Extracted">Extracted: {0}KB tại {1}</system:String>
+    <system:String x:Key="ui_Install_ExtractTooSmall">[ERROR] File extract ra quá nhỏ — resource bị corrupt?</system:String>
+    <system:String x:Key="ui_Install_ExtractDll">Extracting interception.dll từ embedded: {0}</system:String>
+    <system:String x:Key="ui_Install_Win11Detected">[INFO] Windows 11 detected (build {0}) — có thể cần Test Signing mode</system:String>
+    <system:String x:Key="ui_Install_TryTestSigning">[INFO] Nếu cài thất bại, thử: bcdedit /set testsigning on → restart</system:String>
+    <system:String x:Key="ui_Install_RunningInstaller">Đang chạy install-interception.exe /install (UAC prompt)...</system:String>
+    <system:String x:Key="ui_Install_ProcessNull">[ERROR] Process.Start trả về null</system:String>
+    <system:String x:Key="ui_Install_ExitCode0">[OK] Installer ExitCode=0 — thành công</system:String>
+    <system:String x:Key="ui_Install_ExitCode1">[INFO] ExitCode=1 — driver có thể đã cài trước đó (already installed)</system:String>
+    <system:String x:Key="ui_Install_Win11Hint">[HINT] Win11 có thể block unsigned driver. Thử: bcdedit /set testsigning on → restart</system:String>
+    <system:String x:Key="ui_Install_CopyDllFromTemp">interception.dll chưa có trong app dir — copy từ temp</system:String>
+    <system:String x:Key="ui_Install_DllNotInTemp">[WARN] interception.dll không có trong temp — driver cài nhưng DLL chưa sẵn sàng</system:String>
+    <system:String x:Key="ui_Install_Done">Cài đặt hoàn tất! Cần restart máy.</system:String>
+    <system:String x:Key="ui_Install_UacCancelled">[INFO] User bấm No trên UAC prompt</system:String>
+
+    <!-- MacroTemplateService -->
+    <system:String x:Key="ui_Tmpl_AutoLoginDesc">Tự động đăng nhập website với username/password từ CSV</system:String>
+    <system:String x:Key="ui_Tmpl_OpenBrowser">Mở trình duyệt</system:String>
+    <system:String x:Key="ui_Tmpl_WaitPageLoad">Chờ trang load</system:String>
+    <system:String x:Key="ui_Tmpl_ClickLogin">Click đăng nhập</system:String>
+    <system:String x:Key="ui_Tmpl_AutoFillDesc">Điền dữ liệu từ file CSV vào form web (lặp nhiều dòng)</system:String>
+    <system:String x:Key="ui_Tmpl_OpenForm">Mở trang form</system:String>
+    <system:String x:Key="ui_Tmpl_WaitFormLoad">Chờ form load</system:String>
+    <system:String x:Key="ui_Tmpl_LoopEachCsvRow">Lặp từng dòng CSV</system:String>
+    <system:String x:Key="ui_Tmpl_TypeValue1">Nhập giá trị 1</system:String>
+    <system:String x:Key="ui_Tmpl_TypeValue2">Nhập giá trị 2</system:String>
+    <system:String x:Key="ui_Tmpl_WaitProcess">Chờ xử lý</system:String>
+    <system:String x:Key="ui_Tmpl_AutoRepeatDesc">Lặp lại thao tác click chuột theo chu kỳ</system:String>
+    <system:String x:Key="ui_Tmpl_LoopActions">Lặp thao tác</system:String>
+    <system:String x:Key="ui_Tmpl_ClickPosition">Click vị trí</system:String>
+    <system:String x:Key="ui_Tmpl_Wait">Chờ</system:String>
+    <system:String x:Key="ui_Tmpl_ImageDetectDesc">Chờ cho đến khi hình ảnh xuất hiện rồi thực hiện hành động</system:String>
+    <system:String x:Key="ui_Tmpl_CheckImage">Kiểm tra hình ảnh</system:String>
+    <system:String x:Key="ui_Tmpl_IfImageFound">Nếu tìm thấy hình</system:String>
+    <system:String x:Key="ui_Tmpl_WaitAgain">Chờ lại</system:String>
+    <system:String x:Key="ui_Tmpl_HotkeyAutoDesc">Nhấn tổ hợp phím tắt theo chu kỳ</system:String>
+    <system:String x:Key="ui_Tmpl_LoopHotkey">Lặp phím tắt</system:String>
+    <system:String x:Key="ui_Tmpl_PressCtrlS">Nhấn Ctrl+S</system:String>
+    <system:String x:Key="ui_Tmpl_BlankDesc">Bắt đầu với macro trống - thêm actions thủ công</system:String>
+    <system:String x:Key="ui_Tmpl_ClickUsername">Click username</system:String>
+    <system:String x:Key="ui_Tmpl_TypeUsername">Nhập username</system:String>
+    <system:String x:Key="ui_Tmpl_ClickPassword">Click password</system:String>
+    <system:String x:Key="ui_Tmpl_TypePassword">Nhập password</system:String>
+    <system:String x:Key="ui_Tmpl_ClickField1">Click trường 1</system:String>
+    <system:String x:Key="ui_Tmpl_ClickField2">Click trường 2</system:String>
+    <system:String x:Key="ui_Tmpl_ClickSubmit">Click Submit</system:String>
+    <system:String x:Key="ui_Tmpl_GameFarmingDesc">Lặp kỹ năng/phím trong game (farming, combat)</system:String>
+    <system:String x:Key="ui_Tmpl_LoopSkills">Lặp kỹ năng</system:String>
+    <system:String x:Key="ui_Tmpl_SkillKey">Kỹ năng {0}</system:String>
+    <system:String x:Key="ui_Tmpl_NameAutoLogin">🔐 Tự động đăng nhập</system:String>
+    <system:String x:Key="ui_Tmpl_NameAutoFill">📊 Điền dữ liệu CSV</system:String>
+    <system:String x:Key="ui_Tmpl_NameAutoRepeat">🔄 Lặp lại thao tác</system:String>
+    <system:String x:Key="ui_Tmpl_NameImageDetect">🔍 Nhận dạng hình ảnh</system:String>
+    <system:String x:Key="ui_Tmpl_NameHotkey">⌨️ Tự động phím tắt</system:String>
+    <system:String x:Key="ui_Tmpl_NameGameFarm">🎮 Game Farming Loop</system:String>
+    <system:String x:Key="ui_Tmpl_NameBlank">🚀 Macro trống</system:String>
+
+    <!-- CsvDataService -->
+    <system:String x:Key="ui_Csv_SelectFile">Chọn file dữ liệu CSV hoặc TXT</system:String>
+    <system:String x:Key="ui_Csv_EmptyData">Dữ liệu rỗng</system:String>
+    <system:String x:Key="ui_Csv_FileEmpty">File trống.</system:String>
+    <system:String x:Key="ui_Csv_NoValidRows">File không có dòng dữ liệu hợp lệ.</system:String>
+    <system:String x:Key="ui_Csv_NoHeader">File thiếu header hoặc header trống.</system:String>
+    <system:String x:Key="ui_Csv_EmptyHeader">Header cột {0} trống. Vui lòng điền tên cho mỗi cột.</system:String>
+    <system:String x:Key="ui_Csv_HeaderOnly">File chỉ có header, không có dòng dữ liệu.</system:String>
+    <system:String x:Key="ui_Csv_ColumnMismatch">Dòng {0} có {1} cột nhưng header có {2} cột. Số cột phải khớp với header.</system:String>
+
+    <!-- BehaviorRandomizer -->
+    <system:String x:Key="ui_AntiLog_SessionBreak">[Anti-Detection] Nghỉ phiên ~{0} phút (mô hình người dùng).</system:String>
+    <system:String x:Key="ui_AntiLog_EyeTracking">[Anti-Detection] Cuộn nhẹ trước khi nhấp (mô phỏng theo dõi mắt).</system:String>
+
+    <!-- LogWindow -->
+    <system:String x:Key="ui_LogWin_Saved">Đã lưu log vào: {0}</system:String>
 </ResourceDictionary>

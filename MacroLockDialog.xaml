@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.MacroLockDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="🔒 Khóa Macro"
+        Title="{DynamicResource ui_Lock_Title}"
         Height="280" Width="380"
         WindowStartupLocation="CenterOwner"
         Background="#1E1E2E"
@@ -16,19 +16,19 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="🔒 Đặt mật khẩu khóa macro"
+        <TextBlock Grid.Row="0" Text="{DynamicResource ui_Lock_Header}"
                    FontSize="14" FontWeight="SemiBold"
                    Foreground="#CDD6F4" Margin="0,0,0,16"/>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,12">
-            <TextBlock Text="Mật khẩu mới:" Foreground="#6C7086" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="{DynamicResource ui_Lock_NewPwd}" Foreground="#6C7086" FontSize="11" Margin="0,0,0,4"/>
             <PasswordBox x:Name="PwdNew" Height="32" FontSize="13"
                         Background="#313244" Foreground="#CDD6F4"
                         BorderBrush="#45475A" Padding="8,6"/>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Margin="0,0,0,12">
-            <TextBlock Text="Xác nhận mật khẩu:" Foreground="#6C7086" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="{DynamicResource ui_Lock_ConfirmPwd}" Foreground="#6C7086" FontSize="11" Margin="0,0,0,4"/>
             <PasswordBox x:Name="PwdConfirm" Height="32" FontSize="13"
                         Background="#313244" Foreground="#CDD6F4"
                         BorderBrush="#45475A" Padding="8,6"/>
@@ -38,13 +38,13 @@
                    FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"/>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnRemoveLock" Content="Xóa khóa"
+            <Button x:Name="BtnRemoveLock" Content="{DynamicResource ui_Lock_RemoveBtn}"
                     Style="{StaticResource SecondaryButtonStyle}"
                     Click="BtnRemoveLock_Click" Margin="0,0,8,0"/>
-            <Button Content="Hủy"
+            <Button Content="{DynamicResource ui_CancelBtn}"
                     Style="{StaticResource SecondaryButtonStyle}"
                     Click="BtnCancel_Click" Margin="0,0,8,0"/>
-            <Button Content="Lưu"
+            <Button Content="{DynamicResource ui_Save}"
                     Style="{StaticResource PrimaryButtonStyle}"
                     Click="BtnSetLock_Click"/>
         </StackPanel>

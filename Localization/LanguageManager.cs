@@ -10,6 +10,9 @@ public static class LanguageManager
     private static ResourceDictionary? _stringsDictionary;
     private static readonly object Gate = new();
 
+    /// <summary>Current active language code ("en" or "vi").</summary>
+    public static string CurrentLanguage { get; private set; } = "vi";
+
     /// <summary>Fired after the active string dictionary has been replaced (UI should refresh code-bound strings).</summary>
     public static event EventHandler? UiLanguageChanged;
 
@@ -33,11 +36,14 @@ public static class LanguageManager
         if (code != "vi")
             code = "en";
 
+        CurrentLanguage = code;
+
         string relative = code == "vi"
             ? "Localization/Strings.vi.xaml"
             : "Localization/Strings.en.xaml";
 
-        var uri = new Uri($"/SmartMacroAI;component/{relative}", UriKind.Relative);
+        // Use absolute pack URI for reliability
+        var uri = new Uri($"pack://application:,,,/SmartMacroAI;component/{relative}", UriKind.Absolute);
         var newDict = new ResourceDictionary { Source = uri };
 
         lock (Gate)
@@ -63,6 +69,8 @@ public static class LanguageManager
         var s = AppSettings.Load();
         s.LanguageCode = code;
         s.Save();
+
+        System.Diagnostics.Debug.WriteLine($"[LanguageManager] Applied: {code} ({relative})");
 
         UiLanguageChanged?.Invoke(null, EventArgs.Empty);
     }

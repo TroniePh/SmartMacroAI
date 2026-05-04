@@ -1,10 +1,10 @@
 ; SmartMacroAI — Inno Setup 6
 ; Build (repo root):  dotnet publish ... -o release_output
 ; Compile:            ISCC.exe installer\SmartMacroAI_Setup.iss
-; Override version:   ISCC ... /DMyAppVersion=1.5.4
+; Override version:   ISCC ... /DMyAppVersion=1.5.5
 
 #ifndef MyAppVersion
-#define MyAppVersion "1.5.4"
+#define MyAppVersion "1.5.5"
 #endif
 
 #define MyAppName "SmartMacroAI"

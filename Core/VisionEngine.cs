@@ -314,7 +314,7 @@ public static class VisionEngine
             System.Windows.Application.Current?.Dispatcher.Invoke(() =>
             {
                 System.Windows.MessageBox.Show(
-                    $"Lỗi OCR gốc:\n\n{realError}\n\nChi tiết:\n{ex.GetType().Name}",
+                    $"{LanguageManager.GetString("ui_Msg_OcrError")}\n\n{realError}\n\n{ex.GetType().Name}",
                     "OCR Error",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
@@ -374,7 +374,7 @@ public static class VisionEngine
                 System.Windows.Application.Current?.Dispatcher.Invoke(() =>
                 {
                     System.Windows.MessageBox.Show(
-                        $"Lỗi OCR gốc:\n\n{realError}\n\nChi tiết:\n{ex.GetType().Name}\n\nKiểm tra:\n1. Thư mục x86/ x64 có cạnh SmartMacroAI.exe không?\n2. File tessdata/{language}.traineddata có trong thư mục SmartMacroAI không?",
+                        $"{LanguageManager.GetString("ui_Msg_OcrError")}\n\n{realError}\n\n{ex.GetType().Name}\n\n{string.Format(LanguageManager.GetString("ui_Msg_OcrInitHint"), language)}",
                         "OCR Init Error",
                         System.Windows.MessageBoxButton.OK,
                         System.Windows.MessageBoxImage.Error);

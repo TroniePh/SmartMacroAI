@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.CoordinatePickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Pick Coordinate"
+        Title="{DynamicResource ui_CoordPicker_Title}"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -14,7 +14,7 @@
         KeyDown="Window_KeyDown">
     <Grid Background="#01000000">
         <Canvas x:Name="GuideCanvas" />
-        <TextBlock Text="Di chuyển chuột đến vị trí cần lấy tọa độ. Nhấp chuột trái để xác nhận. ESC để hủy."
+        <TextBlock Text="{DynamicResource ui_CoordPicker_Instruction}"
                    Foreground="#89B4FA"
                    FontSize="18"
                    FontWeight="SemiBold"

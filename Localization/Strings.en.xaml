@@ -50,6 +50,7 @@
     <system:String x:Key="ui_OcrLang_Auto">Auto (Windows language profile)</system:String>
     <system:String x:Key="ui_OcrLang_Vi">Vietnamese (vi-VN)</system:String>
     <system:String x:Key="ui_OcrLang_En">English (en-US)</system:String>
+    <system:String x:Key="ui_OcrLang_Both">English + Tiếng Việt</system:String>
     <system:String x:Key="ui_Ok">OK</system:String>
     <system:String x:Key="ui_Cancel">Cancel</system:String>
     <system:String x:Key="ui_Dashboard_AddVar_SelectRow">Select a macro row in the grid first.</system:String>
@@ -196,7 +197,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Path preview</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Mouse settings saved.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.5.0 — RPA Automation Tool</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.5.5 — RPA Automation Tool</system:String>
     <system:String x:Key="ui_About_Description">Non-invasive automation for Windows 10/11. Uses Win32 API to send clicks and keystrokes directly to background windows without hijacking your physical mouse or keyboard.</system:String>
     <system:String x:Key="ui_About_TechStack">Technology Stack</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -204,7 +205,7 @@
     <system:String x:Key="ui_About_Contact">Support contact</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Check for updates</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Software updates</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.5.0</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.5.5</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Buy me a coffee</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Treat the author to a coffee if this app helps you!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
@@ -214,7 +215,7 @@
     <system:String x:Key="ui_LogConsole">LOG CONSOLE</system:String>
     <system:String x:Key="ui_Log_Clear">Clear</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.0</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.5</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Created by Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
@@ -255,4 +256,713 @@
     <system:String x:Key="ui_Settings_Telegram_TestTitle">Quick Test</system:String>
     <system:String x:Key="ui_Settings_Telegram_TestButton">📨 Send Test Message Now</system:String>
     <system:String x:Key="ui_Settings_Telegram_TestDesc">Sends a test message "SmartMacroAI connected successfully!" to the saved Chat ID. Each message includes your PC name [PC: ...] for identification.</system:String>
+
+    <!-- Driver Install Dialog -->
+    <system:String x:Key="ui_Drv_Title">Install Driver Level Mode</system:String>
+    <system:String x:Key="ui_Drv_ModeLabel">Driver Level Mode</system:String>
+    <system:String x:Key="ui_Drv_Subtitle">Enables clicking/key-pressing in anti-cheat games</system:String>
+    <system:String x:Key="ui_Drv_Desc1">This feature requires installing a </system:String>
+    <system:String x:Key="ui_Drv_DescBold">kernel-level driver</system:String>
+    <system:String x:Key="ui_Drv_Desc2"> to emulate real mouse/keyboard devices.</system:String>
+    <system:String x:Key="ui_Drv_Feat1">Fully automatic — just click </system:String>
+    <system:String x:Key="ui_Drv_Feat1Bold">Install Now</system:String>
+    <system:String x:Key="ui_Drv_Feat2">Requires Administrator privileges (Windows will prompt once)</system:String>
+    <system:String x:Key="ui_Drv_Feat3">Requires a system restart after installation</system:String>
+    <system:String x:Key="ui_Drv_Compat">Compatible with: MapleStory, PUBG, and games using HackShield / EasyAntiCheat</system:String>
+    <system:String x:Key="ui_Drv_LaterBtn">Later</system:String>
+    <system:String x:Key="ui_Drv_InstallBtn">Install Now</system:String>
+
+    <!-- Action Edit Dialog -->
+    <system:String x:Key="ui_ActionEdit_Title">Edit Action</system:String>
+    <system:String x:Key="ui_CancelBtn">Cancel</system:String>
+    <system:String x:Key="ui_ApplyBtn">Apply</system:String>
+
+    <!-- Action Type Picker -->
+    <system:String x:Key="ui_ActionType_Title">Add Action</system:String>
+    <system:String x:Key="ui_ActionType_Prompt">Select action type:</system:String>
+    <system:String x:Key="ui_SelectBtn">Select</system:String>
+
+    <!-- Coordinate Picker -->
+    <system:String x:Key="ui_CoordPicker_Title">Pick Coordinate</system:String>
+    <system:String x:Key="ui_CoordPicker_Instruction">Move mouse to the desired location. Left-click to confirm. ESC to cancel.</system:String>
+
+    <!-- Log Window -->
+    <system:String x:Key="ui_LogWin_Title">Log — SmartMacroAI</system:String>
+    <system:String x:Key="ui_LogWin_ClearBtn">Clear log</system:String>
+    <system:String x:Key="ui_LogWin_SaveBtn">Save .txt</system:String>
+    <system:String x:Key="ui_LogWin_AutoScroll">Auto scroll</system:String>
+    <system:String x:Key="ui_LogWin_LineCount">{0} lines</system:String>
+
+    <!-- Macro Lock Dialog -->
+    <system:String x:Key="ui_Lock_Title">Lock Macro</system:String>
+    <system:String x:Key="ui_Lock_Header">Set macro lock password</system:String>
+    <system:String x:Key="ui_Lock_NewPwd">New password:</system:String>
+    <system:String x:Key="ui_Lock_ConfirmPwd">Confirm password:</system:String>
+    <system:String x:Key="ui_Lock_RemoveBtn">Remove lock</system:String>
+
+    <!-- Password Dialog -->
+    <system:String x:Key="ui_Pwd_Title">Enter Password</system:String>
+    <system:String x:Key="ui_Pwd_Prompt">Enter password to continue:</system:String>
+    <system:String x:Key="ui_ConfirmBtn">Confirm</system:String>
+
+    <!-- Record Toolbar -->
+    <system:String x:Key="ui_Record_Title">SmartMacroAI Recorder</system:String>
+    <system:String x:Key="ui_Record_Stop">Stop (F10)</system:String>
+
+    <!-- Rename Macro Dialog -->
+    <system:String x:Key="ui_Rename_Title">Rename Macro</system:String>
+    <system:String x:Key="ui_Rename_Prompt">New macro name</system:String>
+
+    <!-- Run History Dialog -->
+    <system:String x:Key="ui_History_Title">Run History</system:String>
+    <system:String x:Key="ui_History_Header">Macro run history</system:String>
+    <system:String x:Key="ui_History_Result">Result</system:String>
+    <system:String x:Key="ui_History_Time">Time</system:String>
+    <system:String x:Key="ui_History_MacroName">Macro name</system:String>
+    <system:String x:Key="ui_History_Duration">Duration</system:String>
+    <system:String x:Key="ui_History_Steps">Steps</system:String>
+    <system:String x:Key="ui_History_Details">Details</system:String>
+    <system:String x:Key="ui_History_ClearBtn">Clear history</system:String>
+    <system:String x:Key="ui_History_LogPreview">Log preview</system:String>
+
+    <!-- Schedule Edit Dialog -->
+    <system:String x:Key="ui_Schedule_Title">Schedule Run</system:String>
+    <system:String x:Key="ui_Schedule_Header">Set automatic schedule</system:String>
+    <system:String x:Key="ui_Schedule_Enable">Enable automatic schedule</system:String>
+    <system:String x:Key="ui_Schedule_Mode">MODE</system:String>
+    <system:String x:Key="ui_Schedule_Daily">Daily</system:String>
+    <system:String x:Key="ui_Schedule_Interval">Repeat by minutes</system:String>
+    <system:String x:Key="ui_Schedule_Once">Run once</system:String>
+    <system:String x:Key="ui_Schedule_OnStartup">Run on app startup</system:String>
+    <system:String x:Key="ui_Schedule_DailyTime">DAILY RUN TIME</system:String>
+    <system:String x:Key="ui_Schedule_IntervalLabel">REPEAT EVERY (MINUTES)</system:String>
+    <system:String x:Key="ui_Schedule_Minutes">minutes</system:String>
+    <system:String x:Key="ui_Schedule_SaveBtn">Save schedule</system:String>
+
+    <!-- Snipping Tool -->
+    <system:String x:Key="ui_Snip_Title">Snip Area</system:String>
+    <system:String x:Key="ui_Snip_Instruction">Click and drag to select an area. Press Esc to cancel.</system:String>
+
+    <!-- Template Picker Dialog -->
+    <system:String x:Key="ui_Template_Title">Choose Template</system:String>
+    <system:String x:Key="ui_Template_Header">Choose script template</system:String>
+    <system:String x:Key="ui_Template_Category">Category:</system:String>
+    <system:String x:Key="ui_Template_Choose">Select</system:String>
+    <system:String x:Key="ui_Template_Blank">Skip (empty macro)</system:String>
+
+    <!-- MainWindow: File Menu -->
+    <system:String x:Key="ui_Menu_File">File</system:String>
+    <system:String x:Key="ui_Menu_NewMacro">New Macro</system:String>
+    <system:String x:Key="ui_Menu_OpenMacro">Open Macro</system:String>
+    <system:String x:Key="ui_Menu_SaveMacro">Save Macro</system:String>
+    <system:String x:Key="ui_Menu_Share">Share Script (Copy SMA- code)</system:String>
+    <system:String x:Key="ui_Menu_Import">Import from SMA- code</system:String>
+
+    <!-- MainWindow: Notifications -->
+    <system:String x:Key="ui_Notification_Btn">Notifications</system:String>
+    <system:String x:Key="ui_Notification_Header">Notifications</system:String>
+    <system:String x:Key="ui_Notification_MarkAll">Mark all read</system:String>
+    <system:String x:Key="ui_Notification_ClearAll">Clear all notifications</system:String>
+
+    <!-- MainWindow: Dashboard -->
+    <system:String x:Key="ui_Dash_ProfileName">Profile Manager</system:String>
+    <system:String x:Key="ui_Dash_History">History</system:String>
+    <system:String x:Key="ui_Dash_ScheduledFmt">{0} macro(s) scheduled</system:String>
+    <system:String x:Key="ui_Dash_RunningFmt">{0} macro(s) running</system:String>
+    <system:String x:Key="ui_Dash_TooltipRename">Double-click to rename</system:String>
+    <system:String x:Key="ui_Dash_Actions">actions</system:String>
+    <system:String x:Key="ui_Dash_TooltipStealth">Stealth Mode</system:String>
+    <system:String x:Key="ui_Dash_TooltipHW">Hardware Mode</system:String>
+    <system:String x:Key="ui_Dash_TooltipRepeat">Repeat count</system:String>
+    <system:String x:Key="ui_Dash_TooltipInterval">Interval (min)</system:String>
+    <system:String x:Key="ui_Dash_Col_Name">Macro name</system:String>
+    <system:String x:Key="ui_Dash_Col_Target">Target window</system:String>
+    <system:String x:Key="ui_Dash_Col_Mode">Mode</system:String>
+    <system:String x:Key="ui_Dash_Col_Repeat">Repeat / Interval</system:String>
+    <system:String x:Key="ui_Dash_Col_Status">Status</system:String>
+    <system:String x:Key="ui_Dash_Col_Controls">Controls</system:String>
+    <system:String x:Key="ui_Dash_TooltipRun">Run macro</system:String>
+    <system:String x:Key="ui_Dash_TooltipStop">Stop macro</system:String>
+    <system:String x:Key="ui_Dash_TooltipEdit">Edit macro</system:String>
+    <system:String x:Key="ui_Dash_TooltipHistory">Run history</system:String>
+    <system:String x:Key="ui_Dash_TooltipTelegram">Telegram notification</system:String>
+    <system:String x:Key="ui_Dash_TooltipDelete">Delete macro</system:String>
+    <system:String x:Key="ui_Dash_RunBtn">Run</system:String>
+    <system:String x:Key="ui_Dash_StopBtn">Stop</system:String>
+    <system:String x:Key="ui_Dash_EditBtn">Edit</system:String>
+
+    <!-- MainWindow: Macro Editor Actions -->
+    <system:String x:Key="ui_Action_KeyPress">Key Press</system:String>
+    <system:String x:Key="ui_Action_Repeat">Repeat</system:String>
+    <system:String x:Key="ui_Action_SetVariable">Set Variable</system:String>
+    <system:String x:Key="ui_Action_IfVariable">If Variable</system:String>
+    <system:String x:Key="ui_Action_Log">Log</system:String>
+    <system:String x:Key="ui_Action_TryCatch">Try/Catch</system:String>
+
+    <!-- MainWindow: Game Detection -->
+    <system:String x:Key="ui_GameDetected">Game detected — using Driver Level mode</system:String>
+
+    <!-- MainWindow: Share / Import tooltips -->
+    <system:String x:Key="ui_Tooltip_Share">Share script (Copy SMA- code)</system:String>
+    <system:String x:Key="ui_Tooltip_Import">Import from SMA- code</system:String>
+    <system:String x:Key="ui_Tooltip_ViewLog">View real-time activity log</system:String>
+
+    <!-- MainWindow: Profile Manager -->
+    <system:String x:Key="ui_Profile_Title">AdsPower Profile Manager</system:String>
+    <system:String x:Key="ui_Profile_Subtitle">Manage AdsPower profiles for multi-account. Each profile = 1 separate browser.</system:String>
+    <system:String x:Key="ui_Profile_Add">Add</system:String>
+    <system:String x:Key="ui_Profile_Delete">Delete</system:String>
+    <system:String x:Key="ui_Profile_Test">Test connection</system:String>
+    <system:String x:Key="ui_Profile_Col_ProfileId">Profile ID</system:String>
+    <system:String x:Key="ui_Profile_Col_Name">Nickname</system:String>
+    <system:String x:Key="ui_Profile_Col_Proxy">Proxy</system:String>
+    <system:String x:Key="ui_Profile_Col_Status">Status</system:String>
+
+    <!-- MainWindow: Settings - Screenshot -->
+    <system:String x:Key="ui_Settings_Screenshot">Auto screenshot on macro error</system:String>
+    <system:String x:Key="ui_Settings_ScreenshotDesc">Error screenshots saved at: logs/errors/ and sent via Telegram (if enabled)</system:String>
+
+    <!-- MainWindow: Settings - Tabs -->
+    <system:String x:Key="ui_Settings_Tab_DataCSV">Data CSV</system:String>
+    <system:String x:Key="ui_Settings_Tab_Telegram">Telegram</system:String>
+
+    <!-- MainWindow: Help -->
+    <system:String x:Key="ui_About_HelpDesc">Detailed user guide</system:String>
+
+    <!-- MainWindow: Log Console -->
+    <system:String x:Key="ui_Log_CopyBtn">Copy Log</system:String>
+    <system:String x:Key="ui_Log_TooltipCopy">Copy all log to clipboard</system:String>
+
+    <!-- Code-behind messages -->
+    <system:String x:Key="ui_Msg_InitError">Startup error:</system:String>
+    <system:String x:Key="ui_Msg_UiError">UI error:</system:String>
+    <system:String x:Key="ui_Msg_OnStartupError">OnStartup error:</system:String>
+    <system:String x:Key="ui_Msg_DeleteProfileConfirm">Delete profile "{0}"?</system:String>
+    <system:String x:Key="ui_Msg_ConfirmDelete">Confirm delete</system:String>
+    <system:String x:Key="ui_Msg_ShareSuccess">Copied! SMA- code:</system:String>
+    <system:String x:Key="ui_Msg_ShareTitle">Share successful</system:String>
+    <system:String x:Key="ui_Msg_DeleteMacroConfirm">Are you sure you want to delete this macro?</system:String>
+    <system:String x:Key="ui_Msg_WrongPassword">Wrong password!</system:String>
+    <system:String x:Key="ui_Msg_Error">Error</system:String>
+    <system:String x:Key="ui_Msg_GameDetected">Game detected! Install Interception driver now?</system:String>
+    <system:String x:Key="ui_Msg_GameDetectTitle">Game Detected — Install Driver?</system:String>
+    <system:String x:Key="ui_Msg_UpdateAvailable">A new update is available.</system:String>
+    <system:String x:Key="ui_Msg_UpdateTitle">SmartMacroAI — New Update</system:String>
+    <system:String x:Key="ui_Msg_UpToDate">You are using the latest version.</system:String>
+    <system:String x:Key="ui_Msg_UpToDateTitle">SmartMacroAI — Check for Updates</system:String>
+    <system:String x:Key="ui_Msg_UpdateError">Cannot check for updates.</system:String>
+    <system:String x:Key="ui_Msg_UpdateErrorTitle">SmartMacroAI — Connection Error</system:String>
+    <system:String x:Key="ui_Msg_LogEmpty">Log is empty.</system:String>
+    <system:String x:Key="ui_Msg_CopyLogTitle">Copy Log</system:String>
+    <system:String x:Key="ui_Msg_CopyFailed">Cannot copy:</system:String>
+    <system:String x:Key="ui_Msg_Copied">Copied!</system:String>
+    <system:String x:Key="ui_Msg_InvalidHour">Invalid hour (0-23).</system:String>
+    <system:String x:Key="ui_Msg_InvalidMinute">Invalid minute (0-59).</system:String>
+    <system:String x:Key="ui_Msg_InvalidInterval">Interval must be >= 1 minute.</system:String>
+    <system:String x:Key="ui_Msg_ProfileIdEmpty">Profile ID cannot be empty.</system:String>
+    <system:String x:Key="ui_Msg_EnterName">Please enter a name.</system:String>
+    <system:String x:Key="ui_Msg_NoLogForRecord">No log for this record.</system:String>
+    <system:String x:Key="ui_Msg_ScreenshotNotFound">Screenshot does not exist.</system:String>
+    <system:String x:Key="ui_Msg_CannotOpenImage">Cannot open image: {0}</system:String>
+    <system:String x:Key="ui_Msg_DeleteHistoryConfirm">Are you sure you want to delete all run history?</system:String>
+    <system:String x:Key="ui_Msg_DeleteHistoryMacroConfirm">Are you sure you want to delete history for macro '{0}'?</system:String>
+    <system:String x:Key="ui_Msg_FileEmpty">File is empty or has no data rows.</system:String>
+    <system:String x:Key="ui_Msg_FileFormatError">File format error</system:String>
+    <system:String x:Key="ui_Msg_TelegramEnterCredentials">Please enter Bot Token and Chat ID before testing.</system:String>
+    <system:String x:Key="ui_Msg_TelegramSent">Test message sent successfully! Check Telegram.</system:String>
+    <system:String x:Key="ui_Msg_TelegramFailed">Send failed. Check Bot Token, Chat ID and Internet connection.</system:String>
+    <system:String x:Key="ui_Msg_InvalidData">Invalid data:</system:String>
+    <system:String x:Key="ui_Msg_InvalidInput">Invalid Input</system:String>
+    <system:String x:Key="ui_Msg_OcrError">OCR error:</system:String>
+    <system:String x:Key="ui_Msg_OcrInitHint">Check:
+1. Are x86/ x64 folders next to SmartMacroAI.exe?
+2. Is tessdata/{0}.traineddata in the SmartMacroAI folder?</system:String>
+    <system:String x:Key="ui_Msg_SaveLogTitle">Save log file</system:String>
+
+    <!-- ActionEditDialog code-behind -->
+    <system:String x:Key="ui_ActionEdit_EditPrefix">Edit: {0}</system:String>
+    <system:String x:Key="ui_ActionEdit_CoordX">X Coordinate</system:String>
+    <system:String x:Key="ui_ActionEdit_CoordY">Y Coordinate</system:String>
+    <system:String x:Key="ui_ActionEdit_RightClick">Right-click instead of left</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseButton">Mouse button:</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseLeft">Left</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseRight">Right</system:String>
+    <system:String x:Key="ui_ActionEdit_MouseMiddle">Middle</system:String>
+    <system:String x:Key="ui_ActionEdit_TypeContent">Content to type</system:String>
+    <system:String x:Key="ui_ActionEdit_InputMethod">Input method:</system:String>
+    <system:String x:Key="ui_ActionEdit_Clipboard">📋 Paste from clipboard (recommended for Unicode/Vietnamese)</system:String>
+    <system:String x:Key="ui_ActionEdit_WmChar">⌨ Type each character via WM_CHAR</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyDelay">Character delay (ms, WM_CHAR only)</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyDelayHint">If using "Clipboard paste": leave empty or 0. If using "WM_CHAR": enter ms (e.g. 30).</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitFixed">Fixed wait time (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitImage">Wait for template image (path)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitThreshold">Image match threshold</system:String>
+    <system:String x:Key="ui_ActionEdit_Timeout">Maximum timeout (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitOcr">Wait for OCR text match (leave blank to skip)</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrX">OCR region X (screen)</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrY">OCR region Y (screen)</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrW">OCR region width</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrH">OCR region height</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrPoll">OCR poll interval (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitHint">Leave "Wait for template image" empty for fixed wait (ms). When a path is set, macro will scan until the image is found or timeout. When "Wait for OCR text" is filled and region size > 0, macro will poll OCR on that screen area.</system:String>
+    <system:String x:Key="ui_ActionEdit_RandomDelayNote">Note: the script currently uses random delay ({0}–{1} ms). Saving from this dialog will switch to a fixed value above.</system:String>
+    <system:String x:Key="ui_ActionEdit_RepeatCount">Repeat count (0 = infinite)</system:String>
+    <system:String x:Key="ui_ActionEdit_RepeatInterval">Interval between repeats (ms)</system:String>
+    <system:String x:Key="ui_ActionEdit_BreakImage">Break loop image (optional)</system:String>
+    <system:String x:Key="ui_ActionEdit_BreakThreshold">Break image threshold (0.5–1.0)</system:String>
+    <system:String x:Key="ui_ActionEdit_RepeatHint">Repeat count = 0 means infinite loop. Loop steps are edited on the macro canvas, not here.</system:String>
+    <system:String x:Key="ui_ActionEdit_TemplatePath">Template image path</system:String>
+    <system:String x:Key="ui_ActionEdit_MatchThreshold">Match threshold</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickOnFound">Auto-click on image center when found</system:String>
+    <system:String x:Key="ui_ActionEdit_RandomOffset">Random offset (px)</system:String>
+    <system:String x:Key="ui_ActionEdit_RetryUntilFound">🔄 Retry until found</system:String>
+    <system:String x:Key="ui_ActionEdit_RetryHint">RetryUntilFound: macro keeps scanning in a loop until the image is found, then runs Then. If MaxRetryCount > 0 and limit is reached → runs Else.</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrText">Text to match</system:String>
+    <system:String x:Key="ui_ActionEdit_IgnoreCase">Case-insensitive</system:String>
+    <system:String x:Key="ui_ActionEdit_PartialMatch">Match if text appears anywhere (substring)</system:String>
+    <system:String x:Key="ui_ActionEdit_WebType">Web action type</system:String>
+    <system:String x:Key="ui_ActionEdit_Selector">Selector (CSS / xpath=)</system:String>
+    <system:String x:Key="ui_ActionEdit_TypeText">Content to type (Type)</system:String>
+    <system:String x:Key="ui_ActionEdit_WebHint">Navigate: fill URL. Click/Type/Scrape: fill selector. Type: also fill content.</system:String>
+    <system:String x:Key="ui_ActionEdit_CssSelector">CSS selector</system:String>
+    <system:String x:Key="ui_ActionEdit_CssHint">Use CSS (#id, .class) or Playwright text= / xpath=.</system:String>
+    <system:String x:Key="ui_ActionEdit_FillHint">Field is cleared then filled (FillAsync).</system:String>
+    <system:String x:Key="ui_ActionEdit_VarName">Variable name</system:String>
+    <system:String x:Key="ui_ActionEdit_Value">Value</system:String>
+    <system:String x:Key="ui_ActionEdit_Manual">Manual</system:String>
+    <system:String x:Key="ui_ActionEdit_ValueSource">Value source</system:String>
+    <system:String x:Key="ui_ActionEdit_Set">Set</system:String>
+    <system:String x:Key="ui_ActionEdit_Increment">Increment</system:String>
+    <system:String x:Key="ui_ActionEdit_Decrement">Decrement</system:String>
+    <system:String x:Key="ui_ActionEdit_Operation">Operation</system:String>
+    <system:String x:Key="ui_ActionEdit_VarHint">Supports {other_var}, {{name}}, and ${script_var}. Clipboard source ignores the Value field.</system:String>
+    <system:String x:Key="ui_ActionEdit_CompareOp">Comparison operator</system:String>
+    <system:String x:Key="ui_ActionEdit_CompareValue">Comparison value</system:String>
+    <system:String x:Key="ui_ActionEdit_BranchHint">THEN / ELSE branches are edited on the macro canvas.</system:String>
+    <system:String x:Key="ui_ActionEdit_LogContent">Log message</system:String>
+    <system:String x:Key="ui_ActionEdit_LogHint">Supports {var_name} and ${script_var}.</system:String>
+    <system:String x:Key="ui_ActionEdit_TryCatchHint">TRY and CATCH blocks are edited on the macro canvas (not here).</system:String>
+    <system:String x:Key="ui_ActionEdit_ScreenX">Screen region X</system:String>
+    <system:String x:Key="ui_ActionEdit_ScreenY">Screen region Y</system:String>
+    <system:String x:Key="ui_ActionEdit_Width">Width (px)</system:String>
+    <system:String x:Key="ui_ActionEdit_Height">Height (px)</system:String>
+    <system:String x:Key="ui_ActionEdit_OutputVar">Output variable name (no {{ }} needed)</system:String>
+    <system:String x:Key="ui_ActionEdit_PickRegion">Pick screen region (drag)</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiTip">Drag to select region; screen coordinates will fill the fields above.</system:String>
+    <system:String x:Key="ui_ActionEdit_OcrHint">Windows.Media.Ocr — result saved to {{var_name}} and last_ocr.</system:String>
+    <system:String x:Key="ui_ActionEdit_ClearVarName">Variable name (leave blank = clear all)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClearHint">Leave name blank: clears all runtime string variables.</system:String>
+    <system:String x:Key="ui_ActionEdit_TelegramMsg">Message content (supports {{variables}})</system:String>
+    <system:String x:Key="ui_ActionEdit_TelegramHint">Instructions: 1) Open Telegram, search @BotFather → /newbot to get Bot Token. 2) Add bot to group/channel, get Chat ID (e.g. 123456789). Content supports HTML: &lt;b&gt;bold&lt;/b&gt;, &lt;code&gt;code&lt;/code&gt;, &lt;i&gt;italic&lt;/i&gt;. Use {{column_name}} to insert CSV variables.</system:String>
+    <system:String x:Key="ui_ActionEdit_TestNow">Test now</system:String>
+    <system:String x:Key="ui_ActionEdit_PcTestInfo">Current PC: {0} — test message will send "Connection successful!" from this machine.</system:String>
+    <system:String x:Key="ui_ActionEdit_ScriptFile">Script file (.json)</system:String>
+    <system:String x:Key="ui_ActionEdit_MacroName">Macro name (auto-filled)</system:String>
+    <system:String x:Key="ui_ActionEdit_PassVars">Pass CSV / runtime variables to child macro</system:String>
+    <system:String x:Key="ui_ActionEdit_WaitChild">Wait for child macro to finish (unchecked = parallel)</system:String>
+    <system:String x:Key="ui_ActionEdit_CallMacroHint">When "Pass variables" is enabled, {{username}}, {{password}} from the parent CSV will be passed to the child macro. The child macro can use these variables normally.</system:String>
+    <system:String x:Key="ui_ActionEdit_Browse">Browse...</system:String>
+    <system:String x:Key="ui_ActionEdit_PickCoord">📍 Pick coordinate</system:String>
+    <system:String x:Key="ui_ActionEdit_TelegramTestMsg">✅ SmartMacroAI connected successfully!</system:String>
+    <system:String x:Key="ui_ActionEdit_SendingTest">[Telegram] Sending test message...</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiHeader">🔍 Search region (ROI) — optional, leave blank for full window</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiX">X</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiY">Y</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiW">W</system:String>
+    <system:String x:Key="ui_ActionEdit_RoiH">H</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyPressLabel">Key to press</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyPressPlaceholder">Click here and press a key...</system:String>
+    <system:String x:Key="ui_ActionEdit_ClearBtn">✕ Clear</system:String>
+    <system:String x:Key="ui_ActionEdit_HoldMs">Hold duration (ms):</system:String>
+    <system:String x:Key="ui_ActionEdit_KeyPressHint">Press hotkeys or regular keys (F1–F24, Ctrl, Alt, Shift, Enter…). Not for text strings — use "Type Text" instead.</system:String>
+    <system:String x:Key="ui_ActionEdit_KeySendMode">Key send mode:</system:String>
+    <system:String x:Key="ui_ActionEdit_AutoStealth">Auto / Stealth (PostMessage)</system:String>
+    <system:String x:Key="ui_ActionEdit_SendInputTip">Use SendInput for Discord, Chromium browsers, Electron, Unity. Requires foreground window.</system:String>
+    <system:String x:Key="ui_ActionEdit_RawInputTip">SendInput with pure scan codes for DirectX games and Anti-Cheat. Requires foreground window.</system:String>
+    <system:String x:Key="ui_ActionEdit_DriverLevel">🎮 Driver Level — anti-cheat games (requires Interception driver)</system:String>
+    <system:String x:Key="ui_ActionEdit_DriverTip">Keyboard emulation at kernel driver level — bypasses HackShield, NGS, EAC. Requires one-time Interception Driver install with Admin rights.</system:String>
+    <system:String x:Key="ui_ActionEdit_ForegroundNote">↑ Window will be brought to foreground when using SendInput or Raw Input.</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickMode">Click mode:</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickStealth">🔇 Stealth — runs in background, doesn't grab mouse (recommended)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickRaw">⚡ Raw — grabs physical mouse, game receives input</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickRawTip">SendInput grabs the physical mouse — game receives it, requires foreground window.</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickHw">🖥️ Hardware — full HW mode (foreground required)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickDriver">🎮 Driver Level — anti-cheat game receives input (requires Interception driver)</system:String>
+    <system:String x:Key="ui_ActionEdit_ClickDriverTip">Mouse emulation at kernel driver level — bypasses HackShield, NGS, EAC. Requires one-time Interception Driver install with Admin rights.</system:String>
+    <system:String x:Key="ui_ActionEdit_RetrySettings">⚙️ Retry settings (when "Retry until found" is enabled)</system:String>
+    <system:String x:Key="ui_ActionEdit_RetryInterval">Retry interval (ms):</system:String>
+    <system:String x:Key="ui_ActionEdit_MaxRetry">Max retries (0=infinite):</system:String>
+    <system:String x:Key="ui_ActionEdit_ImageFilter">Images</system:String>
+    <system:String x:Key="ui_ActionEdit_AllFilter">All</system:String>
+
+    <!-- MainWindow code-behind -->
+    <system:String x:Key="ui_Log_ProfileAdded">[AdsPower] Added profile: {0} ({1})</system:String>
+    <system:String x:Key="ui_Msg_SelectProfileDelete">Select a profile to delete.</system:String>
+    <system:String x:Key="ui_Log_ProfileDeleted">[AdsPower] Deleted profile: {0}</system:String>
+    <system:String x:Key="ui_Msg_SelectProfileTest">Select a profile to test.</system:String>
+    <system:String x:Key="ui_Msg_ProfileTestOk">Profile {0} — connected successfully!</system:String>
+    <system:String x:Key="ui_Log_ProfileTestFailed">[AdsPower] Test failed: {0}</system:String>
+    <system:String x:Key="ui_Msg_ErrorPrefix">Error: {0}</system:String>
+    <system:String x:Key="ui_Msg_NoStepsToShare">No steps to share.</system:String>
+    <system:String x:Key="ui_Log_ShareCopied">[Share] Copied SMA- code: {0}</system:String>
+    <system:String x:Key="ui_Msg_ShareExportError">Export error: {0}</system:String>
+    <system:String x:Key="ui_Msg_ImportTitle">Import SMA- code</system:String>
+    <system:String x:Key="ui_Msg_ImportPrompt">Paste SMA- code here:</system:String>
+    <system:String x:Key="ui_Msg_InvalidCode">Invalid code — cannot read script.</system:String>
+    <system:String x:Key="ui_Msg_ImportSuccessFmt">Imported successfully! {0} step(s) — "{1}"</system:String>
+    <system:String x:Key="ui_Msg_ImportError">Invalid or corrupted code. Please check.</system:String>
+    <system:String x:Key="ui_Log_EditorOpened">[Editor] Opened: {0}</system:String>
+    <system:String x:Key="ui_Log_TemplateUsed">[Template] Created from template: {0}</system:String>
+    <system:String x:Key="ui_Toast_TelegramSaved">Telegram settings saved!</system:String>
+    <system:String x:Key="ui_Log_TelegramSending">[Telegram] Sending test...</system:String>
+    <system:String x:Key="ui_Action_Run">run</system:String>
+    <system:String x:Key="ui_Msg_LockPasswordRequired">Password required to run this macro.</system:String>
+    <system:String x:Key="ui_Msg_SelectTargetWindow">Select a target window for this macro.</system:String>
+    <system:String x:Key="ui_Msg_WindowNotFound">Window not found: "{0}"</system:String>
+    <system:String x:Key="ui_Log_StealthOn">[{0}] Stealth ON — target window hidden.</system:String>
+    <system:String x:Key="ui_Log_StealthOff">[{0}] Stealth OFF — target window restored.</system:String>
+    <system:String x:Key="ui_Log_StopRequested">[{0}] Stop requested.</system:String>
+    <system:String x:Key="ui_Msg_StopBeforeDelete">Stop the macro before deleting.</system:String>
+    <system:String x:Key="ui_Log_MacroDeleted">Deleted: {0}</system:String>
+    <system:String x:Key="ui_Msg_MacroDeleted">Deleted "{0}".</system:String>
+    <system:String x:Key="ui_Msg_DeleteError">Delete error: {0}</system:String>
+    <system:String x:Key="ui_Log_ShareExportError">[Share] Export error: {0}</system:String>
+    <system:String x:Key="ui_Msg_ImportError2">Import error: {0}</system:String>
+    <system:String x:Key="ui_Msg_ShareCharCount">{0} characters</system:String>
+    <system:String x:Key="ui_Msg_ShareHint">Send this code to others to share your macro script.</system:String>
+
+    <!-- ProfileEditDialog -->
+    <system:String x:Key="ui_ProfileEdit_Title">Add / Edit AdsPower Profile</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProfileIdHint">ID from AdsPower (user_id from profile list)</system:String>
+    <system:String x:Key="ui_ProfileEdit_Nickname">Nickname</system:String>
+    <system:String x:Key="ui_ProfileEdit_NicknameHint">Easy-to-remember name, e.g. Gmail Account 1</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyOptional">Proxy (optional)</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyNote">Enter proxy info if you need to change IP for this profile. Leave empty to use AdsPower's default proxy.</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyHostHint">e.g. proxy.example.com</system:String>
+    <system:String x:Key="ui_ProfileEdit_ProxyPortHint">e.g. 8080</system:String>
+
+    <!-- RunHistoryDialog -->
+    <system:String x:Key="ui_History_TitleFmt">📊 History: {0}</system:String>
+    <system:String x:Key="ui_History_TitleAll">📊 All Run History</system:String>
+    <system:String x:Key="ui_History_ShowAll">Showing all macros</system:String>
+    <system:String x:Key="ui_History_NoLog">(No log)</system:String>
+    <system:String x:Key="ui_History_SelectRecord">(Select a record to view log)</system:String>
+    <system:String x:Key="ui_History_Deleted">(History deleted)</system:String>
+
+    <!-- DriverInstallDialog code-behind -->
+    <system:String x:Key="ui_Drv_InstallSuccessMsg">Installation successful!
+
+A restart is required to complete setup.
+Restart now?</system:String>
+    <system:String x:Key="ui_Drv_InstallComplete">Installation Complete</system:String>
+    <system:String x:Key="ui_Drv_RestartRequired">Please restart your computer before using Driver Level mode.</system:String>
+    <system:String x:Key="ui_Drv_Note">Note</system:String>
+    <system:String x:Key="ui_Drv_CancelledAdmin">Cancelled — Administrator rights required to install driver</system:String>
+    <system:String x:Key="ui_Drv_Win11Hint">
+
+[Windows 11] Unsigned driver may be blocked.
+Run the following command as Admin, then restart:
+bcdedit /set testsigning on</system:String>
+    <system:String x:Key="ui_Drv_InstallFailedMsg">Installation failed.
+
+Error details:
+</system:String>
+    <system:String x:Key="ui_Drv_FallbackMsg">Falling back to Raw mode. Please screenshot this for support.</system:String>
+    <system:String x:Key="ui_Drv_InstallError">Install Error — Driver Level</system:String>
+
+    <!-- MacroAction / MacroEngine localized strings -->
+    <system:String x:Key="ui_Action_ResetVar">Reset variables</system:String>
+    <system:String x:Key="ui_Action_Telegram">Send Telegram</system:String>
+    <system:String x:Key="ui_Engine_TargetWindowGone">[ERROR] Target window no longer exists or has been closed! Please reselect the window.</system:String>
+    <system:String x:Key="ui_Engine_MacroComplete">Macro completed</system:String>
+    <system:String x:Key="ui_Engine_MacroSuccess">'{0}' ran successfully</system:String>
+    <system:String x:Key="ui_Engine_MacroFailed">Macro failed</system:String>
+    <system:String x:Key="ui_Engine_MacroError">'{0}' error: {1}</system:String>
+    <system:String x:Key="ui_Engine_VarNotSet">Variable '{{{0}}}' has no value — replaced with empty string</system:String>
+    <system:String x:Key="ui_Engine_TargetAcquired">Target acquired: "{0}" (HWND=0x{1:X}) — PostMessage (stealth)</system:String>
+    <system:String x:Key="ui_Engine_TargetWindowClosed">Target window was closed during execution.</system:String>
+    <system:String x:Key="ui_Engine_OcrError">OCR error: {0}</system:String>
+    <system:String x:Key="ui_Engine_TelegramFail">[Telegram] Notification failed: {0}</system:String>
+    <system:String x:Key="ui_Engine_ClearAllVars">    → Clearing all string variables {{…}} (VariableStore)</system:String>
+    <system:String x:Key="ui_Engine_ClearVar">    → Clearing variable '{0}'</system:String>
+    <system:String x:Key="ui_Engine_ResetAllVars">    → [ResetVars] All variables cleared</system:String>
+    <system:String x:Key="ui_Engine_TelegramCaptionStep">Step {0}: {1}</system:String>
+    <system:String x:Key="ui_Engine_TelegramCaptionError">Error: {0}</system:String>
+    <system:String x:Key="ui_Engine_OcrRegionOutOfBounds">    ⚠ OCR region out of screen — skipping step ({0})</system:String>
+    <system:String x:Key="ui_Engine_OcrLowConfidence">    ⚠ OCR result may be inaccurate (confidence &lt; 60%)</system:String>
+    <system:String x:Key="ui_Engine_OcrMatchedAfter">    → OCR matched after {0}ms</system:String>
+    <system:String x:Key="ui_Engine_WaitImageFound">    → Image appeared after {0}ms — continuing</system:String>
+    <system:String x:Key="ui_Engine_TypeTextEmpty">  TypeText — skipped (empty text)</system:String>
+    <system:String x:Key="ui_Engine_WmCharLog">    → Stealth WM_CHAR: {0} characters (delay={1}ms)</system:String>
+    <system:String x:Key="ui_Engine_ClipboardPasteElectron">    → Clipboard paste: {0} characters → Electron app (WM_PASTE)</system:String>
+    <system:String x:Key="ui_Engine_ClipboardPaste">    → Clipboard paste: {0} characters</system:String>
+    <system:String x:Key="ui_Engine_WmCharLog2">    → WM_CHAR: {0} characters (delay={1}ms)</system:String>
+    <system:String x:Key="ui_Engine_SendInputUnicode">    → SendInput+Attach/Unicode: {0} characters</system:String>
+    <system:String x:Key="ui_Engine_InterceptionNotInstalled">[WARN] Interception driver not installed — falling back to {0}</system:String>
+    <system:String x:Key="ui_Engine_TelegramSkippedEmpty">  Telegram — SKIPPED (BotToken or ChatId empty)</system:String>
+    <system:String x:Key="ui_Engine_TelegramSkippedEmptyMsg">  Telegram — SKIPPED (message empty)</system:String>
+    <system:String x:Key="ui_Engine_SubMacroTooDeep">  [Sub-macro] ❌ Recursion too deep ({0} levels) — infinite loop detected! Stopping to protect memory.</system:String>
+    <system:String x:Key="ui_Engine_SubMacroNoScript">  [Sub-macro] ❌ No child script selected</system:String>
+    <system:String x:Key="ui_Engine_SubMacroFileNotFound">  [Sub-macro] ❌ File not found: {0}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroSelfCall">  [Sub-macro] ❌ Macro cannot call itself!</system:String>
+    <system:String x:Key="ui_Engine_SubMacroReadFailed">  [Sub-macro] ❌ Cannot read: {0}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroStarted">  [Sub-macro] ▶ Level {0}/{1}: {2}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroComplete">  [Sub-macro] ✅ Completed level {0}: {1}</system:String>
+    <system:String x:Key="ui_Engine_SubMacroLaunched">  [Sub-macro] 🚀 Launched (parallel): {0}</system:String>
+    <system:String x:Key="ui_Engine_ClipboardPasteFlash">    → Clipboard paste: {0} characters → Electron app (flash fallback)</system:String>
+
+    <!-- Canvas: Stop All -->
+    <system:String x:Key="ui_Log_StopAll">Stopped all macros.</system:String>
+
+    <!-- Canvas: Try/Catch block -->
+    <system:String x:Key="ui_Tooltip_EditTryCatch">Edit Try/Catch block configuration</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteTryCatch">Delete Try/Catch block from flow</system:String>
+    <system:String x:Key="ui_Canvas_AddToTry">+ Add to TRY</system:String>
+    <system:String x:Key="ui_Tooltip_AddToTry">Add child action to try branch</system:String>
+    <system:String x:Key="ui_Canvas_AddToCatch">+ Add to CATCH</system:String>
+    <system:String x:Key="ui_Tooltip_AddToCatch">Add child action to catch branch</system:String>
+    <system:String x:Key="ui_Tooltip_TryBranch">Steps that run first; if an error occurs, execution switches to the catch branch</system:String>
+    <system:String x:Key="ui_Tooltip_CatchBranch">Runs when the try branch reports an error (unless cancelled)</system:String>
+    <system:String x:Key="ui_Canvas_TryLabel">TRY</system:String>
+    <system:String x:Key="ui_Canvas_CatchLabel">CATCH</system:String>
+
+    <!-- Canvas: If/Variable block -->
+    <system:String x:Key="ui_Tooltip_EditVarCondition">Edit variable condition</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteVarCondition">Delete variable condition block</system:String>
+    <system:String x:Key="ui_Canvas_AddToThen">+ Add to THEN</system:String>
+    <system:String x:Key="ui_Tooltip_AddToThen">Add action when condition is true</system:String>
+    <system:String x:Key="ui_Canvas_AddToElse">+ Add to ELSE</system:String>
+    <system:String x:Key="ui_Tooltip_AddToElse">Add action when condition is false</system:String>
+    <system:String x:Key="ui_Tooltip_ThenBranch">Branch when variable satisfies condition</system:String>
+    <system:String x:Key="ui_Tooltip_ElseBranch">Branch when condition is not satisfied</system:String>
+    <system:String x:Key="ui_Canvas_ThenLabel">THEN</system:String>
+    <system:String x:Key="ui_Canvas_ElseLabel">ELSE</system:String>
+
+    <!-- Canvas: Repeat block -->
+    <system:String x:Key="ui_Tooltip_EditRepeat">Edit repeat count, interval, break image</system:String>
+    <system:String x:Key="ui_Tooltip_DeleteRepeat">Delete repeat block</system:String>
+    <system:String x:Key="ui_Canvas_AddToLoop">+ Add action to loop</system:String>
+    <system:String x:Key="ui_Tooltip_AddToLoop">Insert new action at end of loop</system:String>
+    <system:String x:Key="ui_Canvas_LoopBody">Loop body</system:String>
+    <system:String x:Key="ui_Tooltip_LoopBody">List of actions that repeat according to configuration above</system:String>
+    <system:String x:Key="ui_Canvas_RepeatLabel">REPEAT {0} (every {1}ms){2}</system:String>
+    <system:String x:Key="ui_Canvas_BreakWhen"> | Exit when: {0}</system:String>
+
+    <!-- Canvas: Action card -->
+    <system:String x:Key="ui_Tooltip_DeleteAction">Delete action</system:String>
+    <system:String x:Key="ui_Tooltip_EditAction">Edit action</system:String>
+    <system:String x:Key="ui_Canvas_ClearAll">Clear all</system:String>
+    <system:String x:Key="ui_Canvas_ClearVar">Clear {{{0}}}</system:String>
+
+    <!-- Canvas: Log messages -->
+    <system:String x:Key="ui_Log_RemovedFromLoop">Removed from loop</system:String>
+    <system:String x:Key="ui_Log_RemovedFromTry">Removed from TRY</system:String>
+    <system:String x:Key="ui_Log_RemovedFromCatch">Removed from CATCH</system:String>
+    <system:String x:Key="ui_Log_RemovedFromThen">Removed from THEN</system:String>
+    <system:String x:Key="ui_Log_RemovedFromElse">Removed from ELSE</system:String>
+    <system:String x:Key="ui_Log_ActionDeleted">Deleted action [{0}]: {1}</system:String>
+    <system:String x:Key="ui_Log_ActionEdited">Edited: {0}</system:String>
+    <system:String x:Key="ui_Log_AddedToLoop">Added {0} to loop</system:String>
+    <system:String x:Key="ui_Log_AddedToTryCatch">Added {0} to {1}</system:String>
+    <system:String x:Key="ui_Log_AddedToThenElse">Added {0} to {1}</system:String>
+
+    <!-- Scheduler -->
+    <system:String x:Key="ui_Log_SchedActivated">[⏰ Scheduler] Macro "{0}" activated at {1}</system:String>
+    <system:String x:Key="ui_Log_SchedAlreadyRunning">[Scheduler] "{0}" is running, skipping.</system:String>
+    <system:String x:Key="ui_Log_SchedWindowNotFound">[Scheduler] Window not found: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedFileReadError">[Scheduler] ❌ Cannot read file: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedWindowNotFound2">[Scheduler] ❌ Window not found: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedCompleted">[Scheduler] ✅ "{0}" completed.</system:String>
+    <system:String x:Key="ui_Log_SchedError">[Scheduler] ❌ Error: {0}</system:String>
+    <system:String x:Key="ui_Log_SchedRegistered">[Scheduler] Registered: {0} ({1})</system:String>
+
+    <!-- Schedule info -->
+    <system:String x:Key="ui_Toast_MacroInfoNotFound">Macro information not found.</system:String>
+    <system:String x:Key="ui_Toast_MacroFileReadError">Cannot read macro file.</system:String>
+    <system:String x:Key="ui_Log_Scheduled">Scheduled</system:String>
+    <system:String x:Key="ui_Log_Unscheduled">Unscheduled</system:String>
+
+    <!-- Game detection -->
+    <system:String x:Key="ui_Game_KnownGame">Known game: {0}</system:String>
+    <system:String x:Key="ui_Game_AntiCheatDll">Anti-cheat DLL detected in process</system:String>
+    <system:String x:Key="ui_Game_FullscreenLikely">Fullscreen/borderless window — may be a game</system:String>
+    <system:String x:Key="ui_Game_AutoDetectFound">[AutoDetect] Game detected: "{0}" ({1})</system:String>
+    <system:String x:Key="ui_Game_DriverInstalled">[AutoDetect] Driver installed — using Driver Level mode</system:String>
+    <system:String x:Key="ui_Game_DriverUnavailable">[AutoDetect] Driver Level unavailable — falling back to Raw mode</system:String>
+    <system:String x:Key="ui_Game_DriverWarning">⚠️ Driver not installed — using Raw mode (game may not detect input)</system:String>
+    <system:String x:Key="ui_Game_DriverReady">[AutoDetect] Driver ready — auto using Driver Level</system:String>
+
+    <!-- Update checker -->
+    <system:String x:Key="ui_Update_CannotReadTag">[Update] Cannot read tag_name from GitHub: "{0}"</system:String>
+    <system:String x:Key="ui_Update_CannotDetermineVersion">[Update] Cannot determine app version for comparison.</system:String>
+    <system:String x:Key="ui_Update_NewVersion">New update available: {0}</system:String>
+    <system:String x:Key="ui_Update_CurrentVersion">Your current version: {0}</system:String>
+    <system:String x:Key="ui_Update_OpenDownload">Do you want to open the download page to update?</system:String>
+    <system:String x:Key="ui_Update_GitHubVersion">[Update] GitHub version: {0} (running: {1})</system:String>
+    <system:String x:Key="ui_Update_UsingLatest">[Update] Using latest version: {0} (GitHub: {1})</system:String>
+    <system:String x:Key="ui_Update_Details">Details: {0}</system:String>
+    <system:String x:Key="ui_Btn_Checking">Checking…</system:String>
+
+    <!-- Telegram tooltip -->
+    <system:String x:Key="ui_Telegram_On">Telegram: ON — Will notify when done</system:String>
+    <system:String x:Key="ui_Telegram_Off">Telegram: OFF — Click to enable</system:String>
+
+    <!-- Wait action descriptions -->
+    <system:String x:Key="ui_Wait_ImageDesc">Wait image ≤{0}ms: {1}</system:String>
+    <system:String x:Key="ui_Wait_OcrDesc">Wait OCR contains "{0}" (screen {1},{2} {3}x{4}, every {5}ms, ≤{6}ms)</system:String>
+
+    <!-- Misc -->
+    <system:String x:Key="ui_Toast_CannotOpenLink">Cannot open link: {0}</system:String>
+
+    <!-- ActionTypePicker -->
+    <system:String x:Key="ui_ActionType_WebNavigate">Web: Navigate</system:String>
+    <system:String x:Key="ui_ActionType_WebClick">Web: Click</system:String>
+    <system:String x:Key="ui_ActionType_WebType">Web: Type Text</system:String>
+    <system:String x:Key="ui_Action_CallMacro">📂 Call Sub-Macro</system:String>
+
+    <!-- MacroLockDialog -->
+    <system:String x:Key="ui_Lock_EmptyPwd">Password cannot be empty.</system:String>
+    <system:String x:Key="ui_Lock_PwdTooShort">Password must be at least 4 characters.</system:String>
+    <system:String x:Key="ui_Lock_PwdMismatch">Passwords do not match.</system:String>
+
+    <!-- PasswordDialog -->
+    <system:String x:Key="ui_Pwd_EnterPwd">Please enter a password.</system:String>
+
+    <!-- MacroLockService -->
+    <system:String x:Key="ui_Lock_Locked">🔒 Locked</system:String>
+    <system:String x:Key="ui_Lock_Unlocked">🔓 Unlocked</system:String>
+
+    <!-- AppNotification -->
+    <system:String x:Key="ui_Time_JustNow">just now</system:String>
+    <system:String x:Key="ui_Time_MinutesAgo">{0} min ago</system:String>
+    <system:String x:Key="ui_Time_HoursAgo">{0} hours ago</system:String>
+
+    <!-- DashboardRowVm -->
+    <system:String x:Key="ui_Schedule_DailyFmt">Daily at {0}</system:String>
+    <system:String x:Key="ui_Schedule_IntervalFmt">Every {0} min</system:String>
+    <system:String x:Key="ui_Schedule_OnceFmt">Once {0}</system:String>
+    <system:String x:Key="ui_Schedule_Scheduled">Scheduled</system:String>
+
+    <!-- MacroRunnerState -->
+    <system:String x:Key="ui_Runner_Started">[{0}] Started...</system:String>
+    <system:String x:Key="ui_Runner_Completed">[{0}] Completed.</system:String>
+    <system:String x:Key="ui_Runner_Stopped">[{0}] Stopped.</system:String>
+    <system:String x:Key="ui_Runner_Error">[{0}] Error: {1}</system:String>
+
+    <!-- MacroScript Telegram templates -->
+    <system:String x:Key="ui_Telegram_SuccessTemplate">✅ &lt;b&gt;{MacroName}&lt;/b&gt; completed!\n📊 Done: &lt;b&gt;{RowsDone}/{RowsTotal}&lt;/b&gt; rows\n⏱ Duration: &lt;code&gt;{Duration}&lt;/code&gt;\n💻 PC: &lt;code&gt;{MachineName}&lt;/code&gt;</system:String>
+    <system:String x:Key="ui_Telegram_ErrorTemplate">❌ &lt;b&gt;{MacroName}&lt;/b&gt; failed!\n📊 Done: &lt;b&gt;{RowsDone}/{RowsTotal}&lt;/b&gt; rows\n🔴 Error: &lt;code&gt;{ErrorMessage}&lt;/code&gt;\n💻 PC: &lt;code&gt;{MachineName}&lt;/code&gt;</system:String>
+
+    <!-- MacroRecorder -->
+    <system:String x:Key="ui_Recorder_ManualInput">Manual Input</system:String>
+    <system:String x:Key="ui_Recorder_ManualInputPrompt">Enter text to insert into macro:</system:String>
+    <system:String x:Key="ui_Recorder_ManualInputLog">  [Manual Input] "{0}"</system:String>
+
+    <!-- ScriptShareService -->
+    <system:String x:Key="ui_Share_EmptyCode">SMA- code is empty. Please paste the full code.</system:String>
+    <system:String x:Key="ui_Share_InvalidPrefix">Invalid code — must start with "{0}". Your code: "{1}..."</system:String>
+    <system:String x:Key="ui_Share_TooShort">Code is too short — may be truncated. Please copy the full code again.</system:String>
+    <system:String x:Key="ui_Share_InvalidBase64">Invalid Base64Url format: {0}</system:String>
+    <system:String x:Key="ui_Share_DecompressShort">Compressed data is corrupted (too short). Please check the code.</system:String>
+    <system:String x:Key="ui_Share_DecompressError">Compressed data is corrupted — the code may be damaged or not in SmartMacroAI format.</system:String>
+    <system:String x:Key="ui_Share_EmptyContent">Decompressed content is empty.</system:String>
+    <system:String x:Key="ui_Share_InvalidJson">Content is not valid JSON: {0}</system:String>
+
+    <!-- AdsPowerService -->
+    <system:String x:Key="ui_AdsPower_Timeout">AdsPower browser profile startup too slow (&gt;15s). Check that AdsPower is running and the profile is valid.</system:String>
+    <system:String x:Key="ui_AdsPower_ConnectionFailed">Cannot connect to AdsPower Local API at {0}. Make sure AdsPower is running and Local API is enabled in Settings.</system:String>
+    <system:String x:Key="ui_AdsPower_ApiError">AdsPower API error (code={0}): {1}</system:String>
+    <system:String x:Key="ui_AdsPower_NoWebSocket">WebSocket CDP endpoint not found in AdsPower response. Response: </system:String>
+    <system:String x:Key="ui_AdsPower_InvalidJson">AdsPower response is not valid JSON: {0}</system:String>
+
+    <!-- TelegramService -->
+    <system:String x:Key="ui_TgLog_EmptyCredentials">[Telegram] BotToken or ChatId empty — skipping send.</system:String>
+    <system:String x:Key="ui_TgLog_EmptyMessage">[Telegram] Message empty — skipping send.</system:String>
+    <system:String x:Key="ui_TgLog_Sent">[Telegram] Sent successfully → {0}</system:String>
+    <system:String x:Key="ui_TgLog_SendError">[Telegram] Send error: {0}</system:String>
+    <system:String x:Key="ui_TgLog_Timeout">[Telegram] Error: connection timed out (10s). Check Internet or Bot Token.</system:String>
+    <system:String x:Key="ui_TgLog_ConnectionError">[Telegram] Connection error: {0}</system:String>
+    <system:String x:Key="ui_TgLog_UnknownError">[Telegram] Unknown error: {0}</system:String>
+    <system:String x:Key="ui_TgLog_EmptyCredentialsPhoto">[Telegram] BotToken or ChatId empty — skipping photo send.</system:String>
+    <system:String x:Key="ui_TgLog_PhotoNotFound">[Telegram] Photo file not found: {0}</system:String>
+    <system:String x:Key="ui_TgLog_PhotoSent">[Telegram] Photo sent successfully → {0}</system:String>
+    <system:String x:Key="ui_TgLog_PhotoSendError">[Telegram] Photo send error: {0}</system:String>
+    <system:String x:Key="ui_TgLog_PhotoError">[Telegram] Photo error: {0}</system:String>
+
+    <!-- InterceptionInstaller -->
+    <system:String x:Key="ui_Install_NoInstallerResource">[ERROR] install-interception.exe not found in embedded resources!</system:String>
+    <system:String x:Key="ui_Install_ExtractInstaller">Extracting installer from embedded: {0}</system:String>
+    <system:String x:Key="ui_Install_Extracted">Extracted: {0}KB at {1}</system:String>
+    <system:String x:Key="ui_Install_ExtractTooSmall">[ERROR] Extracted file too small — resource may be corrupt?</system:String>
+    <system:String x:Key="ui_Install_ExtractDll">Extracting interception.dll from embedded: {0}</system:String>
+    <system:String x:Key="ui_Install_Win11Detected">[INFO] Windows 11 detected (build {0}) — may need Test Signing mode</system:String>
+    <system:String x:Key="ui_Install_TryTestSigning">[INFO] If install fails, try: bcdedit /set testsigning on → restart</system:String>
+    <system:String x:Key="ui_Install_RunningInstaller">Running install-interception.exe /install (UAC prompt)...</system:String>
+    <system:String x:Key="ui_Install_ProcessNull">[ERROR] Process.Start returned null</system:String>
+    <system:String x:Key="ui_Install_ExitCode0">[OK] Installer ExitCode=0 — success</system:String>
+    <system:String x:Key="ui_Install_ExitCode1">[INFO] ExitCode=1 — driver may have been installed previously (already installed)</system:String>
+    <system:String x:Key="ui_Install_Win11Hint">[HINT] Win11 may block unsigned driver. Try: bcdedit /set testsigning on → restart</system:String>
+    <system:String x:Key="ui_Install_CopyDllFromTemp">interception.dll not in app dir — copying from temp</system:String>
+    <system:String x:Key="ui_Install_DllNotInTemp">[WARN] interception.dll not in temp — driver installed but DLL not ready</system:String>
+    <system:String x:Key="ui_Install_Done">Installation complete! Restart required.</system:String>
+    <system:String x:Key="ui_Install_UacCancelled">[INFO] User clicked No on UAC prompt</system:String>
+
+    <!-- MacroTemplateService -->
+    <system:String x:Key="ui_Tmpl_AutoLoginDesc">Auto login to website with username/password from CSV</system:String>
+    <system:String x:Key="ui_Tmpl_OpenBrowser">Open browser</system:String>
+    <system:String x:Key="ui_Tmpl_WaitPageLoad">Wait for page to load</system:String>
+    <system:String x:Key="ui_Tmpl_ClickLogin">Click login</system:String>
+    <system:String x:Key="ui_Tmpl_AutoFillDesc">Fill data from CSV file into web form (loop multiple rows)</system:String>
+    <system:String x:Key="ui_Tmpl_OpenForm">Open form page</system:String>
+    <system:String x:Key="ui_Tmpl_WaitFormLoad">Wait for form to load</system:String>
+    <system:String x:Key="ui_Tmpl_LoopEachCsvRow">Loop each CSV row</system:String>
+    <system:String x:Key="ui_Tmpl_TypeValue1">Type value 1</system:String>
+    <system:String x:Key="ui_Tmpl_TypeValue2">Type value 2</system:String>
+    <system:String x:Key="ui_Tmpl_WaitProcess">Wait for processing</system:String>
+    <system:String x:Key="ui_Tmpl_AutoRepeatDesc">Repeat click action on a cycle</system:String>
+    <system:String x:Key="ui_Tmpl_LoopActions">Loop actions</system:String>
+    <system:String x:Key="ui_Tmpl_ClickPosition">Click position</system:String>
+    <system:String x:Key="ui_Tmpl_Wait">Wait</system:String>
+    <system:String x:Key="ui_Tmpl_ImageDetectDesc">Wait for image to appear then perform action</system:String>
+    <system:String x:Key="ui_Tmpl_CheckImage">Check image</system:String>
+    <system:String x:Key="ui_Tmpl_IfImageFound">If image found</system:String>
+    <system:String x:Key="ui_Tmpl_WaitAgain">Wait again</system:String>
+    <system:String x:Key="ui_Tmpl_HotkeyAutoDesc">Press hotkey combination on a cycle</system:String>
+    <system:String x:Key="ui_Tmpl_LoopHotkey">Loop hotkey</system:String>
+    <system:String x:Key="ui_Tmpl_PressCtrlS">Press Ctrl+S</system:String>
+    <system:String x:Key="ui_Tmpl_BlankDesc">Start with blank macro - add actions manually</system:String>
+    <system:String x:Key="ui_Tmpl_ClickUsername">Click username</system:String>
+    <system:String x:Key="ui_Tmpl_TypeUsername">Type username</system:String>
+    <system:String x:Key="ui_Tmpl_ClickPassword">Click password</system:String>
+    <system:String x:Key="ui_Tmpl_TypePassword">Type password</system:String>
+    <system:String x:Key="ui_Tmpl_ClickField1">Click field 1</system:String>
+    <system:String x:Key="ui_Tmpl_ClickField2">Click field 2</system:String>
+    <system:String x:Key="ui_Tmpl_ClickSubmit">Click Submit</system:String>
+    <system:String x:Key="ui_Tmpl_GameFarmingDesc">Repeat skill/key rotation for game farming and combat</system:String>
+    <system:String x:Key="ui_Tmpl_LoopSkills">Loop skills</system:String>
+    <system:String x:Key="ui_Tmpl_SkillKey">Skill {0}</system:String>
+    <system:String x:Key="ui_Tmpl_NameAutoLogin">🔐 Auto Login</system:String>
+    <system:String x:Key="ui_Tmpl_NameAutoFill">📊 Auto Fill CSV</system:String>
+    <system:String x:Key="ui_Tmpl_NameAutoRepeat">🔄 Auto Repeat Task</system:String>
+    <system:String x:Key="ui_Tmpl_NameImageDetect">🔍 Image Detection Loop</system:String>
+    <system:String x:Key="ui_Tmpl_NameHotkey">⌨️ Hotkey Automation</system:String>
+    <system:String x:Key="ui_Tmpl_NameGameFarm">🎮 Game Farming Loop</system:String>
+    <system:String x:Key="ui_Tmpl_NameBlank">🚀 Blank Macro</system:String>
+
+    <!-- CsvDataService -->
+    <system:String x:Key="ui_Csv_SelectFile">Select CSV or TXT data file</system:String>
+    <system:String x:Key="ui_Csv_EmptyData">Empty data</system:String>
+    <system:String x:Key="ui_Csv_FileEmpty">File is empty.</system:String>
+    <system:String x:Key="ui_Csv_NoValidRows">File has no valid data rows.</system:String>
+    <system:String x:Key="ui_Csv_NoHeader">File is missing headers or headers are empty.</system:String>
+    <system:String x:Key="ui_Csv_EmptyHeader">Column {0} header is empty. Please provide a name for each column.</system:String>
+    <system:String x:Key="ui_Csv_HeaderOnly">File only has headers, no data rows.</system:String>
+    <system:String x:Key="ui_Csv_ColumnMismatch">Row {0} has {1} columns but header has {2}. Column count must match the header.</system:String>
+
+    <!-- BehaviorRandomizer -->
+    <system:String x:Key="ui_AntiLog_SessionBreak">[Anti-Detection] Session break ~{0} min (human model).</system:String>
+    <system:String x:Key="ui_AntiLog_EyeTracking">[Anti-Detection] Light scroll before click (eye-tracking simulation).</system:String>
+
+    <!-- LogWindow -->
+    <system:String x:Key="ui_LogWin_Saved">Log saved to: {0}</system:String>
 </ResourceDictionary>

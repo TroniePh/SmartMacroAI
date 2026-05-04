@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using System.Windows;
 using SmartMacroAI.Core;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI;
 
@@ -13,6 +14,17 @@ public partial class DriverInstallDialog : Window
     public DriverInstallDialog()
     {
         InitializeComponent();
+    }
+
+    private void SafeClose()
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            if (IsLoaded)
+                DialogResult = InstallSucceeded;
+            else
+                Close();
+        });
     }
 
     private async void BtnInstall_Click(object sender, RoutedEventArgs e)
@@ -34,8 +46,8 @@ public partial class DriverInstallDialog : Window
             case InstallResult.NeedRestart:
                 InstallSucceeded = true;
                 var restart = MessageBox.Show(
-                    "Cài đặt thành công!\n\nCần khởi động lại máy để hoàn tất.\nKhởi động lại ngay bây giờ?",
-                    "Cài đặt hoàn tất",
+                    LanguageManager.GetString("ui_Drv_InstallSuccessMsg"),
+                    LanguageManager.GetString("ui_Drv_InstallComplete"),
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Information);
                 if (restart == MessageBoxResult.Yes)
@@ -43,7 +55,7 @@ public partial class DriverInstallDialog : Window
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = "shutdown",
-                        Arguments = "/r /t 5 /c \"SmartMacroAI: Hoàn tất cài driver Interception\"",
+                        Arguments = "/r /t 5 /c \"SmartMacroAI: Interception driver installed\"",
                         UseShellExecute = false
                     });
                     Application.Current.Shutdown();
@@ -51,15 +63,16 @@ public partial class DriverInstallDialog : Window
                 else
                 {
                     MessageBox.Show(
-                        "Vui lòng khởi động lại máy trước khi dùng Driver Level mode.",
-                        "Lưu ý", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        LanguageManager.GetString("ui_Drv_RestartRequired"),
+                        LanguageManager.GetString("ui_Drv_Note"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-                Close();
+                SafeClose();
                 break;
 
             case InstallResult.UserCancelled:
                 BtnInstall.IsEnabled = true;
-                TxtStatus.Text = "Đã hủy — cần quyền Admin để cài driver";
+                TxtStatus.Text = LanguageManager.GetString("ui_Drv_CancelledAdmin");
                 ProgressPanel.Visibility = Visibility.Visible;
                 break;
 
@@ -69,17 +82,14 @@ public partial class DriverInstallDialog : Window
                 bool isWin11 = osVer.Major == 10 && osVer.Build >= 22000;
 
                 string hint = isWin11
-                    ? "\n\n[Windows 11] Có thể do driver unsigned bị block.\n" +
-                      "Thử chạy lệnh sau với quyền Admin rồi restart:\n" +
-                      "bcdedit /set testsigning on"
+                    ? LanguageManager.GetString("ui_Drv_Win11Hint")
                     : "";
 
                 MessageBox.Show(
-                    "Cài đặt thất bại.\n\n" +
-                    "Chi tiết lỗi:\n" +
+                    LanguageManager.GetString("ui_Drv_InstallFailedMsg") +
                     logText + hint + "\n\n" +
-                    "Chuyển sang Raw mode tạm thời. Vui lòng chụp màn hình gửi cho hỗ trợ.",
-                    "Lỗi cài đặt — Driver Level",
+                    LanguageManager.GetString("ui_Drv_FallbackMsg"),
+                    LanguageManager.GetString("ui_Drv_InstallError"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 BtnInstall.IsEnabled = true;
@@ -87,7 +97,7 @@ public partial class DriverInstallDialog : Window
 
             case InstallResult.AlreadyInstalled:
                 InstallSucceeded = true;
-                Close();
+                SafeClose();
                 break;
         }
     }

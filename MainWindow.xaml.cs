@@ -82,7 +82,7 @@ public partial class MainWindow : Window
     // ── Update Checker ──
     /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
     public static string AppVersion => CurrentVersion;
-    private const string CurrentVersion   = "v1.5.4";
+    private const string CurrentVersion   = "v1.5.5";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
     /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
@@ -112,7 +112,7 @@ public partial class MainWindow : Window
         {
             try { File.WriteAllText("crash_init.log", ex.ToString()); } catch { }
             MessageBox.Show(
-                $"Lỗi InitializeComponent:\n\n{ex.Message}\n\nXem crash_init.log",
+                $"{LanguageManager.GetString("ui_Msg_InitError")}\n\n{ex.Message}\n\nXem crash_init.log",
                 "Startup Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -148,7 +148,7 @@ public partial class MainWindow : Window
         {
             try { File.WriteAllText("crash_loaded.log", ex.ToString()); } catch { }
             MessageBox.Show(
-                $"Lỗi Window_Loaded:\n\n{ex.Message}\n\nXem crash_loaded.log",
+                $"{LanguageManager.GetString("ui_Msg_OnStartupError")}\n\n{ex.Message}\n\nXem crash_loaded.log",
                 "Startup Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -396,20 +396,20 @@ public partial class MainWindow : Window
             Status = "",
         });
 
-        AppendLog($"[AdsPower] Đã thêm profile: {entry.ProfileId} ({entry.Name})");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_ProfileAdded"), entry.ProfileId, entry.Name));
     }
 
     private void BtnDeleteProfile_Click(object sender, RoutedEventArgs e)
     {
         if (ProfileGrid.SelectedItem is not ProfileRowVm selected)
         {
-            ShowToast("Chọn một profile để xóa.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_SelectProfileDelete"), isError: true);
             return;
         }
 
         var result = MessageBox.Show(
-            $"Xóa profile \"{selected.Name}\" ({selected.ProfileId})?",
-            "Xác nhận xóa",
+            string.Format(LanguageManager.GetString("ui_Msg_DeleteProfileConfirm"), selected.Name) + $" ({selected.ProfileId})",
+            LanguageManager.GetString("ui_Msg_ConfirmDelete"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
@@ -418,14 +418,14 @@ public partial class MainWindow : Window
         _profileStore.Profiles.RemoveAll(p => p.ProfileId == selected.ProfileId);
         _profileStore.Save();
         _profileRows.Remove(selected);
-        AppendLog($"[AdsPower] Đã xóa profile: {selected.ProfileId}");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_ProfileDeleted"), selected.ProfileId));
     }
 
     private async void BtnTestProfile_Click(object sender, RoutedEventArgs e)
     {
         if (ProfileGrid.SelectedItem is not ProfileRowVm selected)
         {
-            ShowToast("Chọn một profile để test.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_SelectProfileTest"), isError: true);
             return;
         }
 
@@ -439,13 +439,13 @@ public partial class MainWindow : Window
             AppendLog($"[AdsPower] Browser launched — CDP: {Truncate(endpoint, 60)}");
             await service.StopProfileAsync(selected.ProfileId);
             selected.Status = "OK";
-            ShowToast($"Profile {selected.ProfileId} — kết nối thành công!", isError: false);
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_ProfileTestOk"), selected.ProfileId), isError: false);
         }
         catch (Exception ex)
         {
-            selected.Status = "Lỗi";
-            AppendLog($"[AdsPower] Test thất bại: {ex.Message}");
-            ShowToast($"Lỗi: {Truncate(ex.Message, 80)}", isError: true);
+            selected.Status = LanguageManager.GetString("ui_Status_Error");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_ProfileTestFailed"), ex.Message));
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_ErrorPrefix"), Truncate(ex.Message, 80)), isError: true);
         }
     }
 
@@ -460,7 +460,7 @@ public partial class MainWindow : Window
     {
         if (_actions.Count == 0)
         {
-            ShowToast("Không có bước nào để chia sẻ.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_NoStepsToShare"), isError: true);
             return;
         }
 
@@ -477,24 +477,24 @@ public partial class MainWindow : Window
 
             WinForms.Clipboard.SetText(code);
             string preview = code.Length > 60 ? code.Substring(0, 60) + "..." : code;
-            AppendLog($"[Share] Đã copy SMA- code: {preview}");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_ShareCopied"), preview));
 
             MessageBox.Show(
-                $"Đã copy! Mã SMA- của bạn:\n\n{preview}\n\n({code.Length} ký tự)\n\nGửi mã này cho người khác để chia sẻ kịch bản macro.",
-                "Chia sẻ thành công",
+                $"{LanguageManager.GetString("ui_Msg_ShareSuccess")}\n\n{preview}\n\n({string.Format(LanguageManager.GetString("ui_Msg_ShareCharCount"), code.Length)})\n\n{LanguageManager.GetString("ui_Msg_ShareHint")}",
+                LanguageManager.GetString("ui_Msg_ShareTitle"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            AppendLog($"[Share] Lỗi export: {ex.Message}");
-            ShowToast($"Lỗi export: {ex.Message}", isError: true);
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_ShareExportError"), ex.Message));
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_ShareExportError"), ex.Message), isError: true);
         }
     }
 
     private void BtnImportScript_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new InputDialog("Nhập mã SMA-", "Dán mã SMA- vào đây:");
+        var dlg = new InputDialog(LanguageManager.GetString("ui_Msg_ImportTitle"), LanguageManager.GetString("ui_Msg_ImportPrompt"));
         if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.InputText))
             return;
 
@@ -511,7 +511,7 @@ public partial class MainWindow : Window
 
             if (script == null)
             {
-                ShowToast("Mã không hợp lệ — không thể đọc kịch bản.", isError: true);
+                ShowToast(LanguageManager.GetString("ui_Msg_InvalidCode"), isError: true);
                 return;
             }
 
@@ -524,18 +524,18 @@ public partial class MainWindow : Window
             RebuildCanvas();
             SetActiveView("MacroEditor");
 
-            AppendLog($"[Share] Đã nhập kịch bản: {script.Name} ({script.Actions.Count} bước)");
-            ShowToast($"Nhập thành công! {script.Actions.Count} bước — \"{script.Name}\"", isError: false);
+            AppendLog($"[Share] {string.Format(LanguageManager.GetString("ui_Msg_ImportSuccessFmt"), script.Actions.Count, script.Name)}");
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_ImportSuccessFmt"), script.Actions.Count, script.Name), isError: false);
         }
         catch (ScriptShareService.ShareCodeException ex)
         {
-            AppendLog($"[Share] Lỗi import: {ex.Message}");
-            ShowToast("Mã không hợp lệ hoặc bị lỗi. Kiểm tra lại.", isError: true);
+            AppendLog($"[Share] {string.Format(LanguageManager.GetString("ui_Msg_ImportError2"), ex.Message)}");
+            ShowToast(LanguageManager.GetString("ui_Msg_ImportError"), isError: true);
         }
         catch (Exception ex)
         {
-            AppendLog($"[Share] Lỗi import: {ex.Message}");
-            ShowToast("Mã không hợp lệ hoặc bị lỗi. Kiểm tra lại.", isError: true);
+            AppendLog($"[Share] {string.Format(LanguageManager.GetString("ui_Msg_ImportError2"), ex.Message)}");
+            ShowToast(LanguageManager.GetString("ui_Msg_ImportError"), isError: true);
         }
     }
 
@@ -779,7 +779,7 @@ public partial class MainWindow : Window
         foreach (var a in _currentScript.Actions) _actions.Add(a);
         SyncScriptToUi();
         RebuildCanvas();
-        AppendLog($"[Editor] Đã mở: {script.Name}");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_EditorOpened"), script.Name));
     }
 
     private void BtnNewMacro_Click(object sender, RoutedEventArgs e)
@@ -792,21 +792,23 @@ public partial class MainWindow : Window
             {
                 Name = template.Name.Replace("🔐", "").Replace("📊", "").Replace("🔄", "")
                                   .Replace("🔍", "").Replace("⌨️", "").Replace("📋", "")
-                                  .Replace("📸", "").Replace("🚀", "").Trim()
+                                  .Replace("📸", "").Replace("🚀", "").Replace("🎮", "").Trim()
             };
             _currentScript.TargetWindowTitle = template.TargetWindowTitle;
             _actions.Clear();
             foreach (var action in template.Actions)
                 _actions.Add(action);
             SyncScriptToUi();
+            RebuildCanvas();
             SetActiveView("MacroEditor");
-            AppendLog($"[Template] Đã tạo từ mẫu: {template.Name}");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_TemplateUsed"), template.Name));
         }
         else
         {
             _currentScript = new MacroScript();
             _actions.Clear();
             SyncScriptToUi();
+            RebuildCanvas();
             SetActiveView("MacroEditor");
             AppendLog("New macro created.");
         }
@@ -1170,7 +1172,7 @@ public partial class MainWindow : Window
         s.TelegramChatId = TxtTelegramChatId.Text.Trim();
         s.ScreenshotOnError = ChkScreenshotOnError.IsChecked == true;
         s.Save();
-        ShowToast("Đã lưu Telegram!", isError: false);
+        ShowToast(LanguageManager.GetString("ui_Toast_TelegramSaved"), isError: false);
     }
 
     private async void BtnTestTelegramGlobal_Click(object sender, RoutedEventArgs e)
@@ -1180,21 +1182,21 @@ public partial class MainWindow : Window
 
         if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
         {
-            ShowToast("Nhập Bot Token và Chat ID trước.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_TelegramEnterCredentials"), isError: true);
             return;
         }
 
-        AppendLog("[Telegram] Đang gửi test...");
+        AppendLog(LanguageManager.GetString("ui_Log_TelegramSending"));
         bool ok = await TelegramService.SendAsync(
             botToken,
             chatId,
-            "✅ SmartMacroAI kết nối thành công!",
+            LanguageManager.GetString("ui_ActionEdit_TelegramTestMsg"),
             msg => Dispatcher.Invoke(() => AppendLog(msg)));
 
         if (ok)
-            ShowToast("Tin nhắn test đã gửi thành công!", isError: false);
+            ShowToast(LanguageManager.GetString("ui_Msg_TelegramSent"), isError: false);
         else
-            ShowToast("Gửi thất bại — kiểm tra Token, Chat ID và Internet.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_TelegramFailed"), isError: true);
     }
 
     // ═══════════════════════════════════════════════════
@@ -1364,15 +1366,15 @@ public partial class MainWindow : Window
         if (sender is not Button { DataContext: DashboardRowVm row }) return;
         if (row.Runner.IsRunning) return;
 
-        if (!CheckMacroLock(row.Script, "chạy"))
+        if (!CheckMacroLock(row.Script, LanguageManager.GetString("ui_Action_Run")))
         {
-            ShowToast("Bạn cần nhập mật khẩu để chạy macro này.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_LockPasswordRequired"), isError: true);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(row.TargetWindow))
         {
-            ShowToast("Chọn cửa sổ mục tiêu cho macro này.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_SelectTargetWindow"), isError: true);
             return;
         }
 
@@ -1384,7 +1386,7 @@ public partial class MainWindow : Window
             : ResolveHwnd(row.TargetWindow);
         if (targetHwnd == IntPtr.Zero)
         {
-            ShowToast($"Không tìm thấy cửa sổ: \"{row.TargetWindow}\"", isError: true);
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_WindowNotFound"), row.TargetWindow), isError: true);
             return;
         }
         row.TargetHwnd = targetHwnd;
@@ -1394,7 +1396,7 @@ public partial class MainWindow : Window
         {
             string title = Win32Api.GetWindowTitle(targetHwnd);
             StealthHideWindow(targetHwnd, title);
-            AppendLog($"[{row.MacroName}] Stealth ON — ẩn cửa sổ mục tiêu.");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_StealthOn"), row.MacroName));
         }
 
         row.InitRunner(row.Script, targetHwnd, row.StealthMode, row.HardwareMode);
@@ -1410,7 +1412,7 @@ public partial class MainWindow : Window
         if (row.StealthMode && row.TargetHwnd != IntPtr.Zero)
         {
             StealthShowWindow(row.TargetHwnd);
-            AppendLog($"[{row.MacroName}] Stealth OFF — hiện lại cửa sổ mục tiêu.");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_StealthOff"), row.MacroName));
         }
     }
 
@@ -1418,7 +1420,7 @@ public partial class MainWindow : Window
     {
         if (sender is not Button { DataContext: DashboardRowVm row }) return;
         row.Runner.Stop();
-        AppendLog($"[{row.MacroName}] Yêu cầu dừng.");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_StopRequested"), row.MacroName));
     }
 
     private void DashboardRename_Click(object sender, RoutedEventArgs e)
@@ -1434,7 +1436,7 @@ public partial class MainWindow : Window
         foreach (var a in _currentScript.Actions) _actions.Add(a);
         SyncScriptToUi();
         RebuildCanvas();
-        AppendLog($"[Editor] Đã mở: {script.Name}");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_EditorOpened"), script.Name));
     }
 
     private void DashboardDelete_Click(object sender, RoutedEventArgs e)
@@ -1443,13 +1445,13 @@ public partial class MainWindow : Window
 
         if (row.IsRunning)
         {
-            ShowToast("Dừng macro trước khi xóa.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Msg_StopBeforeDelete"), isError: true);
             return;
         }
 
         var result = MessageBox.Show(
-            $"Bạn có chắc muốn xóa kịch bản \"{row.MacroName}\"?\nFile: {Path.GetFileName(row.FilePath)}",
-            "Xác nhận xóa",
+            $"{LanguageManager.GetString("ui_Msg_DeleteMacroConfirm")}\n\"{row.MacroName}\"\nFile: {Path.GetFileName(row.FilePath)}",
+            LanguageManager.GetString("ui_Msg_ConfirmDelete"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -1460,13 +1462,13 @@ public partial class MainWindow : Window
             if (File.Exists(row.FilePath))
                 File.Delete(row.FilePath);
 
-            AppendLog($"Đã xóa: {row.FilePath}");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_MacroDeleted"), row.FilePath));
             LoadDashboard();
-            ShowToast($"Đã xóa \"{row.MacroName}\".", isError: false);
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_MacroDeleted"), row.MacroName), isError: false);
         }
         catch (Exception ex)
         {
-            ShowToast($"Lỗi khi xóa: {ex.Message}", isError: true);
+            ShowToast(string.Format(LanguageManager.GetString("ui_Msg_DeleteError"), ex.Message), isError: true);
         }
     }
 
@@ -1486,19 +1488,20 @@ public partial class MainWindow : Window
     /// Checks if the macro requires a password and prompts the user if needed.
     /// Returns true if the macro can proceed, false if access is denied.
     /// </summary>
-    private bool CheckMacroLock(MacroScript script, string action = "chạy")
+    private bool CheckMacroLock(MacroScript script, string? action = null)
     {
+        action ??= LanguageManager.GetString("ui_Action_Run");
         if (!MacroLockService.IsLocked(script)) return true;
 
-        bool requiresCheck = action == "chạy" ? script.LockRun : script.LockEdit;
+        bool requiresCheck = action == LanguageManager.GetString("ui_Action_Run") ? script.LockRun : script.LockEdit;
         if (!requiresCheck) return true;
 
-        var dialog = new PasswordDialog($"Nhập mật khẩu để {action} macro \"{script.Name}\"") { Owner = this };
+        var dialog = new PasswordDialog(string.Format("{0} {1} \"{2}\"", LanguageManager.GetString("ui_Pwd_Prompt"), action, script.Name)) { Owner = this };
         if (dialog.ShowDialog() != true) return false;
 
         if (!MacroLockService.Verify(dialog.Password, script.PasswordHash!))
         {
-            MessageBox.Show("Mật khẩu không đúng!", "Lỗi",
+            MessageBox.Show(LanguageManager.GetString("ui_Msg_WrongPassword"), LanguageManager.GetString("ui_Msg_Error"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
@@ -1526,7 +1529,7 @@ public partial class MainWindow : Window
         foreach (var row in _dashboardRows)
             row.Runner.Stop();
         _cts?.Cancel();
-        AppendLog($"Đã dừng tất cả macro.");
+        AppendLog(LanguageManager.GetString("ui_Log_StopAll"));
     }
 
     // ═══════════════════════════════════════════════════
@@ -1897,7 +1900,7 @@ public partial class MainWindow : Window
         var headerRow = new DockPanel { LastChildFill = false };
         var titleTb = new TextBlock
         {
-            Text = $"🛡 {tc.DisplayName} — THỬ NGHIỆM ({tc.TryActions.Count}) / XỬ LÝ LỖI ({tc.CatchActions.Count})",
+            Text = $"🛡 {tc.DisplayName} — {LanguageManager.GetString("ui_Canvas_TryLabel")} ({tc.TryActions.Count}) / {LanguageManager.GetString("ui_Canvas_CatchLabel")} ({tc.CatchActions.Count})",
             Foreground = new SolidColorBrush(Color.FromRgb(255, 180, 120)),
             FontWeight = FontWeights.Bold,
             VerticalAlignment = VerticalAlignment.Center,
@@ -1910,7 +1913,7 @@ public partial class MainWindow : Window
         var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var btnEdit = new Button
         {
-            Content = "Sửa",
+            Content = LanguageManager.GetString("ui_Dash_EditBtn"),
             FontSize = 11,
             Foreground = Brushes.White,
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
@@ -1919,7 +1922,7 @@ public partial class MainWindow : Window
             Cursor = Cursors.Hand,
             Margin = new Thickness(0, 0, 6, 0),
             Tag = headerTag,
-            ToolTip = "Chỉnh sửa cấu hình khối Try/Catch",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_EditTryCatch"),
         };
         btnEdit.Click += BtnEditAction_Click;
         var btnDel = new Button
@@ -1932,7 +1935,7 @@ public partial class MainWindow : Window
             Padding = new Thickness(6, 2, 6, 2),
             Cursor = Cursors.Hand,
             Tag = headerTag,
-            ToolTip = "Xoá khối Try/Catch khỏi luồng",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_DeleteTryCatch"),
         };
         btnDel.Click += BtnDeleteAction_Click;
         hdrButtons.Children.Add(btnEdit);
@@ -1956,7 +1959,7 @@ public partial class MainWindow : Window
 
         var btnAddTry = new Button
         {
-            Content = "+ Thêm vào THỬ NGHIỆM (TRY)",
+            Content = LanguageManager.GetString("ui_Canvas_AddToTry"),
             Margin = new Thickness(2, 6, 2, 2),
             Padding = new Thickness(10, 6, 10, 6),
             Background = new SolidColorBrush(Color.FromRgb(35, 80, 45)),
@@ -1964,7 +1967,7 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand,
             Tag = new TryCatchInsertTag(tc, true),
-            ToolTip = "Thêm thao tác con vào nhánh thử nghiệm",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_AddToTry"),
         };
         btnAddTry.Click += BtnAddTryCatchBranch_Click;
         tryPanel.Children.Add(btnAddTry);
@@ -1985,7 +1988,7 @@ public partial class MainWindow : Window
 
         var btnAddCatch = new Button
         {
-            Content = "+ Thêm vào XỬ LÝ LỖI (CATCH)",
+            Content = LanguageManager.GetString("ui_Canvas_AddToCatch"),
             Margin = new Thickness(2, 6, 2, 2),
             Padding = new Thickness(10, 6, 10, 6),
             Background = new SolidColorBrush(Color.FromRgb(90, 35, 35)),
@@ -1993,7 +1996,7 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand,
             Tag = new TryCatchInsertTag(tc, false),
-            ToolTip = "Thêm thao tác con vào nhánh xử lý khi lỗi",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_AddToCatch"),
         };
         btnAddCatch.Click += BtnAddTryCatchBranch_Click;
         catchPanel.Children.Add(btnAddCatch);
@@ -2001,21 +2004,21 @@ public partial class MainWindow : Window
 
         var expTry = new Expander
         {
-            Header = "THỬ NGHIỆM (TRY)",
+            Header = LanguageManager.GetString("ui_Canvas_TryLabel") + " (TRY)",
             IsExpanded = true,
             Foreground = Brushes.LightGreen,
             Margin = new Thickness(0, 4, 0, 0),
             Content = tryBorder,
-            ToolTip = "Các bước chạy trước; nếu lỗi sẽ chuyển sang nhánh xử lý lỗi",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_TryBranch"),
         };
         var expCatch = new Expander
         {
-            Header = "XỬ LÝ LỖI (CATCH)",
+            Header = LanguageManager.GetString("ui_Canvas_CatchLabel") + " (CATCH)",
             IsExpanded = true,
             Foreground = Brushes.IndianRed,
             Margin = new Thickness(0, 4, 0, 0),
             Content = catchBorder,
-            ToolTip = "Chạy khi nhánh thử nghiệm báo lỗi (trừ khi bị hủy)",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_CatchBranch"),
         };
         rootStack.Children.Add(expTry);
         rootStack.Children.Add(expCatch);
@@ -2054,7 +2057,7 @@ public partial class MainWindow : Window
         var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var btnEdit = new Button
         {
-            Content = "Sửa",
+            Content = LanguageManager.GetString("ui_Dash_EditBtn"),
             FontSize = 11,
             Foreground = Brushes.White,
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
@@ -2063,7 +2066,7 @@ public partial class MainWindow : Window
             Cursor = Cursors.Hand,
             Margin = new Thickness(0, 0, 6, 0),
             Tag = headerTag,
-            ToolTip = "Chỉnh sửa điều kiện biến",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_EditVarCondition"),
         };
         btnEdit.Click += BtnEditAction_Click;
         var btnDel = new Button
@@ -2076,7 +2079,7 @@ public partial class MainWindow : Window
             Padding = new Thickness(6, 2, 6, 2),
             Cursor = Cursors.Hand,
             Tag = headerTag,
-            ToolTip = "Xoá khối điều kiện biến",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_DeleteVarCondition"),
         };
         btnDel.Click += BtnDeleteAction_Click;
         hdrButtons.Children.Add(btnEdit);
@@ -2100,7 +2103,7 @@ public partial class MainWindow : Window
 
         var btnThen = new Button
         {
-            Content = "+ Thêm vào THỎA MÃN (THEN)",
+            Content = LanguageManager.GetString("ui_Canvas_AddToThen"),
             Margin = new Thickness(2, 6, 2, 2),
             Padding = new Thickness(10, 6, 10, 6),
             Background = new SolidColorBrush(Color.FromRgb(35, 55, 90)),
@@ -2108,7 +2111,7 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand,
             Tag = new IfVarInsertTag(iv, true),
-            ToolTip = "Thêm thao tác khi điều kiện đúng",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_AddToThen"),
         };
         btnThen.Click += BtnAddIfVariableBranch_Click;
         thenPanel.Children.Add(btnThen);
@@ -2129,7 +2132,7 @@ public partial class MainWindow : Window
 
         var btnElse = new Button
         {
-            Content = "+ Thêm vào TRÁI LẠI (ELSE)",
+            Content = LanguageManager.GetString("ui_Canvas_AddToElse"),
             Margin = new Thickness(2, 6, 2, 2),
             Padding = new Thickness(10, 6, 10, 6),
             Background = new SolidColorBrush(Color.FromRgb(55, 55, 55)),
@@ -2137,7 +2140,7 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand,
             Tag = new IfVarInsertTag(iv, false),
-            ToolTip = "Thêm thao tác khi điều kiện sai",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_AddToElse"),
         };
         btnElse.Click += BtnAddIfVariableBranch_Click;
         elsePanel.Children.Add(btnElse);
@@ -2145,21 +2148,21 @@ public partial class MainWindow : Window
 
         rootStack.Children.Add(new Expander
         {
-            Header = "THỎA MÃN (THEN)",
+            Header = LanguageManager.GetString("ui_Canvas_ThenLabel") + " (THEN)",
             IsExpanded = true,
             Foreground = Brushes.LightSkyBlue,
             Margin = new Thickness(0, 4, 0, 0),
             Content = thenBorder,
-            ToolTip = "Nhánh khi biến thỏa mãn điều kiện",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_ThenBranch"),
         });
         rootStack.Children.Add(new Expander
         {
-            Header = "TRÁI LẠI (ELSE)",
+            Header = LanguageManager.GetString("ui_Canvas_ElseLabel") + " (ELSE)",
             IsExpanded = true,
             Foreground = Brushes.Gray,
             Margin = new Thickness(0, 4, 0, 0),
             Content = elseBorder,
-            ToolTip = "Nhánh khi điều kiện không thỏa mãn",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_ElseBranch"),
         });
 
         card.Child = rootStack;
@@ -2197,7 +2200,7 @@ public partial class MainWindow : Window
         var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var btnEditRepeat = new Button
         {
-            Content = "Sửa",
+            Content = LanguageManager.GetString("ui_Dash_EditBtn"),
             FontSize = 11,
             Foreground = Brushes.White,
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
@@ -2207,7 +2210,7 @@ public partial class MainWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 6, 0),
             Tag = headerTag,
-            ToolTip = "Chỉnh sửa số lần lặp, khoảng cách, ảnh thoát",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_EditRepeat"),
         };
         btnEditRepeat.Click += BtnEditAction_Click;
         var btnDelRepeat = new Button
@@ -2221,7 +2224,7 @@ public partial class MainWindow : Window
             Cursor = Cursors.Hand,
             VerticalAlignment = VerticalAlignment.Center,
             Tag = headerTag,
-            ToolTip = "Xoá khối lặp lại",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_DeleteRepeat"),
         };
         btnDelRepeat.Click += BtnDeleteAction_Click;
         hdrButtons.Children.Add(btnEditRepeat);
@@ -2249,7 +2252,7 @@ public partial class MainWindow : Window
 
         var btnAddChild = new Button
         {
-            Content = "+ Thêm thao tác vào vòng lặp",
+            Content = LanguageManager.GetString("ui_Canvas_AddToLoop"),
             Margin = new Thickness(2, 6, 2, 2),
             Padding = new Thickness(10, 6, 10, 6),
             Background = new SolidColorBrush(Color.FromRgb(40, 70, 45)),
@@ -2257,7 +2260,7 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand,
             Tag = repeat,
-            ToolTip = "Chèn thao tác mới vào cuối vòng lặp",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_AddToLoop"),
         };
         btnAddChild.Click += BtnAddChildAction_Click;
         nestedPanel.Children.Add(btnAddChild);
@@ -2265,12 +2268,12 @@ public partial class MainWindow : Window
         nestedBorder.Child = nestedPanel;
         var exp = new Expander
         {
-            Header = "Thân vòng lặp",
+            Header = LanguageManager.GetString("ui_Canvas_LoopBody"),
             IsExpanded = true,
             Foreground = Brushes.Orange,
             Margin = new Thickness(0, 4, 0, 0),
             Content = nestedBorder,
-            ToolTip = "Danh sách thao tác chạy lặp lại theo cấu hình phía trên",
+            ToolTip = LanguageManager.GetString("ui_Tooltip_LoopBody"),
         };
         rootStack.Children.Add(exp);
 
@@ -2283,8 +2286,8 @@ public partial class MainWindow : Window
         string count = r.RepeatCount == 0 ? "∞" : $"{r.RepeatCount}x";
         string breakStr = string.IsNullOrEmpty(r.BreakIfImagePath)
             ? ""
-            : $" | Thoát khi: {Path.GetFileName(r.BreakIfImagePath)}";
-        return $"🔁 LẶP LẠI {count} (mỗi {r.IntervalMs}ms){breakStr}";
+            : string.Format(LanguageManager.GetString("ui_Canvas_BreakWhen"), Path.GetFileName(r.BreakIfImagePath));
+        return "🔁 " + string.Format(LanguageManager.GetString("ui_Canvas_RepeatLabel"), count, r.IntervalMs, breakStr);
     }
 
     private UIElement BuildActionCard(MacroAction action, int displayIndex, object editDeleteTag)
@@ -2316,7 +2319,7 @@ public partial class MainWindow : Window
             WebClickAction wc => ("Web: Click", "#94E2D5", Truncate(wc.CssSelector, 35)),
             WebTypeAction wt => ("Web: Type", "#94E2D5", $"{Truncate(wt.CssSelector, 20)} ← \"{Truncate(wt.TextToType, 15)}\""),
             OcrRegionAction ocr => ("📋 " + ocr.DisplayName, "#74C7EC", $"ROI {ocr.ScreenX},{ocr.ScreenY} {ocr.ScreenWidth}x{ocr.ScreenHeight} → {{" + ocr.OutputVariableName + "}}"),
-            ClearVariableAction cv => ("🗑 " + cv.DisplayName, "#F5C2E7", string.IsNullOrWhiteSpace(cv.VarName) ? "Xóa tất cả" : "Xóa {{" + cv.VarName + "}}"),
+            ClearVariableAction cv => ("🗑 " + cv.DisplayName, "#F5C2E7", string.IsNullOrWhiteSpace(cv.VarName) ? LanguageManager.GetString("ui_Canvas_ClearAll") : string.Format(LanguageManager.GetString("ui_Canvas_ClearVar"), cv.VarName)),
             LogVariableAction lv => ("📋 " + lv.DisplayName, "#A6E3A1", "Log {{" + lv.VarName + "}}"),
             _ => (action.DisplayName, "#CDD6F4", ""),
         };
@@ -2332,12 +2335,12 @@ public partial class MainWindow : Window
 
         var outer = new DockPanel();
 
-        var btnDel = new Button { Content = "X", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")), BorderThickness = new Thickness(0), Padding = new Thickness(6, 2, 6, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Tag = buttonTag, ToolTip = "Xoá thao tác" };
+        var btnDel = new Button { Content = "X", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")), BorderThickness = new Thickness(0), Padding = new Thickness(6, 2, 6, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Tag = buttonTag, ToolTip = LanguageManager.GetString("ui_Tooltip_DeleteAction") };
         btnDel.Click += BtnDeleteAction_Click;
         DockPanel.SetDock(btnDel, Dock.Right);
         outer.Children.Add(btnDel);
 
-        var btnEdit = new Button { Content = "Sửa", FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")), BorderThickness = new Thickness(0), Padding = new Thickness(8, 2, 8, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0), Tag = buttonTag, ToolTip = "Chỉnh sửa thao tác" };
+        var btnEdit = new Button { Content = LanguageManager.GetString("ui_Dash_EditBtn"), FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")), BorderThickness = new Thickness(0), Padding = new Thickness(8, 2, 8, 2), Cursor = Cursors.Hand, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0), Tag = buttonTag, ToolTip = LanguageManager.GetString("ui_Tooltip_EditAction") };
         btnEdit.Click += BtnEditAction_Click;
         DockPanel.SetDock(btnEdit, Dock.Right);
         outer.Children.Add(btnEdit);
@@ -2362,18 +2365,18 @@ public partial class MainWindow : Window
             case NestedLoopTag nl:
                 if (nl.ChildIndex < 0 || nl.ChildIndex >= nl.Parent.LoopActions.Count)
                     return;
-                RemoveAtAndLog(nl.Parent.LoopActions, nl.ChildIndex, "Đã xoá khỏi vòng lặp");
+                RemoveAtAndLog(nl.Parent.LoopActions, nl.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromLoop"));
                 return;
             case NestedTryCatchChildTag tc:
                 if (tc.IsTry)
                 {
                     if (tc.ChildIndex < 0 || tc.ChildIndex >= tc.Parent.TryActions.Count) return;
-                    RemoveAtAndLog(tc.Parent.TryActions, tc.ChildIndex, "Đã xoá khỏi THỬ NGHIỆM");
+                    RemoveAtAndLog(tc.Parent.TryActions, tc.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromTry"));
                 }
                 else
                 {
                     if (tc.ChildIndex < 0 || tc.ChildIndex >= tc.Parent.CatchActions.Count) return;
-                    RemoveAtAndLog(tc.Parent.CatchActions, tc.ChildIndex, "Đã xoá khỏi XỬ LÝ LỖI");
+                    RemoveAtAndLog(tc.Parent.CatchActions, tc.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromCatch"));
                 }
 
                 return;
@@ -2381,12 +2384,12 @@ public partial class MainWindow : Window
                 if (iv.IsThen)
                 {
                     if (iv.ChildIndex < 0 || iv.ChildIndex >= iv.Parent.ThenActions.Count) return;
-                    RemoveAtAndLog(iv.Parent.ThenActions, iv.ChildIndex, "Đã xoá khỏi THỎA MÃN");
+                    RemoveAtAndLog(iv.Parent.ThenActions, iv.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromThen"));
                 }
                 else
                 {
                     if (iv.ChildIndex < 0 || iv.ChildIndex >= iv.Parent.ElseActions.Count) return;
-                    RemoveAtAndLog(iv.Parent.ElseActions, iv.ChildIndex, "Đã xoá khỏi TRÁI LẠI");
+                    RemoveAtAndLog(iv.Parent.ElseActions, iv.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromElse"));
                 }
 
                 return;
@@ -2394,7 +2397,7 @@ public partial class MainWindow : Window
                 string name = _actions[idx].DisplayName;
                 _actions.RemoveAt(idx);
                 RebuildCanvas();
-                AppendLog($"Đã xoá thao tác [{idx}]: {name}");
+                AppendLog(string.Format(LanguageManager.GetString("ui_Log_ActionDeleted"), idx, name));
                 return;
         }
     }
@@ -2417,7 +2420,7 @@ public partial class MainWindow : Window
         if (dlg.ShowDialog() == true)
         {
             RebuildCanvas();
-            AppendLog($"Đã sửa: {action.DisplayName}");
+            AppendLog(string.Format(LanguageManager.GetString("ui_Log_ActionEdited"), action.DisplayName));
         }
     }
 
@@ -2452,7 +2455,7 @@ public partial class MainWindow : Window
 
         parentRepeat.LoopActions.Add(newAction);
         RebuildCanvas();
-        AppendLog($"Đã thêm {newAction.DisplayName} vào vòng lặp");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToLoop"), newAction.DisplayName));
     }
 
     private void BtnAddTryCatchBranch_Click(object sender, RoutedEventArgs e)
@@ -2479,7 +2482,7 @@ public partial class MainWindow : Window
             marker.Parent.CatchActions.Add(newAction);
 
         RebuildCanvas();
-        AppendLog($"Đã thêm {newAction.DisplayName} vào {(marker.IsTry ? "THỬ NGHIỆM" : "XỬ LÝ LỖI")}");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToTryCatch"), newAction.DisplayName, marker.IsTry ? LanguageManager.GetString("ui_Canvas_TryLabel") : LanguageManager.GetString("ui_Canvas_CatchLabel")));
     }
 
     private void BtnAddIfVariableBranch_Click(object sender, RoutedEventArgs e)
@@ -2506,7 +2509,7 @@ public partial class MainWindow : Window
             marker.Parent.ElseActions.Add(newAction);
 
         RebuildCanvas();
-        AppendLog($"Đã thêm {newAction.DisplayName} vào {(marker.IsThen ? "THỎA MÃN" : "TRÁI LẠI")}");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, marker.IsThen ? LanguageManager.GetString("ui_Canvas_ThenLabel") : LanguageManager.GetString("ui_Canvas_ElseLabel")));
     }
 
     private void BtnClearCanvas_Click(object sender, RoutedEventArgs e) { _actions.Clear(); RebuildCanvas(); AppendLog("Canvas cleared."); }
@@ -2552,21 +2555,21 @@ public partial class MainWindow : Window
                 {
                     await Dispatcher.InvokeAsync(async () =>
                     {
-                        AppendLog($"[⏰ Scheduler] Macro \"{s.Name}\" kích hoạt lúc {DateTime.Now:HH:mm:ss}");
+                        AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedActivated"), s.Name, DateTime.Now.ToString("HH:mm:ss")));
 
                         var row = _dashboardRows.FirstOrDefault(r => r.MacroName == s.Name);
                         if (row != null)
                         {
                             if (row.Runner.IsRunning)
                             {
-                                AppendLog($"[Scheduler] \"{s.Name}\" đang chạy, bỏ qua.");
+                                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedAlreadyRunning"), s.Name));
                                 return;
                             }
 
                             IntPtr hwnd = ResolveHwnd(row.TargetWindow);
                             if (hwnd == IntPtr.Zero)
                             {
-                                AppendLog($"[Scheduler] Không tìm thấy cửa sổ: {row.TargetWindow}");
+                                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedWindowNotFound"), row.TargetWindow));
                                 return;
                             }
 
@@ -2578,13 +2581,13 @@ public partial class MainWindow : Window
                             var runScript = ScriptManager.Load(file);
                             if (runScript == null)
                             {
-                                AppendLog($"[Scheduler] ❌ Không đọc được file: {file}");
+                                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedFileReadError"), file));
                                 return;
                             }
                             IntPtr hwnd = ResolveHwnd(runScript.TargetWindowTitle);
                             if (hwnd == IntPtr.Zero)
                             {
-                                AppendLog($"[Scheduler] ❌ Không tìm thấy cửa sổ: {runScript.TargetWindowTitle}");
+                                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedWindowNotFound2"), runScript.TargetWindowTitle));
                                 return;
                             }
                             var engine = new MacroEngine { HardwareMode = false };
@@ -2592,22 +2595,22 @@ public partial class MainWindow : Window
                             try
                             {
                                 await engine.ExecuteScriptAsync(runScript, hwnd, CancellationToken.None);
-                                AppendLog($"[Scheduler] ✅ \"{s.Name}\" hoàn tất.");
+                                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedCompleted"), s.Name));
                             }
                             catch (Exception ex)
                             {
-                                AppendLog($"[Scheduler] ❌ Lỗi: {ex.Message}");
+                                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedError"), ex.Message));
                             }
                         }
                     });
                 });
-                AppendLog($"[Scheduler] Đã đăng ký: {script.Name} ({script.Schedule.Mode})");
+                AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedRegistered"), script.Name, script.Schedule.Mode));
             }
         }
 
         SchedulerService.MacroTriggered += name =>
         {
-            Dispatcher.Invoke(() => AppendLog($"[⏰ Scheduler] Macro \"{name}\" kích hoạt lúc {DateTime.Now:HH:mm:ss}"));
+            Dispatcher.Invoke(() => AppendLog(string.Format(LanguageManager.GetString("ui_Log_SchedActivated"), name, DateTime.Now.ToString("HH:mm:ss"))));
         };
 
         RefreshDashboardStats();
@@ -2632,14 +2635,14 @@ public partial class MainWindow : Window
 
         if (string.IsNullOrEmpty(filePath))
         {
-            ShowToast("Không tìm thấy thông tin macro.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Toast_MacroInfoNotFound"), isError: true);
             return;
         }
 
         var script = ScriptManager.Load(filePath);
         if (script == null)
         {
-            ShowToast("Không đọc được file macro.", isError: true);
+            ShowToast(LanguageManager.GetString("ui_Toast_MacroFileReadError"), isError: true);
             return;
         }
 
@@ -2666,7 +2669,7 @@ public partial class MainWindow : Window
 
         RefreshDashboardStats();
 
-        string summary = script.Schedule.Enabled ? "Đã lên lịch" : "Đã tắt lịch";
+        string summary = script.Schedule.Enabled ? LanguageManager.GetString("ui_Log_Scheduled") : LanguageManager.GetString("ui_Log_Unscheduled");
         AppendLog($"[Scheduler] {script.Name}: {summary}");
     }
 
@@ -2674,8 +2677,8 @@ public partial class MainWindow : Window
     {
         int scheduled = _dashboardRows.Count(r => r.HasSchedule);
         int running = _dashboardRows.Count(r => r.IsRunning);
-        TxtScheduledCount.Text = $"{scheduled} macro đã lên lịch";
-        TxtRunningCount.Text = $"{running} macro đang chạy";
+        TxtScheduledCount.Text = string.Format(LanguageManager.GetString("ui_Dash_ScheduledFmt"), scheduled);
+        TxtRunningCount.Text = string.Format(LanguageManager.GetString("ui_Dash_RunningFmt"), running);
     }
 
     private async void BtnLoadMacro_Click(object sender, RoutedEventArgs e)
@@ -2856,9 +2859,9 @@ public partial class MainWindow : Window
             {
                 TxtGameDetectedSub.Text = detectResult switch
                 {
-                    GameDetectResult.KnownGame        => $"Game đã biết: {Win32Api.GetWindowTitle(hwnd)}",
-                    GameDetectResult.DetectedAntiCheat => "Phát hiện anti-cheat DLL trong process",
-                    GameDetectResult.LikelyGame        => "Cửa sổ fullscreen/borderless — có thể là game",
+                    GameDetectResult.KnownGame        => string.Format(LanguageManager.GetString("ui_Game_KnownGame"), Win32Api.GetWindowTitle(hwnd)),
+                    GameDetectResult.DetectedAntiCheat => LanguageManager.GetString("ui_Game_AntiCheatDll"),
+                    GameDetectResult.LikelyGame        => LanguageManager.GetString("ui_Game_FullscreenLikely"),
                     _ => ""
                 };
             }
@@ -2866,7 +2869,7 @@ public partial class MainWindow : Window
 
         if (!isGame) return;
 
-        AppendLog($"[AutoDetect] Phát hiện game: \"{Win32Api.GetWindowTitle(hwnd)}\" ({detectResult})");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Game_AutoDetectFound"), Win32Api.GetWindowTitle(hwnd), detectResult));
 
         if (!InterceptionInstaller.IsReady())
         {
@@ -2875,10 +2878,8 @@ public partial class MainWindow : Window
             await Dispatcher.InvokeAsync(() =>
             {
                 var result = MessageBox.Show(
-                    $"Đã phát hiện game:\n{Win32Api.GetWindowTitle(hwnd)}\n\n" +
-                    "Để macro hoạt động với game này, cần cài Driver Level.\n" +
-                    "Cài đặt ngay? (Cần restart máy sau khi cài)",
-                    "Phát hiện Game — Cài Driver?",
+                    $"{LanguageManager.GetString("ui_Msg_GameDetected")}\n{Win32Api.GetWindowTitle(hwnd)}",
+                    LanguageManager.GetString("ui_Msg_GameDetectTitle"),
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
                 yesNo = result == MessageBoxResult.Yes;
@@ -2897,22 +2898,22 @@ public partial class MainWindow : Window
             if (InterceptionInstaller.IsReady())
             {
                 ApplyDefaultModeToCurrentScript(Models.ClickMode.DriverLevel, Models.KeyInputMode.DriverLevel);
-                AppendLog("[AutoDetect] Driver cài xong — dùng Driver Level mode");
+                AppendLog(LanguageManager.GetString("ui_Game_DriverInstalled"));
             }
             else
             {
                 ApplyDefaultModeToCurrentScript(Models.ClickMode.Raw, Models.KeyInputMode.SendInput);
-                AppendLog("[AutoDetect] Driver Level không khả dụng — fallback Raw mode");
+                AppendLog(LanguageManager.GetString("ui_Game_DriverUnavailable"));
                 await Dispatcher.InvokeAsync(() =>
                 {
-                    TxtGameDetectedSub.Text = "⚠️ Driver chưa cài được — đang dùng Raw mode (game có thể không nhận)";
+                    TxtGameDetectedSub.Text = LanguageManager.GetString("ui_Game_DriverWarning");
                 });
             }
         }
         else
         {
             ApplyDefaultModeToCurrentScript(Models.ClickMode.DriverLevel, Models.KeyInputMode.DriverLevel);
-            AppendLog("[AutoDetect] Driver đã sẵn sàng — tự động dùng Driver Level");
+            AppendLog(LanguageManager.GetString("ui_Game_DriverReady"));
         }
     }
 
@@ -3059,9 +3060,9 @@ public partial class MainWindow : Window
         try
         {
             // Check password lock before running
-            if (!CheckMacroLock(_currentScript, "chạy"))
+            if (!CheckMacroLock(_currentScript, LanguageManager.GetString("ui_Action_Run")))
             {
-                ShowToast("Bạn cần nhập mật khẩu để chạy macro này.", isError: true);
+                ShowToast(LanguageManager.GetString("ui_Msg_LockPasswordRequired"), isError: true);
                 Interlocked.Decrement(ref _macroStartCount);
                 return;
             }
@@ -3412,14 +3413,14 @@ public partial class MainWindow : Window
             if (!TryParseReleaseTag(latestTag, out Version remoteVersion))
             {
                 await Dispatcher.InvokeAsync(() =>
-                    AppendLog($"[Update] Không đọc được tag_name từ GitHub: \"{latestTag}\""));
+                    AppendLog(string.Format(LanguageManager.GetString("ui_Update_CannotReadTag"), latestTag)));
                 return;
             }
 
             if (!TryGetLocalReleaseVersion(out Version localVersion))
             {
                 await Dispatcher.InvokeAsync(() =>
-                    AppendLog("[Update] Không xác định được phiên bản app để so sánh."));
+                    AppendLog(LanguageManager.GetString("ui_Update_CannotDetermineVersion")));
                 return;
             }
 
@@ -3430,13 +3431,13 @@ public partial class MainWindow : Window
             {
                 if (isNewer)
                 {
-                    AppendLog($"Đã có bản cập nhật mới: {latestTag.Trim()}");
+                    AppendLog(string.Format(LanguageManager.GetString("ui_Update_NewVersion"), latestTag.Trim()));
 
                     var result = MessageBox.Show(
-                        $"Đã có bản cập nhật mới: {latestTag.Trim()}\n\n" +
-                        $"Phiên bản bạn đang dùng: {localDisplay}\n\n" +
-                        "Bạn có muốn mở trang tải về để cập nhật không?",
-                        "SmartMacroAI — Cập nhật mới",
+                        $"{LanguageManager.GetString("ui_Msg_UpdateAvailable")}\n{latestTag.Trim()}\n\n" +
+                        $"{string.Format(LanguageManager.GetString("ui_Update_CurrentVersion"), localDisplay)}\n\n" +
+                        LanguageManager.GetString("ui_Update_OpenDownload"),
+                        LanguageManager.GetString("ui_Msg_UpdateTitle"),
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Information);
 
@@ -3446,15 +3447,15 @@ public partial class MainWindow : Window
                 else if (!silent)
                 {
                     MessageBox.Show(
-                        $"✅ Bạn đang dùng phiên bản mới nhất ({localDisplay}).",
-                        "SmartMacroAI — Kiểm tra cập nhật",
+                        $"{LanguageManager.GetString("ui_Msg_UpToDate")} ({localDisplay}).",
+                        LanguageManager.GetString("ui_Msg_UpToDateTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
 
                 AppendLog(isNewer
-                    ? $"[Update] Phiên bản GitHub: {latestTag.Trim()} (đang chạy: {localDisplay})"
-                    : $"[Update] Đang dùng phiên bản mới nhất: {localDisplay} (GitHub: {latestTag.Trim()})");
+                    ? string.Format(LanguageManager.GetString("ui_Update_GitHubVersion"), latestTag.Trim(), localDisplay)
+                    : string.Format(LanguageManager.GetString("ui_Update_UsingLatest"), localDisplay, latestTag.Trim()));
             });
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
@@ -3463,9 +3464,9 @@ public partial class MainWindow : Window
             {
                 await Dispatcher.InvokeAsync(() =>
                     MessageBox.Show(
-                        "Không thể kiểm tra cập nhật. Vui lòng kiểm tra kết nối mạng.\n\n" +
-                        $"Chi tiết: {ex.Message}",
-                        "SmartMacroAI — Lỗi kết nối",
+                        $"{LanguageManager.GetString("ui_Msg_UpdateError")}\n\n" +
+                        string.Format(LanguageManager.GetString("ui_Update_Details"), ex.Message),
+                        LanguageManager.GetString("ui_Msg_UpdateErrorTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning));
             }
@@ -3529,7 +3530,7 @@ public partial class MainWindow : Window
         if (sender is Button btn)
         {
             btn.IsEnabled = false;
-            btn.Content   = "Đang kiểm tra…";
+            btn.Content   = LanguageManager.GetString("ui_Btn_Checking");
         }
 
         await CheckForUpdatesAsync(silent: false);
@@ -3554,7 +3555,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            ShowToast($"Không thể mở liên kết: {ex.Message}", isError: true);
+            ShowToast(string.Format(LanguageManager.GetString("ui_Toast_CannotOpenLink"), ex.Message), isError: true);
         }
     }
 
@@ -3588,7 +3589,7 @@ public partial class MainWindow : Window
 
             if (string.IsNullOrWhiteSpace(logText))
             {
-                MessageBox.Show("Log trống.", "Copy Log", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(LanguageManager.GetString("ui_Msg_LogEmpty"), LanguageManager.GetString("ui_Msg_CopyLogTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -3596,7 +3597,7 @@ public partial class MainWindow : Window
 
             // Brief visual feedback
             string savedContent = BtnCopyLog.Content?.ToString() ?? "";
-            BtnCopyLog.Content = "✅ Đã copy!";
+            BtnCopyLog.Content = LanguageManager.GetString("ui_Msg_Copied");
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
             timer.Tick += (s, _) =>
             {
@@ -3607,7 +3608,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Không thể copy: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"{LanguageManager.GetString("ui_Msg_CopyFailed")} {ex.Message}", LanguageManager.GetString("ui_Msg_Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -3663,14 +3664,16 @@ public partial class MainWindow : Window
     private static string FormatWaitCardDetail(WaitAction w)
     {
         if (!string.IsNullOrWhiteSpace(w.WaitForImage))
-            return $"Chờ ảnh hiện ≤{w.WaitTimeoutMs}ms: {Path.GetFileName(w.WaitForImage)}";
+            return string.Format(LanguageManager.GetString("ui_Wait_ImageDesc"), w.WaitTimeoutMs, Path.GetFileName(w.WaitForImage));
         if (!string.IsNullOrWhiteSpace(w.WaitForOcrContains)
             && w.OcrRegionWidth > 0
             && w.OcrRegionHeight > 0)
         {
-            return $"Chờ OCR chứa \"{Truncate(w.WaitForOcrContains, 22)}\" " +
-                   $"(màn hình {w.OcrRegionX},{w.OcrRegionY} {w.OcrRegionWidth}x{w.OcrRegionHeight}, " +
-                   $"mỗi {w.OcrPollIntervalMs}ms, ≤{w.WaitTimeoutMs}ms)";
+            return string.Format(LanguageManager.GetString("ui_Wait_OcrDesc"),
+                   Truncate(w.WaitForOcrContains, 22),
+                   w.OcrRegionX, w.OcrRegionY,
+                   w.OcrRegionWidth, w.OcrRegionHeight,
+                   w.OcrPollIntervalMs, w.WaitTimeoutMs);
         }
 
         if (w.DelayMin != w.DelayMax)
@@ -3693,8 +3696,8 @@ public class BoolToTelegramTooltipConverter : System.Windows.Data.IValueConverte
     public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
     {
         return value is true
-            ? "Telegram: BẬT — Sẽ thông báo khi chạy xong"
-            : "Telegram: TẮT — Nhấn để bật";
+            ? SmartMacroAI.Localization.LanguageManager.GetString("ui_Telegram_On")
+            : SmartMacroAI.Localization.LanguageManager.GetString("ui_Telegram_Off");
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)

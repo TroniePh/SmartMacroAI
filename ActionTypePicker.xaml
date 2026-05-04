@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.ActionTypePicker"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Thêm thao tác" Height="420" Width="360"
+        Title="{DynamicResource ui_ActionType_Title}" Height="420" Width="360"
         WindowStartupLocation="CenterOwner"
         Background="#1E1E2E">
     <Grid Margin="16">
@@ -11,15 +11,15 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="Chọn loại thao tác:" Foreground="#CDD6F4" FontSize="13" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="0" Text="{DynamicResource ui_ActionType_Prompt}" Foreground="#CDD6F4" FontSize="13" Margin="0,0,0,8"/>
         <ListBox x:Name="LstTypes" Grid.Row="1"
                  Background="#313244" Foreground="#CDD6F4"
                  BorderBrush="#45475A" BorderThickness="1"
                  Margin="0,0,0,12"/>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnOk" Content="Chọn" Width="88" Margin="0,0,8,0" Padding="10,6"
+            <Button x:Name="BtnOk" Content="{DynamicResource ui_SelectBtn}" Width="88" Margin="0,0,8,0" Padding="10,6"
                     IsDefault="True" Click="BtnOk_Click" Background="#89B4FA" Foreground="#1E1E2E" BorderThickness="0" Cursor="Hand"/>
-            <Button Content="Hủy" Width="88" Padding="10,6" IsCancel="True"
+            <Button Content="{DynamicResource ui_CancelBtn}" Width="88" Padding="10,6" IsCancel="True"
                     Background="#45475A" Foreground="#CDD6F4" BorderThickness="0" Cursor="Hand"/>
         </StackPanel>
     </Grid>

@@ -2,6 +2,8 @@
 
 using System.Drawing;
 using System.Text.Json.Serialization;
+using SmartMacroAI.Core;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Models;
 
@@ -73,9 +75,9 @@ public class ClickAction : MacroAction
     public int Y { get; set; }
 
     /// <summary>
-    /// When true, sends WM_RBUTTONDOWN/UP instead of WM_LBUTTONDOWN/UP.
+    /// Which mouse button to use: Left, Right, or Middle.
     /// </summary>
-    public bool IsRightClick { get; set; }
+    public MouseButton Button { get; set; }
 
     /// <summary>
     /// Monitor index (0-based) where this click was captured.
@@ -129,7 +131,7 @@ public class WaitAction : MacroAction
 
     public WaitAction()
     {
-        DisplayName = "Chờ";
+        DisplayName = LanguageManager.GetString("ui_Action_Wait");
     }
 }
 
@@ -151,7 +153,7 @@ public class RepeatAction : MacroAction
 
     public RepeatAction()
     {
-        DisplayName = "Lặp lại";
+        DisplayName = LanguageManager.GetString("ui_Action_Repeat");
     }
 }
 
@@ -171,7 +173,7 @@ public class SetVariableAction : MacroAction
 
     public SetVariableAction()
     {
-        DisplayName = "Gán biến";
+        DisplayName = LanguageManager.GetString("ui_Action_SetVariable");
     }
 }
 
@@ -191,7 +193,7 @@ public class IfVariableAction : MacroAction
 
     public IfVariableAction()
     {
-        DisplayName = "Nếu biến thỏa mãn";
+        DisplayName = LanguageManager.GetString("ui_Action_IfVariable");
     }
 }
 
@@ -202,7 +204,7 @@ public class LogAction : MacroAction
 
     public LogAction()
     {
-        DisplayName = "Ghi nhật ký";
+        DisplayName = LanguageManager.GetString("ui_Action_Log");
     }
 }
 
@@ -215,7 +217,7 @@ public class TryCatchAction : MacroAction
 
     public TryCatchAction()
     {
-        DisplayName = "Bẫy lỗi (Try/Catch)";
+        DisplayName = LanguageManager.GetString("ui_Action_TryCatch");
     }
 }
 
@@ -381,7 +383,7 @@ public class OcrRegionAction : MacroAction
 
     public OcrRegionAction()
     {
-        DisplayName = "Đọc văn bản (OCR)";
+        DisplayName = LanguageManager.GetString("ui_Action_OcrRegion");
     }
 }
 
@@ -393,7 +395,7 @@ public class ClearVariableAction : MacroAction
 
     public ClearVariableAction()
     {
-        DisplayName = "Xóa biến";
+        DisplayName = LanguageManager.GetString("ui_Action_ClearVar");
     }
 }
 
@@ -402,7 +404,7 @@ public class ResetVariablesAction : MacroAction
 {
     public ResetVariablesAction()
     {
-        DisplayName = "Reset biến";
+        DisplayName = LanguageManager.GetString("ui_Action_ResetVar");
     }
 }
 
@@ -413,7 +415,7 @@ public class LogVariableAction : MacroAction
 
     public LogVariableAction()
     {
-        DisplayName = "In biến vào log";
+        DisplayName = LanguageManager.GetString("ui_Action_LogVar");
     }
 }
 
@@ -593,7 +595,7 @@ public class KeyPressAction : MacroAction
 
     public KeyPressAction()
     {
-        DisplayName = "Nhấn phím";
+        DisplayName = LanguageManager.GetString("ui_Action_KeyPress");
     }
 }
 
@@ -634,6 +636,6 @@ public class TelegramAction : MacroAction
 
     public TelegramAction()
     {
-        DisplayName = "Gửi Telegram";
+        DisplayName = LanguageManager.GetString("ui_Action_Telegram");
     }
 }

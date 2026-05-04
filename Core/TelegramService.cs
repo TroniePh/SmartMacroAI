@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Core;
 
@@ -43,13 +44,13 @@ public static class TelegramService
     {
         if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
         {
-            onLog?.Invoke("[Telegram] BotToken hoặc ChatId trống — bỏ qua gửi.");
+            onLog?.Invoke(LanguageManager.GetString("ui_TgLog_EmptyCredentials"));
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(message))
         {
-            onLog?.Invoke("[Telegram] Message trống — bỏ qua gửi.");
+            onLog?.Invoke(LanguageManager.GetString("ui_TgLog_EmptyMessage"));
             return false;
         }
 
@@ -80,27 +81,27 @@ public static class TelegramService
 
             if (response.IsSuccessStatusCode)
             {
-                onLog?.Invoke($"[Telegram] Đã gửi thành công → {chatId}");
+                onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_Sent"), chatId));
                 return true;
             }
 
             string error = ExtractTelegramError(responseBody) ?? $"HTTP {response.StatusCode}";
-            onLog?.Invoke($"[Telegram] Lỗi gửi: {error}");
+            onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_SendError"), error));
             return false;
         }
         catch (TaskCanceledException) when (!CancellationToken.None.IsCancellationRequested)
         {
-            onLog?.Invoke("[Telegram] Lỗi: hết thời gian kết nối (10s). Kiểm tra Internet hoặc Bot Token.");
+            onLog?.Invoke(LanguageManager.GetString("ui_TgLog_Timeout"));
             return false;
         }
         catch (HttpRequestException ex)
         {
-            onLog?.Invoke($"[Telegram] Lỗi kết nối: {ex.Message}");
+            onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_ConnectionError"), ex.Message));
             return false;
         }
         catch (Exception ex)
         {
-            onLog?.Invoke($"[Telegram] Lỗi không xác định: {ex.Message}");
+            onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_UnknownError"), ex.Message));
             return false;
         }
     }
@@ -141,13 +142,13 @@ public static class TelegramService
     {
         if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
         {
-            onLog?.Invoke("[Telegram] BotToken hoặc ChatId trống — bỏ qua gửi ảnh.");
+            onLog?.Invoke(LanguageManager.GetString("ui_TgLog_EmptyCredentialsPhoto"));
             return false;
         }
 
         if (!File.Exists(imagePath))
         {
-            onLog?.Invoke($"[Telegram] File ảnh không tồn tại: {imagePath}");
+            onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_PhotoNotFound"), imagePath));
             return false;
         }
 
@@ -180,17 +181,17 @@ public static class TelegramService
 
             if (response.IsSuccessStatusCode)
             {
-                onLog?.Invoke($"[Telegram] Đã gửi ảnh thành công → {chatId}");
+                onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_PhotoSent"), chatId));
                 return true;
             }
 
             string error = ExtractTelegramError(responseBody) ?? $"HTTP {response.StatusCode}";
-            onLog?.Invoke($"[Telegram] Lỗi gửi ảnh: {error}");
+            onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_PhotoSendError"), error));
             return false;
         }
         catch (Exception ex)
         {
-            onLog?.Invoke($"[Telegram] Lỗi gửi ảnh: {ex.Message}");
+            onLog?.Invoke(string.Format(LanguageManager.GetString("ui_TgLog_PhotoError"), ex.Message));
             return false;
         }
     }

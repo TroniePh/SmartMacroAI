@@ -2,6 +2,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using SmartMacroAI.Localization;
 using SmartMacroAI.Models;
 
 namespace SmartMacroAI.Core;
@@ -22,5 +23,5 @@ public static class MacroLockService
         => !string.IsNullOrEmpty(script?.PasswordHash);
 
     public static string GetLockStatus(MacroScript? script)
-        => IsLocked(script) ? "🔒 Đã khóa" : "🔓 Mở";
+        => IsLocked(script) ? LanguageManager.GetString("ui_Lock_Locked") : LanguageManager.GetString("ui_Lock_Unlocked");
 }

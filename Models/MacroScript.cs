@@ -1,3 +1,5 @@
+using SmartMacroAI.Localization;
+
 namespace SmartMacroAI.Models;
 
 /// <summary>
@@ -92,20 +94,14 @@ public class MacroScript
     /// Supports placeholders: {MacroName}, {RowsDone}, {RowsTotal}, {Duration}, {MachineName}.
     /// </summary>
     public string TelegramCompleteMessage { get; set; } =
-        "✅ <b>{MacroName}</b> chạy xong!\n" +
-        "📊 Hoàn thành: <b>{RowsDone}/{RowsTotal}</b> dòng\n" +
-        "⏱ Thời gian: <code>{Duration}</code>\n" +
-        "💻 Máy: <code>{MachineName}</code>";
+        LanguageManager.GetString("ui_Telegram_SuccessTemplate");
 
     /// <summary>
     /// HTML-formatted message sent via Telegram when the macro completes with errors.
     /// Supports placeholders: {MacroName}, {RowsDone}, {RowsTotal}, {ErrorMessage}, {MachineName}.
     /// </summary>
     public string TelegramErrorMessage { get; set; } =
-        "❌ <b>{MacroName}</b> bị lỗi!\n" +
-        "📊 Hoàn thành: <b>{RowsDone}/{RowsTotal}</b> dòng\n" +
-        "🔴 Lỗi: <code>{ErrorMessage}</code>\n" +
-        "💻 Máy: <code>{MachineName}</code>";
+        LanguageManager.GetString("ui_Telegram_ErrorTemplate");
 
     // === ADDED for scheduler and lock features ===
 

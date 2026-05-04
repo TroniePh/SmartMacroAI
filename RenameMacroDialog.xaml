@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.RenameMacroDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Rename Macro"
+        Title="{DynamicResource ui_Rename_Title}"
         Height="200" Width="440"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="New macro name"
+        <TextBlock Grid.Row="0" Text="{DynamicResource ui_Rename_Prompt}"
                    FontSize="16" FontWeight="SemiBold" Foreground="#CDD6F4" Margin="0,0,0,12" />
 
         <TextBox x:Name="TxtNewName" Grid.Row="1"
@@ -25,9 +25,9 @@
                  BorderThickness="1" Padding="10,8" FontSize="13" CaretBrush="#CDD6F4" />
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" Click="BtnCancel_Click" Padding="16,8" Margin="0,0,8,0"
+            <Button Content="{DynamicResource ui_CancelBtn}" Click="BtnCancel_Click" Padding="16,8" Margin="0,0,8,0"
                     Background="#313244" Foreground="#CDD6F4" BorderThickness="0" Cursor="Hand" />
-            <Button Content="OK" Click="BtnOk_Click" Padding="16,8"
+            <Button Content="{DynamicResource ui_Ok}" Click="BtnOk_Click" Padding="16,8"
                     Background="#89B4FA" Foreground="#11111B" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
         </StackPanel>
     </Grid>

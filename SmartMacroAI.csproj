@@ -16,9 +16,9 @@
     <Product>SmartMacroAI</Product>
     <Company>Pham Duy</Company>
     <Copyright>Created by Pham Duy - Giai phap tu dong hoa thong minh.</Copyright>
-    <Version>1.5.4</Version>
-    <AssemblyVersion>1.5.4.0</AssemblyVersion>
-    <FileVersion>1.5.4.0</FileVersion>
+    <Version>1.5.5</Version>
+    <AssemblyVersion>1.5.5.0</AssemblyVersion>
+    <FileVersion>1.5.5.0</FileVersion>
     <Description>SmartMacroAI - RPA Automation Tool for Windows. Non-invasive macro automation with Image and OCR recognition.</Description>
   </PropertyGroup>
 
@@ -54,6 +54,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>tessdata\vie.traineddata</Link>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\interception.dll">
+      <LogicalName>SmartMacroAI.Resources.interception.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\install-interception.exe">
+      <LogicalName>SmartMacroAI.Resources.install-interception.exe</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

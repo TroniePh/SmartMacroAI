@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using Microsoft.Win32;
 using System.Windows;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Core;
 
@@ -27,7 +28,7 @@ public static class CsvDataService
         var dlg = new OpenFileDialog
         {
             Filter = "CSV/TXT files (*.csv;*.txt)|*.csv;*.txt|All files (*.*)|*.*",
-            Title = "Chọn file dữ liệu CSV hoặc TXT",
+            Title = LanguageManager.GetString("ui_Csv_SelectFile"),
         };
 
         if (dlg.ShowDialog() != true)
@@ -41,8 +42,8 @@ public static class CsvDataService
             if (rows.Count == 0)
             {
                 MessageBox.Show(
-                    "File trống hoặc không có dòng dữ liệu.",
-                    "Dữ liệu rỗng",
+                    LanguageManager.GetString("ui_Msg_FileEmpty"),
+                    LanguageManager.GetString("ui_Csv_EmptyData"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return null;
@@ -52,7 +53,7 @@ public static class CsvDataService
         }
         catch (CsvParseException ex)
         {
-            MessageBox.Show(ex.Message, "Lỗi định dạng file", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(ex.Message, LanguageManager.GetString("ui_Msg_FileFormatError"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return null;
         }
     }
@@ -62,7 +63,7 @@ public static class CsvDataService
         var allLines = File.ReadAllLines(path, Encoding.UTF8);
 
         if (allLines.Length == 0)
-            throw new CsvParseException("File trống.");
+            throw new CsvParseException(LanguageManager.GetString("ui_Csv_FileEmpty"));
 
         var nonEmpty = new List<string[]>();
         char separator = DetectSeparator(allLines[0]);
@@ -82,23 +83,23 @@ public static class CsvDataService
         }
 
         if (nonEmpty.Count == 0)
-            throw new CsvParseException("File không có dòng dữ liệu hợp lệ.");
+            throw new CsvParseException(LanguageManager.GetString("ui_Csv_NoValidRows"));
 
         int headerCount = nonEmpty[0].Length;
         if (headerCount == 0)
-            throw new CsvParseException("File thiếu header hoặc header trống.");
+            throw new CsvParseException(LanguageManager.GetString("ui_Csv_NoHeader"));
 
         var headers = new string[headerCount];
         for (int i = 0; i < headerCount; i++)
         {
             string raw = nonEmpty[0][i].Trim();
             if (string.IsNullOrEmpty(raw))
-                throw new CsvParseException($"Header cột {i + 1} trống. Vui lòng điền tên cho mỗi cột.");
+                throw new CsvParseException(string.Format(LanguageManager.GetString("ui_Csv_EmptyHeader"), i + 1));
             headers[i] = NormalizeKey(raw);
         }
 
         if (nonEmpty.Count < 2)
-            throw new CsvParseException("File chỉ có header, không có dòng dữ liệu.");
+            throw new CsvParseException(LanguageManager.GetString("ui_Csv_HeaderOnly"));
 
         var result = new List<Dictionary<string, string>>();
         for (int r = 1; r < nonEmpty.Count; r++)
@@ -106,8 +107,7 @@ public static class CsvDataService
             string[] cells = nonEmpty[r];
             if (cells.Length != headerCount)
                 throw new CsvParseException(
-                    $"Dòng {r + 1} có {cells.Length} cột nhưng header có {headerCount} cột. " +
-                    "Số cột phải khớp với header.");
+                    string.Format(LanguageManager.GetString("ui_Csv_ColumnMismatch"), r + 1, cells.Length, headerCount));
 
             var row = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
             for (int c = 0; c < headerCount; c++)

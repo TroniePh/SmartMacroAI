@@ -2,7 +2,7 @@
 <Window x:Class="SmartMacroAI.ScheduleEditDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="⏰ Đặt lịch chạy"
+        Title="{DynamicResource ui_Schedule_Title}"
         Height="440" Width="400"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
@@ -21,30 +21,30 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <TextBlock Grid.Row="0" Text="⏰ Đặt lịch chạy tự động"
+        <TextBlock Grid.Row="0" Text="{DynamicResource ui_Schedule_Header}"
                    FontSize="16" FontWeight="SemiBold" Foreground="#CDD6F4" Margin="0,0,0,16"/>
 
         <!-- Enable checkbox -->
         <CheckBox x:Name="ChkEnabled" Grid.Row="1"
-                  Content="Bật lịch chạy tự động"
+                  Content="{DynamicResource ui_Schedule_Enable}"
                   Foreground="#CDD6F4" FontSize="13" Margin="0,0,0,16"
                   VerticalContentAlignment="Center"/>
 
         <!-- Mode selector -->
         <StackPanel Grid.Row="2" Margin="0,0,0,12">
-            <TextBlock Text="CHẾ ĐỘ" Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock Text="{DynamicResource ui_Schedule_Mode}" Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
             <ComboBox x:Name="CmbMode" Background="#1A1A2E" Foreground="#CDD6F4"
                       BorderBrush="#45475A" BorderThickness="1" Padding="8,6">
-                <ComboBoxItem Content="Hàng ngày" Tag="Daily"/>
-                <ComboBoxItem Content="Lặp lại theo phút" Tag="Interval"/>
-                <ComboBoxItem Content="Chạy một lần" Tag="Once"/>
-                <ComboBoxItem Content="Chạy khi khởi động app" Tag="OnStartup"/>
+                <ComboBoxItem Content="{DynamicResource ui_Schedule_Daily}" Tag="Daily"/>
+                <ComboBoxItem Content="{DynamicResource ui_Schedule_Interval}" Tag="Interval"/>
+                <ComboBoxItem Content="{DynamicResource ui_Schedule_Once}" Tag="Once"/>
+                <ComboBoxItem Content="{DynamicResource ui_Schedule_OnStartup}" Tag="OnStartup"/>
             </ComboBox>
         </StackPanel>
 
         <!-- Daily mode: time picker -->
         <StackPanel x:Name="PanelDaily" Grid.Row="3" Margin="0,0,0,12" Visibility="Visible">
-            <TextBlock Text="GIỜ CHẠY (HẰNG NGÀY)" Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock Text="{DynamicResource ui_Schedule_DailyTime}" Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="TxtHour" Background="#313244" Foreground="#CDD6F4"
                          BorderBrush="#45475A" BorderThickness="1" Padding="8,6" Width="50"
@@ -60,20 +60,20 @@
 
         <!-- Interval mode: minutes -->
         <StackPanel x:Name="PanelInterval" Grid.Row="4" Margin="0,0,0,12" Visibility="Collapsed">
-            <TextBlock Text="LẶP LẠI MỖI (PHÚT)" Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock Text="{DynamicResource ui_Schedule_IntervalLabel}" Foreground="#A6ADC8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="TxtInterval" Background="#313244" Foreground="#CDD6F4"
                          BorderBrush="#45475A" BorderThickness="1" Padding="8,6" Width="80"
                          CaretBrush="#CDD6F4" TextAlignment="Center" FontSize="14"/>
-                <TextBlock Text="  phút" Foreground="#A6ADC8" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                <TextBlock Text="{DynamicResource ui_Schedule_Minutes}" Foreground="#A6ADC8" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0"/>
             </StackPanel>
         </StackPanel>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Hủy" Click="BtnCancel_Click" Padding="16,8" Margin="0,0,8,0"
+            <Button Content="{DynamicResource ui_CancelBtn}" Click="BtnCancel_Click" Padding="16,8" Margin="0,0,8,0"
                     Background="#45475A" Foreground="#CDD6F4" BorderThickness="0" Cursor="Hand"/>
-            <Button Content="💾 Lưu lịch" Click="BtnSave_Click" Padding="16,8"
+            <Button Content="{DynamicResource ui_Schedule_SaveBtn}" Click="BtnSave_Click" Padding="16,8"
                     Background="#A6E3A1" Foreground="#11111B" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand"/>
         </StackPanel>
     </Grid>

@@ -39,6 +39,7 @@ public static class Win32Api
 
     public const uint MK_LBUTTON = 0x0001;
     public const uint MK_RBUTTON = 0x0002;
+    public const uint MK_MBUTTON = 0x0010;
 
     // ═══════════════════════════════════════════════
     //  CONSTANTS — ShowWindow / Hotkey

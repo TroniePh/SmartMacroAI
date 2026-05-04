@@ -2,12 +2,12 @@
 <Window x:Class="SmartMacroAI.DriverInstallDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="🎮 Cài đặt Driver Level Mode"
         Width="500" Height="340"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1E1E2E"
-        FontFamily="Segoe UI">
+        FontFamily="Segoe UI"
+        Title="{DynamicResource ui_Drv_Title}">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -21,20 +21,18 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
             <TextBlock Text="🎮" FontSize="32" Margin="0,0,12,0"/>
             <StackPanel>
-                <TextBlock Text="Driver Level Mode" FontSize="16" FontWeight="Bold" Foreground="White"/>
-                <TextBlock Text="Cho phép click/nhấn phím vào game anti-cheat"
-                           Foreground="#888" FontSize="12"/>
+                <TextBlock Text="{DynamicResource ui_Drv_ModeLabel}" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="{DynamicResource ui_Drv_Subtitle}" Foreground="#888" FontSize="12"/>
             </StackPanel>
         </StackPanel>
 
         <!-- Description -->
         <TextBlock Grid.Row="1" TextWrapping="Wrap" LineHeight="22" FontSize="13" Foreground="#CCC">
-            Tính năng này cần cài một <Bold Foreground="White">driver cấp hệ thống</Bold>
-            để giả lập thiết bị chuột/bàn phím thật.<LineBreak/><LineBreak/>
-            ✅ Hoàn toàn tự động — chỉ cần bấm <Bold Foreground="White">Cài đặt ngay</Bold><LineBreak/>
-            ✅ Cần quyền Administrator (Windows sẽ hỏi 1 lần)<LineBreak/>
-            ✅ Cần khởi động lại máy sau khi cài<LineBreak/><LineBreak/>
-            <Italic Foreground="#888">Tương thích: MapleStory, PUBG, và các game có HackShield / EasyAntiCheat</Italic>
+            <Run Text="{DynamicResource ui_Drv_Desc1}"/><Bold Foreground="White"><Run Text="{DynamicResource ui_Drv_DescBold}"/></Bold><Run Text="{DynamicResource ui_Drv_Desc2}"/><LineBreak/><LineBreak/>
+            ✅ <Run Text="{DynamicResource ui_Drv_Feat1}"/><Bold Foreground="White"><Run Text="{DynamicResource ui_Drv_Feat1Bold}"/></Bold><LineBreak/>
+            ✅ <Run Text="{DynamicResource ui_Drv_Feat2}"/><LineBreak/>
+            ✅ <Run Text="{DynamicResource ui_Drv_Feat3}"/><LineBreak/><LineBreak/>
+            <Italic Foreground="#888"><Run Text="{DynamicResource ui_Drv_Compat}"/></Italic>
         </TextBlock>
 
         <!-- Progress -->
@@ -46,11 +44,11 @@
         <!-- Buttons -->
         <StackPanel Grid.Row="3" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button x:Name="BtnCancel" Content="Để sau"
+            <Button x:Name="BtnCancel" Content="{DynamicResource ui_Drv_LaterBtn}"
                     Click="BtnCancel_Click"
                     Padding="16,8" Margin="0,0,8,0"
                     Background="#333" Foreground="#CCC" BorderBrush="#555"/>
-            <Button x:Name="BtnInstall" Content="⚡ Cài đặt ngay"
+            <Button x:Name="BtnInstall" Content="{DynamicResource ui_Drv_InstallBtn}"
                     Click="BtnInstall_Click"
                     Padding="16,8" IsDefault="True"
                     Background="#4FC3F7" Foreground="#1E1E2E" BorderBrush="#4FC3F7"/>

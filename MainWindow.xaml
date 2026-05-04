@@ -208,11 +208,11 @@
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
                     <Setter Property="Foreground" Value="Orange"/>
-                    <Setter Property="ToolTip" Value="Telegram: BẬT — Sẽ thông báo khi chạy xong"/>
+                    <Setter Property="ToolTip" Value="{DynamicResource ui_Telegram_On}"/>
                 </Trigger>
                 <Trigger Property="IsChecked" Value="False">
                     <Setter Property="Foreground" Value="Gray"/>
-                    <Setter Property="ToolTip" Value="Telegram: TẮT — Nhấn để bật"/>
+                    <Setter Property="ToolTip" Value="{DynamicResource ui_Telegram_Off}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -306,7 +306,7 @@
                         <Button x:Name="BtnProfileManager" Style="{StaticResource SidebarButtonStyle}" Click="BtnProfileManager_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1" Fill="Transparent" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" />
-                                <TextBlock Text="Profile Manager" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource ui_Dash_ProfileName}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -328,13 +328,13 @@
                 <DockPanel>
                     <!-- File Menu -->
                     <Menu DockPanel.Dock="Left" Background="Transparent" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" Margin="0,0,16,0">
-                        <MenuItem Header="File" Foreground="{StaticResource TextBrush}" FontSize="12" BorderThickness="0" Background="Transparent">
-                            <MenuItem Header="📄 Macro mới" Click="BtnNewMacro_Click" />
-                            <MenuItem Header="📂 Mở macro" Click="BtnLoadMacro_Click" />
-                            <MenuItem Header="💾 Lưu macro" Click="BtnSaveMacro_Click" />
+                        <MenuItem Header="{DynamicResource ui_Menu_File}" Foreground="{StaticResource TextBrush}" FontSize="12" BorderThickness="0" Background="Transparent">
+                            <MenuItem Header="{DynamicResource ui_Menu_NewMacro}" Click="BtnNewMacro_Click" />
+                            <MenuItem Header="{DynamicResource ui_Menu_OpenMacro}" Click="BtnLoadMacro_Click" />
+                            <MenuItem Header="{DynamicResource ui_Menu_SaveMacro}" Click="BtnSaveMacro_Click" />
                             <Separator />
-                            <MenuItem Header="📤 Chia sẻ kịch bản (Copy mã SMA-)" Click="BtnShareScript_Click" />
-                            <MenuItem Header="📥 Nhập từ mã SMA-" Click="BtnImportScript_Click" />
+                            <MenuItem Header="{DynamicResource ui_Menu_Share}" Click="BtnShareScript_Click" />
+                            <MenuItem Header="{DynamicResource ui_Menu_Import}" Click="BtnImportScript_Click" />
                         </MenuItem>
                     </Menu>
 
@@ -345,7 +345,7 @@
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Padding="8,4"
-                                ToolTip="Thông báo"
+                                ToolTip="{DynamicResource ui_Notification_Btn}"
                                 Margin="0,0,8,0"
                                 Width="36" Height="32">
                             <Grid>
@@ -386,10 +386,10 @@
                                     <!-- Header -->
                                     <Border Grid.Row="0" Background="#181825" Margin="0,0,0,1" CornerRadius="8,8,0,0">
                                         <Grid Margin="12,8">
-                                            <TextBlock Text="🔔 Thông báo"
+                                            <TextBlock Text="{DynamicResource ui_Notification_Header}"
                                                        Foreground="#CDD6F4" FontSize="13"
                                                        FontWeight="Bold"/>
-                                            <Button Content="Đọc tất cả"
+                                            <Button Content="{DynamicResource ui_Notification_MarkAll}"
                                                     Click="BtnMarkAllRead_Click"
                                                     HorizontalAlignment="Right"
                                                     FontSize="11"
@@ -449,7 +449,7 @@
 
                                     <!-- Footer -->
                                     <Border Grid.Row="2" Background="#181825" Padding="8" CornerRadius="0,0,8,8">
-                                        <Button Content="Xóa tất cả thông báo"
+                                        <Button Content="{DynamicResource ui_Notification_ClearAll}"
                                                 Click="BtnClearNotifications_Click"
                                                 HorizontalAlignment="Center"
                                                 FontSize="11"
@@ -524,10 +524,10 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⏰ " Foreground="#A6E3A1" FontSize="13" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="TxtScheduledCount" Foreground="#A6E3A1" FontSize="13"
-                                           Text="0 macro đã lên lịch" VerticalAlignment="Center"/>
+                                           Text="{DynamicResource ui_Dash_ScheduledFmt}" VerticalAlignment="Center"/>
                                 <TextBlock Text="  |  " Foreground="#6C7086" FontSize="13" VerticalAlignment="Center" Margin="8,0"/>
                                 <TextBlock x:Name="TxtRunningCount" Foreground="#CDD6F4" FontSize="13"
-                                           Text="0 macro đang chạy" VerticalAlignment="Center"/>
+                                           Text="{DynamicResource ui_Dash_RunningFmt}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
@@ -540,7 +540,7 @@
                                         <Button Click="BtnGlobalHistory_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" Background="#45475A" Foreground="#CDD6F4" BorderThickness="0" Cursor="Hand">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="📊" Margin="0,0,4,0"/>
-                                                <TextBlock Text="Lịch sử"/>
+                                                <TextBlock Text="{DynamicResource ui_Dash_History}"/>
                                             </StackPanel>
                                         </Button>
                                         <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Refresh}" Click="BtnRefreshDashboard_Click" Padding="12,6" FontSize="11" />
@@ -618,7 +618,7 @@
                                         <DataGrid.Columns>
 
                                             <!-- Col 1: Tên macro — flexible, always visible -->
-                                            <DataGridTemplateColumn Header="Tên kịch bản" Width="*" MinWidth="140">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Dash_Col_Name}" Width="*" MinWidth="140">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Grid Margin="4,0">
@@ -627,11 +627,11 @@
                                                                 <TextBlock Text="{Binding MacroName}"
                                                                            Foreground="#CDD6F4" FontSize="13" FontWeight="SemiBold"
                                                                            TextTrimming="CharacterEllipsis"
-                                                                           ToolTip="Double-click để đổi tên"
+                                                                           ToolTip="{DynamicResource ui_Dash_TooltipRename}"
                                                                            MouseLeftButtonDown="MacroName_DoubleClick"/>
                                                                 <TextBlock Foreground="#6C7086" FontSize="10">
                                                                     <Run Text="{Binding ActionCount, Mode=OneWay}"/>
-                                                                    <Run Text=" thao tác"/>
+                                                                    <Run Text="{DynamicResource ui_Dash_Actions}"/>
                                                                 </TextBlock>
                                                             </StackPanel>
 
@@ -651,7 +651,7 @@
                                             </DataGridTemplateColumn>
 
                                             <!-- Col 2: Cửa sổ mục tiêu — fixed width -->
-                                            <DataGridTemplateColumn Header="Cửa sổ mục tiêu" Width="180" MinWidth="120">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Dash_Col_Target}" Width="180" MinWidth="120">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <DockPanel>
@@ -672,17 +672,17 @@
                                             </DataGridTemplateColumn>
 
                                             <!-- Col 3: Chế độ — Stealth + HW icon toggles -->
-                                            <DataGridTemplateColumn Header="Chế độ" Width="70" MinWidth="70">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Dash_Col_Mode}" Width="70" MinWidth="70">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                             <ToggleButton Content="👁" Width="30" Height="26"
                                                                           IsChecked="{Binding StealthMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                          ToolTip="Stealth Mode"
+                                                                          ToolTip="{DynamicResource ui_Dash_TooltipStealth}"
                                                                           Margin="1,0" FontSize="11"/>
                                                             <ToggleButton Content="⚡" Width="30" Height="26"
                                                                           IsChecked="{Binding HardwareMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                          ToolTip="Hardware Mode"
+                                                                          ToolTip="{DynamicResource ui_Dash_TooltipHW}"
                                                                           Margin="1,0" FontSize="11"/>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -690,7 +690,7 @@
                                             </DataGridTemplateColumn>
 
                                             <!-- Col 4: Lặp / Giãn cách — compact inputs -->
-                                            <DataGridTemplateColumn Header="Lặp / Giãn(phút)" Width="110" MinWidth="100">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Dash_Col_Repeat}" Width="110" MinWidth="100">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -699,7 +699,7 @@
                                                                      Background="#313244" Foreground="#CDD6F4"
                                                                      BorderBrush="#45475A" BorderThickness="1"
                                                                      Padding="2,1" Margin="1,0"
-                                                                     ToolTip="Số lần lặp"/>
+                                                                     ToolTip="{DynamicResource ui_Dash_TooltipRepeat}"/>
                                                             <TextBlock Text="/" Foreground="#6C7086"
                                                                        VerticalAlignment="Center" Margin="2,0"/>
                                                             <TextBox Text="{Binding IntervalMinutes, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
@@ -707,14 +707,14 @@
                                                                      Background="#313244" Foreground="#CDD6F4"
                                                                      BorderBrush="#45475A" BorderThickness="1"
                                                                      Padding="2,1" Margin="1,0"
-                                                                     ToolTip="Giãn cách (phút)"/>
+                                                                     ToolTip="{DynamicResource ui_Dash_TooltipInterval}"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
 
                                             <!-- Col 5: Trạng thái + Lịch — combined -->
-                                            <DataGridTemplateColumn Header="Trạng thái" Width="130" MinWidth="110">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Dash_Col_Status}" Width="130" MinWidth="110">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Margin="2,0">
@@ -762,7 +762,7 @@
                                             </DataGridTemplateColumn>
 
                                             <!-- Col 6: Điều khiển — fixed-width column to prevent overflow -->
-                                            <DataGridTemplateColumn Header="Điều khiển" Width="210" MinWidth="210">
+                                            <DataGridTemplateColumn Header="{DynamicResource ui_Dash_Col_Controls}" Width="210" MinWidth="210">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Grid Margin="2,4" Width="204">
@@ -785,10 +785,10 @@
                                                                         BorderThickness="0" Cursor="Hand"
                                                                         Click="DashboardStart_Click"
                                                                         IsEnabled="{Binding CanStart}"
-                                                                        ToolTip="Chạy macro">
+                                                                        ToolTip="{DynamicResource ui_Dash_TooltipRun}">
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <Path Data="M8,5.14V19.14L19,12.14L8,5.14Z" Fill="#1E1E2E" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
-                                                                        <TextBlock Text="Chạy"/>
+                                                                        <TextBlock Text="{DynamicResource ui_Dash_RunBtn}"/>
                                                                     </StackPanel>
                                                                 </Button>
 
@@ -798,10 +798,10 @@
                                                                         BorderThickness="0" Cursor="Hand"
                                                                         Click="DashboardStop_Click"
                                                                         IsEnabled="{Binding CanStop}"
-                                                                        ToolTip="Dừng macro">
+                                                                        ToolTip="{DynamicResource ui_Dash_TooltipStop}">
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <Path Data="M6,6H18V18H6V6Z" Fill="#1E1E2E" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
-                                                                        <TextBlock Text="Dừng"/>
+                                                                        <TextBlock Text="{DynamicResource ui_Dash_StopBtn}"/>
                                                                     </StackPanel>
                                                                 </Button>
 
@@ -810,10 +810,10 @@
                                                                         FontWeight="Bold" FontSize="11"
                                                                         BorderThickness="0" Cursor="Hand"
                                                                         Click="DashboardRename_Click"
-                                                                        ToolTip="Sửa macro">
+                                                                        ToolTip="{DynamicResource ui_Dash_TooltipEdit}">
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <Path Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" Fill="#1E1E2E" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
-                                                                        <TextBlock Text="Sửa"/>
+                                                                        <TextBlock Text="{DynamicResource ui_Dash_EditBtn}"/>
                                                                     </StackPanel>
                                                                 </Button>
                                                             </Grid>
@@ -842,7 +842,7 @@
                                                                         Background="#313244" Foreground="#89DCEB"
                                                                         FontSize="11" BorderThickness="0" Cursor="Hand"
                                                                         Click="BtnDashHistory_Click"
-                                                                        ToolTip="Lịch sử chạy">
+                                                                        ToolTip="{DynamicResource ui_Dash_TooltipHistory}">
                                                                     <Path Data="M13.5,8H12V13L16.28,15.54L17,14.33L13.5,12.25V8M13,3A9,9 0 0,0 4,12H1L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z" Fill="#89DCEB" Width="10" Height="10" Stretch="Uniform"/>
                                                                 </Button>
 
@@ -870,7 +870,7 @@
                                                                 <!-- Telegram -->
                                                                 <ToggleButton Grid.Column="3" Margin="0,0,2,0" Height="22"
                                                                              IsChecked="{Binding SendTelegramOnComplete, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                             ToolTip="Thông báo Telegram"
+                                                                             ToolTip="{DynamicResource ui_Dash_TooltipTelegram}"
                                                                              Background="#313244" Foreground="#A6E3A1"
                                                                              BorderThickness="0" Cursor="Hand">
                                                                     <Path Data="M10,21H14A2,2 0 0,1 12,23A2,2 0 0,1 10,21M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19Z" Fill="#A6E3A1" Width="11" Height="11" Stretch="Uniform"/>
@@ -881,7 +881,7 @@
                                                                         Background="#313244" Foreground="#F38BA8"
                                                                         FontSize="12" BorderThickness="0" Cursor="Hand"
                                                                         Click="DashboardDelete_Click"
-                                                                        ToolTip="Xóa macro">
+                                                                        ToolTip="{DynamicResource ui_Dash_TooltipDelete}">
                                                                     <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Fill="#F38BA8" Width="10" Height="10" Stretch="Uniform"/>
                                                                 </Button>
                                                             </Grid>
@@ -936,7 +936,7 @@
                                             <TextBlock Text="🎮" Margin="0,0,6,0" FontSize="14"/>
                                             <StackPanel>
                                                 <TextBlock x:Name="TxtGameDetected"
-                                                           Text="Phát hiện game — đang dùng Driver Level mode"
+                                                           Text="{DynamicResource ui_GameDetected}"
                                                            FontWeight="SemiBold" FontSize="12" Foreground="#6daa45"/>
                                                 <TextBlock x:Name="TxtGameDetectedSub"
                                                            Text="" FontSize="11" Foreground="#888"/>
@@ -970,8 +970,8 @@
                                 <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal">
                                     <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Save}" Click="BtnSaveMacro_Click" Margin="0,0,6,0" Padding="16,8" />
                                     <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Load}" Click="BtnLoadMacro_Click" Margin="0,0,6,0" Padding="16,8" />
-                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="📤" ToolTip="Chia sẻ kịch bản (Copy mã SMA-)" Click="BtnShareScript_Click" Padding="10,8" FontSize="14" Margin="0,0,4,0" />
-                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="📥" ToolTip="Nhập từ mã SMA-" Click="BtnImportScript_Click" Padding="10,8" FontSize="14" Margin="0,0,6,0" />
+                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="📤" ToolTip="{DynamicResource ui_Tooltip_Share}" Click="BtnShareScript_Click" Padding="10,8" FontSize="14" Margin="0,0,4,0" />
+                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="📥" ToolTip="{DynamicResource ui_Tooltip_Import}" Click="BtnImportScript_Click" Padding="10,8" FontSize="14" Margin="0,0,6,0" />
                                     <Button Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_Clear}" Click="BtnClearCanvas_Click" Margin="0,0,6,0" Padding="16,8" />
                                     <Border Width="1" Background="{StaticResource Surface1Brush}" Margin="4,2,10,2" />
                                     <Button x:Name="BtnRunMacro" Click="BtnRunMacro_Click"
@@ -983,8 +983,8 @@
                                             Style="{StaticResource DangerButtonStyle}"
                                             Padding="16,8" FontSize="12"
                                             Content="{DynamicResource ui_Stop}" />
-                                    <Button x:Name="BtnShowLog" Click="BtnShowLog_Click"
-                                            ToolTip="Xem log hoạt động real-time"
+                                            <Button x:Name="BtnShowLog" Click="BtnShowLog_Click"
+                                                    ToolTip="{DynamicResource ui_Tooltip_ViewLog}"
                                             Padding="10,4" Margin="8,0,0,0"
                                             Background="#45475A" Foreground="#CDD6F4"
                                             BorderThickness="0" Cursor="Hand" FontSize="12"
@@ -1004,13 +1004,13 @@
                                         <StackPanel>
                                             <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Click"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentBlueBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_Click}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
                                             <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="TypeText"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentGreenBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_TypeText}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
-                                            <Border Background="#1E2030" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#89B4FA" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="KeyPress"><TextBlock Text="⌨" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Nhấn phím" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#1E2030" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#89B4FA" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="KeyPress"><TextBlock Text="⌨" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_KeyPress}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
                                             <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Wait"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentYellowBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_Wait}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
-                                            <Border Background="#2A2418" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#FFA500" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Repeat"><Ellipse Width="8" Height="8" Fill="#FFA500" Margin="0,0,10,0" /><TextBlock Text="Lặp lại" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
-                                            <Border Background="#2A1F30" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#CBA6F7" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="SetVariable"><TextBlock Text="&#x1F4E6;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Gán biến" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
-                                            <Border Background="#152030" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#89B4FA" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfVariable"><TextBlock Text="&#x2753;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Nếu biến thỏa mãn" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
-                                            <Border Background="#252528" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#6C7086" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Log"><TextBlock Text="&#x1F4DD;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Ghi nhật ký" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
-                                            <Border Background="#301818" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#FE640B" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="TryCatch"><TextBlock Text="&#x1F6E1;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="Bẫy lỗi (Try/Catch)" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#2A2418" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#FFA500" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Repeat"><Ellipse Width="8" Height="8" Fill="#FFA500" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_Repeat}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#2A1F30" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#CBA6F7" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="SetVariable"><TextBlock Text="&#x1F4E6;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_SetVariable}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#152030" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#89B4FA" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfVariable"><TextBlock Text="&#x2753;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_IfVariable}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#252528" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#6C7086" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="Log"><TextBlock Text="&#x1F4DD;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_Log}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
+                                            <Border Background="#301818" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#FE640B" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="TryCatch"><TextBlock Text="&#x1F6E1;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_TryCatch}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
                                             <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfImageFound"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentPeachBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_IfImage}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
                                             <Border Background="{StaticResource BaseBrush}" CornerRadius="0" Padding="8,4" Margin="0,1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="IfTextFound"><Ellipse Width="8" Height="8" Fill="{StaticResource AccentLavenderBrush}" Margin="0,0,10,0" /><TextBlock Text="{DynamicResource ui_Action_IfText}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
                                             <Border Background="#1E2A38" CornerRadius="0" Padding="8,4" Margin="0,1" BorderBrush="#74C7EC" BorderThickness="1" Cursor="Hand" MouseLeftButtonDown="ActionBlock_MouseDown"><StackPanel Orientation="Horizontal" Tag="OcrRegion"><TextBlock Text="&#x1F4D0;" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource ui_Action_OcrRegion}" Foreground="#CDD6F4" FontSize="12" /></StackPanel></Border>
@@ -1135,11 +1135,11 @@
                                                   SelectionChanged="CmbWinRtOcrLanguage_SelectionChanged" />
                                     </StackPanel>
                                     <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,8">
-                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Ngôn ngữ OCR" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource ui_Ocr_WinRtLanguage}" />
                                         <ComboBox x:Name="CmbTesseractLanguage" Width="140" Style="{StaticResource DarkComboBoxStyle}" FontSize="12" Margin="0,4,0,6">
-                                            <ComboBoxItem Content="English" Tag="eng" IsSelected="True" />
-                                            <ComboBoxItem Content="Tiếng Việt" Tag="vie" />
-                                            <ComboBoxItem Content="English + Tiếng Việt" Tag="eng+vie" />
+                                            <ComboBoxItem Content="{DynamicResource ui_OcrLang_En}" Tag="eng" IsSelected="True" />
+                                            <ComboBoxItem Content="{DynamicResource ui_OcrLang_Vi}" Tag="vie" />
+                                            <ComboBoxItem Content="{DynamicResource ui_OcrLang_Both}" Tag="eng+vie" />
                                         </ComboBox>
                                         <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_ExtractText}" Click="BtnTestOcr_Click" Padding="16,8" />
                                     </StackPanel>
@@ -1303,13 +1303,13 @@
                         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="16">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="+ Thêm" Click="BtnAddProfile_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
-                                    <Button Style="{StaticResource DangerButtonStyle}" Content="Xóa" Click="BtnDeleteProfile_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
-                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="Test kết nối" Click="BtnTestProfile_Click" Padding="12,6" FontSize="11" />
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="{DynamicResource ui_Profile_Add}" Click="BtnAddProfile_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
+                                    <Button Style="{StaticResource DangerButtonStyle}" Content="{DynamicResource ui_Profile_Delete}" Click="BtnDeleteProfile_Click" Padding="12,6" FontSize="11" Margin="0,0,6,0" />
+                                    <Button Style="{StaticResource SidebarButtonStyle}" Content="{DynamicResource ui_Profile_Test}" Click="BtnTestProfile_Click" Padding="12,6" FontSize="11" />
                                 </StackPanel>
                                 <StackPanel>
-                                    <TextBlock Text="AdsPower Profile Manager" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                    <TextBlock Text="Quản lý danh sách AdsPower profile để chạy multi-account. Mỗi profile = 1 browser riêng biệt." FontSize="11" Foreground="{StaticResource SubtextBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{DynamicResource ui_Profile_Title}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                    <TextBlock Text="{DynamicResource ui_Profile_Subtitle}" FontSize="11" Foreground="{StaticResource SubtextBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                             </DockPanel>
                         </Border>
@@ -1364,10 +1364,10 @@
                                     </Style>
                                 </DataGrid.CellStyle>
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Profile ID" Binding="{Binding ProfileId}" Width="180" IsReadOnly="True" />
-                                    <DataGridTextColumn Header="Tên gợi nhớ" Binding="{Binding Name}" Width="200" />
-                                    <DataGridTextColumn Header="Proxy" Binding="{Binding ProxySummary}" Width="180" IsReadOnly="True" />
-                                    <DataGridTemplateColumn Header="Trạng thái" Width="120">
+                                    <DataGridTextColumn Header="{DynamicResource ui_Profile_Col_ProfileId}" Binding="{Binding ProfileId}" Width="180" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="{DynamicResource ui_Profile_Col_Name}" Binding="{Binding Name}" Width="200" />
+                                    <DataGridTextColumn Header="{DynamicResource ui_Profile_Col_Proxy}" Binding="{Binding ProxySummary}" Width="180" IsReadOnly="True" />
+                                    <DataGridTemplateColumn Header="{DynamicResource ui_Profile_Col_Status}" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding Status}" FontSize="11">
@@ -1378,7 +1378,7 @@
                                                                 <DataTrigger Binding="{Binding Status}" Value="OK">
                                                                     <Setter Property="Foreground" Value="#A6E3A1" />
                                                                 </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Status}" Value="Lỗi">
+                                                                <DataTrigger Binding="{Binding Status}" Value="Error">
                                                                     <Setter Property="Foreground" Value="#F38BA8" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
@@ -1545,7 +1545,7 @@
                                     </StackPanel>
                                 </ScrollViewer>
                             </TabItem>
-                            <TabItem x:Name="TabDataCsv" Header="Data CSV">
+                            <TabItem x:Name="TabDataCsv" Header="{DynamicResource ui_Settings_Tab_DataCSV}">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                     <StackPanel MaxWidth="700" Margin="0,8,0,24">
                                         <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
@@ -1595,7 +1595,7 @@
                                     </StackPanel>
                                 </ScrollViewer>
                             </TabItem>
-                            <TabItem x:Name="TabTelegram" Header="Telegram">
+                            <TabItem x:Name="TabTelegram" Header="{DynamicResource ui_Settings_Tab_Telegram}">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                     <StackPanel MaxWidth="620" Margin="0,8,0,24">
                                         <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
@@ -1614,10 +1614,10 @@
                                                     Padding="8,6" FontSize="12" />
 
                                                 <CheckBox x:Name="ChkScreenshotOnError"
-                                                    Content="📸 Chụp màn hình tự động khi macro lỗi"
+                                                    Content="{DynamicResource ui_Settings_Screenshot}"
                                                     IsChecked="{Binding Source={x:Static settings:AppSettings.Instance}, Path=ScreenshotOnError}"
                                                     Foreground="#CDD6F4" Margin="0,0,0,4"/>
-                                                <TextBlock Text="Ảnh lỗi lưu tại: logs/errors/ và gửi kèm Telegram (nếu bật)"
+                                                <TextBlock Text="{DynamicResource ui_Settings_ScreenshotDesc}"
                                                     Foreground="#6C7086" FontSize="11" Margin="20,0,0,0"/>
 
                                                 <Border Height="1" Background="{StaticResource Surface1Brush}" Margin="0,12,0,16" />
@@ -1727,7 +1727,7 @@
                                                 Style="{StaticResource PrimaryButtonStyle}"
                                                 Padding="14,8" FontSize="12"
                                                 VerticalAlignment="Center" />
-                                        <TextBlock Text="📖 Hướng dẫn sử dụng chi tiết"
+                                        <TextBlock Text="{DynamicResource ui_About_HelpDesc}"
                                                    VerticalAlignment="Center"
                                                    FontSize="13"
                                                    Foreground="{StaticResource SubtextBrush}" />
@@ -1779,9 +1779,9 @@
                     <DockPanel DockPanel.Dock="Top" Margin="8,4,8,2">
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                             <Button x:Name="BtnCopyLog"
-                                    Content="📋 Copy Log"
+                                    Content="{DynamicResource ui_Log_CopyBtn}"
                                     Click="BtnCopyLog_Click"
-                                    ToolTip="Copy toàn bộ log ra clipboard"
+                                    ToolTip="{DynamicResource ui_Log_TooltipCopy}"
                                     Padding="8,2"
                                     Margin="0,0,6,0"
                                     Background="#2a2a3a"

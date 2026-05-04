@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Input;
 using SmartMacroAI;
+using SmartMacroAI.Localization;
 using SmartMacroAI.Models;
 
 namespace SmartMacroAI.Core;
@@ -123,7 +124,7 @@ public sealed class MacroRecorder : IDisposable
     //  MOUSE HANDLER
     // ═══════════════════════════════════════════════
 
-    private void OnMouseClicked(int screenX, int screenY, bool isRightClick)
+    private void OnMouseClicked(int screenX, int screenY, MouseButton button)
     {
         if (_isPaused) return;
         if (!Win32Api.GetWindowRect(_targetHwnd, out var rect))
@@ -143,12 +144,11 @@ public sealed class MacroRecorder : IDisposable
         {
             X = pt.X,
             Y = pt.Y,
-            IsRightClick = isRightClick,
+            Button = button,
         };
         _recordedActions.Add(click);
 
-        string btn = isRightClick ? "Right" : "Left";
-        Log?.Invoke($"  {btn}Click at ({pt.X}, {pt.Y})");
+        Log?.Invoke($"  {button}Click at ({pt.X}, {pt.Y})");
         ActionRecorded?.Invoke(_recordedActions.Count);
     }
 
@@ -254,14 +254,14 @@ public sealed class MacroRecorder : IDisposable
 
             try
             {
-                var dialog = new InputDialog("Nhập liệu thủ công", "Nhập văn bản muốn chèn vào macro:");
+                var dialog = new InputDialog(LanguageManager.GetString("ui_Recorder_ManualInput"), LanguageManager.GetString("ui_Recorder_ManualInputPrompt"));
                 dialog.Owner = System.Windows.Application.Current.MainWindow;
                 dialog.Topmost = true;
 
                 if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.InputText))
                 {
                     _recordedActions.Add(new TypeAction { Text = dialog.InputText });
-                    Log?.Invoke($"  [Nhập liệu thủ công] \"{dialog.InputText}\"");
+                    Log?.Invoke(string.Format(LanguageManager.GetString("ui_Recorder_ManualInputLog"), dialog.InputText));
                     ActionRecorded?.Invoke(_recordedActions.Count);
                 }
             }

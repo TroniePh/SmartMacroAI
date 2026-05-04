@@ -1,6 +1,7 @@
 // Created by Phạm Duy – Giải pháp tự động hóa thông minh.
 
 using System.Text.Json.Serialization;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Models;
 
@@ -36,6 +37,6 @@ public class CallMacroAction : MacroAction
 
     public CallMacroAction()
     {
-        DisplayName = "📂 Gọi kịch bản con";
+        DisplayName = LanguageManager.GetString("ui_Action_CallMacro");
     }
 }

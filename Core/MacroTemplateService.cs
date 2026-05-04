@@ -1,6 +1,7 @@
 // Created by Phạm Duy – Giải pháp tự động hóa thông minh.
 
 using SmartMacroAI.Models;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI.Core;
 
@@ -19,125 +20,150 @@ public static class MacroTemplateService
     {
         new MacroTemplate
         {
-            Name = "🔐 Auto Login Website",
-            Description = "Tự động đăng nhập website với username/password từ CSV",
+            Name = LanguageManager.GetString("ui_Tmpl_NameAutoLogin"),
+            Description = LanguageManager.GetString("ui_Tmpl_AutoLoginDesc"),
             Category = "Web",
             TargetWindowTitle = "",
             Actions = new List<MacroAction>
             {
-                new LaunchAndBindAction { DisplayName = "Mở trình duyệt", Url = "{{url}}", Browser = LaunchBrowserKind.Edge, BindTimeoutMs = 30000, PollIntervalMs = 500 },
-                new WaitAction { DisplayName = "Chờ trang load", DelayMin = 2000, DelayMax = 3000 },
-                new WebClickAction { DisplayName = "Click username", CssSelector = "{{username_selector}}" },
-                new WebTypeAction { DisplayName = "Nhập username", CssSelector = "{{username_selector}}", TextToType = "{{username}}" },
-                new WebClickAction { DisplayName = "Click password", CssSelector = "{{password_selector}}" },
-                new WebTypeAction { DisplayName = "Nhập password", CssSelector = "{{password_selector}}", TextToType = "{{password}}" },
-                new WebClickAction { DisplayName = "Click đăng nhập", CssSelector = "{{login_button_selector}}" }
+                new LaunchAndBindAction { DisplayName = LanguageManager.GetString("ui_Tmpl_OpenBrowser"), Url = "{{url}}", Browser = LaunchBrowserKind.Edge, BindTimeoutMs = 30000, PollIntervalMs = 500 },
+                new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitPageLoad"), DelayMin = 2000, DelayMax = 3000 },
+                new WebClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickUsername"), CssSelector = "{{username_selector}}" },
+                new WebTypeAction { DisplayName = LanguageManager.GetString("ui_Tmpl_TypeUsername"), CssSelector = "{{username_selector}}", TextToType = "{{username}}" },
+                new WebClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickPassword"), CssSelector = "{{password_selector}}" },
+                new WebTypeAction { DisplayName = LanguageManager.GetString("ui_Tmpl_TypePassword"), CssSelector = "{{password_selector}}", TextToType = "{{password}}" },
+                new WebClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickLogin"), CssSelector = "{{login_button_selector}}" }
             }
         },
         new MacroTemplate
         {
-            Name = "📊 Auto Fill CSV Data",
-            Description = "Điền dữ liệu từ file CSV vào form web (lặp nhiều dòng)",
+            Name = LanguageManager.GetString("ui_Tmpl_NameAutoFill"),
+            Description = LanguageManager.GetString("ui_Tmpl_AutoFillDesc"),
             Category = "Web",
             TargetWindowTitle = "",
             Actions = new List<MacroAction>
             {
-                new LaunchAndBindAction { DisplayName = "Mở trang form", Url = "{{form_url}}", Browser = LaunchBrowserKind.Edge, BindTimeoutMs = 30000 },
-                new WaitAction { DisplayName = "Chờ form load", DelayMin = 2000, DelayMax = 3000 },
+                new LaunchAndBindAction { DisplayName = LanguageManager.GetString("ui_Tmpl_OpenForm"), Url = "{{form_url}}", Browser = LaunchBrowserKind.Edge, BindTimeoutMs = 30000 },
+                new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitFormLoad"), DelayMin = 2000, DelayMax = 3000 },
                 new RepeatAction
                 {
-                    DisplayName = "Lặp từng dòng CSV",
+                    DisplayName = LanguageManager.GetString("ui_Tmpl_LoopEachCsvRow"),
                     RepeatCount = 0,
                     IntervalMs = 1000,
                     LoopActions = new List<MacroAction>
                     {
-                        new WebClickAction { DisplayName = "Click field 1", CssSelector = "{{field1_selector}}" },
-                        new WebTypeAction { DisplayName = "Nhập giá trị 1", CssSelector = "{{field1_selector}}", TextToType = "{{col1}}" },
-                        new WebClickAction { DisplayName = "Click field 2", CssSelector = "{{field2_selector}}" },
-                        new WebTypeAction { DisplayName = "Nhập giá trị 2", CssSelector = "{{field2_selector}}", TextToType = "{{col2}}" },
-                        new WebClickAction { DisplayName = "Click Submit", CssSelector = "{{submit_selector}}" },
-                        new WaitAction { DisplayName = "Chờ xử lý", DelayMin = 1000, DelayMax = 2000 }
+                        new WebClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickField1"), CssSelector = "{{field1_selector}}" },
+                        new WebTypeAction { DisplayName = LanguageManager.GetString("ui_Tmpl_TypeValue1"), CssSelector = "{{field1_selector}}", TextToType = "{{col1}}" },
+                        new WebClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickField2"), CssSelector = "{{field2_selector}}" },
+                        new WebTypeAction { DisplayName = LanguageManager.GetString("ui_Tmpl_TypeValue2"), CssSelector = "{{field2_selector}}", TextToType = "{{col2}}" },
+                        new WebClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickSubmit"), CssSelector = "{{submit_selector}}" },
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitProcess"), DelayMin = 1000, DelayMax = 2000 }
                     }
                 }
             }
         },
         new MacroTemplate
         {
-            Name = "🔄 Auto Repeat Task",
-            Description = "Lặp lại thao tác click chuột theo chu kỳ",
+            Name = LanguageManager.GetString("ui_Tmpl_NameAutoRepeat"),
+            Description = LanguageManager.GetString("ui_Tmpl_AutoRepeatDesc"),
             Category = "Desktop",
             TargetWindowTitle = "{{target_window}}",
             Actions = new List<MacroAction>
             {
                 new RepeatAction
                 {
-                    DisplayName = "Lặp thao tác",
+                    DisplayName = LanguageManager.GetString("ui_Tmpl_LoopActions"),
                     RepeatCount = 10,
                     IntervalMs = 5000,
                     LoopActions = new List<MacroAction>
                     {
-                        new ClickAction { DisplayName = "Click vị trí", X = 0, Y = 0 },
-                        new WaitAction { DisplayName = "Chờ", DelayMin = 1000, DelayMax = 1500 }
+                        new ClickAction { DisplayName = LanguageManager.GetString("ui_Tmpl_ClickPosition"), X = 0, Y = 0 },
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_Wait"), DelayMin = 1000, DelayMax = 1500 }
                     }
                 }
             }
         },
         new MacroTemplate
         {
-            Name = "🔍 Image Detection Loop",
-            Description = "Chờ cho đến khi hình ảnh xuất hiện rồi thực hiện hành động",
+            Name = LanguageManager.GetString("ui_Tmpl_NameImageDetect"),
+            Description = LanguageManager.GetString("ui_Tmpl_ImageDetectDesc"),
             Category = "Desktop",
             TargetWindowTitle = "{{target_window}}",
             Actions = new List<MacroAction>
             {
                 new RepeatAction
                 {
-                    DisplayName = "Kiểm tra hình ảnh",
+                    DisplayName = LanguageManager.GetString("ui_Tmpl_CheckImage"),
                     RepeatCount = 0,
                     IntervalMs = 2000,
                     LoopActions = new List<MacroAction>
                     {
                         new IfImageAction
                         {
-                            DisplayName = "Nếu tìm thấy hình",
+                            DisplayName = LanguageManager.GetString("ui_Tmpl_IfImageFound"),
                             ImagePath = "{{image_path}}",
                             Threshold = 0.8f,
                             TimeoutMs = 5000,
                             ClickOnFound = true,
                             RandomOffset = 5,
-                            ThenActions = new List<MacroAction> { new WaitAction { DisplayName = "Chờ xử lý", DelayMin = 500, DelayMax = 1000 } },
+                            ThenActions = new List<MacroAction> { new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitProcess"), DelayMin = 500, DelayMax = 1000 } },
                             ElseActions = new List<MacroAction>()
                         },
-                        new WaitAction { DisplayName = "Chờ lại", DelayMin = 500, DelayMax = 800 }
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitAgain"), DelayMin = 500, DelayMax = 800 }
                     }
                 }
             }
         },
         new MacroTemplate
         {
-            Name = "⌨️ Hotkey Automation",
-            Description = "Nhấn tổ hợp phím tắt theo chu kỳ",
+            Name = LanguageManager.GetString("ui_Tmpl_NameHotkey"),
+            Description = LanguageManager.GetString("ui_Tmpl_HotkeyAutoDesc"),
             Category = "Desktop",
             TargetWindowTitle = "{{target_window}}",
             Actions = new List<MacroAction>
             {
                 new RepeatAction
                 {
-                    DisplayName = "Lặp phím tắt",
+                    DisplayName = LanguageManager.GetString("ui_Tmpl_LoopHotkey"),
                     RepeatCount = 5,
                     IntervalMs = 3000,
                     LoopActions = new List<MacroAction>
                     {
-                        new KeyPressAction { DisplayName = "Nhấn Ctrl+S", KeyName = "S", VirtualKeyCode = 0x53, Modifiers = new KeyModifiers { Ctrl = true }, HoldDurationMs = 100 },
-                        new WaitAction { DisplayName = "Chờ", DelayMin = 500, DelayMax = 1000 }
+                        new KeyPressAction { DisplayName = LanguageManager.GetString("ui_Tmpl_PressCtrlS"), KeyName = "S", VirtualKeyCode = 0x53, Modifiers = new KeyModifiers { Ctrl = true }, HoldDurationMs = 100 },
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_Wait"), DelayMin = 500, DelayMax = 1000 }
                     }
                 }
             }
         },
         new MacroTemplate
         {
-            Name = "🚀 Quick Start Blank",
-            Description = "Bắt đầu với macro trống - thêm actions thủ công",
+            Name = LanguageManager.GetString("ui_Tmpl_NameGameFarm"),
+            Description = LanguageManager.GetString("ui_Tmpl_GameFarmingDesc"),
+            Category = "Desktop",
+            TargetWindowTitle = "{{target_window}}",
+            Actions = new List<MacroAction>
+            {
+                new RepeatAction
+                {
+                    DisplayName = LanguageManager.GetString("ui_Tmpl_LoopSkills"),
+                    RepeatCount = 0,
+                    IntervalMs = 2000,
+                    LoopActions = new List<MacroAction>
+                    {
+                        new KeyPressAction { DisplayName = string.Format(LanguageManager.GetString("ui_Tmpl_SkillKey"), 1), KeyName = "D1", VirtualKeyCode = 0x31, HoldDurationMs = 80, InputMode = KeyInputMode.RawInput },
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_Wait"), DelayMin = 400, DelayMax = 600 },
+                        new KeyPressAction { DisplayName = string.Format(LanguageManager.GetString("ui_Tmpl_SkillKey"), 2), KeyName = "D2", VirtualKeyCode = 0x32, HoldDurationMs = 80, InputMode = KeyInputMode.RawInput },
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_Wait"), DelayMin = 400, DelayMax = 600 },
+                        new KeyPressAction { DisplayName = string.Format(LanguageManager.GetString("ui_Tmpl_SkillKey"), 3), KeyName = "D3", VirtualKeyCode = 0x33, HoldDurationMs = 80, InputMode = KeyInputMode.RawInput },
+                        new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_Wait"), DelayMin = 800, DelayMax = 1200 }
+                    }
+                }
+            }
+        },
+        new MacroTemplate
+        {
+            Name = LanguageManager.GetString("ui_Tmpl_NameBlank"),
+            Description = LanguageManager.GetString("ui_Tmpl_BlankDesc"),
             Category = "General",
             TargetWindowTitle = "",
             Actions = new List<MacroAction>()

@@ -3,6 +3,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI;
 
@@ -60,7 +61,7 @@ public sealed class InputDialog : Window
 
         var btnCancel = new Button
         {
-            Content = "Hủy",
+            Content = LanguageManager.GetString("ui_CancelBtn"),
             Padding = new Thickness(16, 8, 16, 8),
             Margin = new Thickness(0, 0, 8, 0),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#45475A")),
@@ -72,7 +73,7 @@ public sealed class InputDialog : Window
 
         var btnOk = new Button
         {
-            Content = "OK",
+            Content = LanguageManager.GetString("ui_Ok"),
             Padding = new Thickness(16, 8, 16, 8),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
             Foreground = Brushes.White,

@@ -2,6 +2,7 @@
 
 using System.Windows;
 using System.Windows.Input;
+using SmartMacroAI.Localization;
 
 namespace SmartMacroAI;
 
@@ -20,7 +21,7 @@ public partial class PasswordDialog : Window
     {
         if (string.IsNullOrEmpty(PwdInput.Password))
         {
-            TxtError.Text = "Vui lòng nhập mật khẩu.";
+            TxtError.Text = LanguageManager.GetString("ui_Pwd_EnterPwd");
             return;
         }
         DialogResult = true;

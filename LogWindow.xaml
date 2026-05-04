@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="📋 Log — SmartMacroAI"
+        Title="{DynamicResource ui_LogWin_Title}"
         Height="400" Width="680"
         MinHeight="200" MinWidth="400"
         WindowStartupLocation="CenterScreen"
@@ -56,7 +56,7 @@
                 Background="#111111"
                 Padding="8,6">
             <StackPanel Orientation="Horizontal">
-                <Button Content="🗑 Xóa log"
+                <Button Content="{DynamicResource ui_LogWin_ClearBtn}"
                         Click="BtnClear_Click"
                         Padding="10,4"
                         Margin="0,0,8,0"
@@ -65,7 +65,7 @@
                         BorderThickness="0"
                         Cursor="Hand"
                         FontSize="12"/>
-                <Button Content="💾 Lưu .txt"
+                <Button Content="{DynamicResource ui_LogWin_SaveBtn}"
                         Click="BtnSave_Click"
                         Padding="10,4"
                         Margin="0,0,8,0"
@@ -75,7 +75,7 @@
                         Cursor="Hand"
                         FontSize="12"/>
                 <CheckBox x:Name="ChkAutoScroll"
-                          Content="Auto scroll"
+                          Content="{DynamicResource ui_LogWin_AutoScroll}"
                           IsChecked="{Binding AutoScroll, RelativeSource={RelativeSource AncestorType=Window}}"
                           VerticalAlignment="Center"
                           Foreground="#aaaaaa"

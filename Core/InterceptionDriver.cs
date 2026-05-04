@@ -36,6 +36,10 @@ public static class InterceptionDriver
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern int interception_is_mouse(int device);
 
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+    public static extern int interception_get_hardware_id(IntPtr context, int device,
+        [MarshalAs(UnmanagedType.LPWStr)] System.Text.StringBuilder hardwareId, uint bufferSize);
+
     // ── Callback ──
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate bool InterceptionPredicate(int device);
@@ -81,6 +85,8 @@ public static class InterceptionDriver
     public const ushort INTERCEPTION_MOUSE_LEFT_BUTTON_UP   = 0x0002;
     public const ushort INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN = 0x0004;
     public const ushort INTERCEPTION_MOUSE_RIGHT_BUTTON_UP  = 0x0008;
+    public const ushort INTERCEPTION_MOUSE_MIDDLE_BUTTON_DOWN = 0x0010;
+    public const ushort INTERCEPTION_MOUSE_MIDDLE_BUTTON_UP  = 0x0020;
     public const ushort INTERCEPTION_MOUSE_MOVE              = 0x0001;
     public const ushort INTERCEPTION_MOUSE_MOVE_ABSOLUTE     = 0x0002;
 

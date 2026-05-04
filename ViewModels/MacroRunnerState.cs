@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using SmartMacroAI.Core;
+using SmartMacroAI.Localization;
 using SmartMacroAI.Models;
 
 namespace SmartMacroAI.ViewModels;
@@ -40,21 +41,21 @@ public class MacroRunnerState
         {
             try
             {
-                SafeLog($"[{Script.Name}] Bắt đầu...");
+                SafeLog(string.Format(LanguageManager.GetString("ui_Runner_Started"), Script.Name));
 
                 var engine = new MacroEngine(Script, TargetHwnd, SafeLog) { HardwareMode = HwMode };
                 await engine.ExecuteScriptAsync(Script, TargetHwnd, _cts!.Token);
-                SafeLog($"[{Script.Name}] Hoàn tất.");
+                SafeLog(string.Format(LanguageManager.GetString("ui_Runner_Completed"), Script.Name));
                 StatusChanged?.Invoke("Ready");
             }
             catch (OperationCanceledException)
             {
-                SafeLog($"[{Script.Name}] Đã dừng.");
+                SafeLog(string.Format(LanguageManager.GetString("ui_Runner_Stopped"), Script.Name));
                 StatusChanged?.Invoke("Ready");
             }
             catch (Exception ex)
             {
-                SafeLog($"[{Script.Name}] Lỗi: {ex.Message}");
+                SafeLog(string.Format(LanguageManager.GetString("ui_Runner_Error"), Script.Name, ex.Message));
                 StatusChanged?.Invoke("Error");
             }
             finally

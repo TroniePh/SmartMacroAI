@@ -1,3 +1,5 @@
+using SmartMacroAI.Localization;
+
 namespace SmartMacroAI.Models;
 
 /// <summary>
@@ -40,9 +42,9 @@ public sealed class AppNotification
         get
         {
             var diff = DateTime.Now - Time;
-            if (diff.TotalSeconds < 60) return "vừa xong";
-            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} phút trước";
-            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} giờ trước";
+            if (diff.TotalSeconds < 60) return LanguageManager.GetString("ui_Time_JustNow");
+            if (diff.TotalMinutes < 60) return string.Format(LanguageManager.GetString("ui_Time_MinutesAgo"), (int)diff.TotalMinutes);
+            if (diff.TotalHours < 24) return string.Format(LanguageManager.GetString("ui_Time_HoursAgo"), (int)diff.TotalHours);
             return Time.ToString("dd/MM HH:mm");
         }
     }

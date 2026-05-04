@@ -3,6 +3,7 @@
 using System.Windows;
 using System.Windows.Input;
 using SmartMacroAI.Core;
+using SmartMacroAI.Localization;
 using SmartMacroAI.Models;
 
 namespace SmartMacroAI;
@@ -28,19 +29,19 @@ public partial class MacroLockDialog : Window
 
         if (string.IsNullOrWhiteSpace(pwd))
         {
-            TxtError.Text = "Mật khẩu không được trống.";
+            TxtError.Text = LanguageManager.GetString("ui_Lock_EmptyPwd");
             return;
         }
 
         if (pwd.Length < 4)
         {
-            TxtError.Text = "Mật khẩu phải có ít nhất 4 ký tự.";
+            TxtError.Text = LanguageManager.GetString("ui_Lock_PwdTooShort");
             return;
         }
 
         if (pwd != confirm)
         {
-            TxtError.Text = "Mật khẩu xác nhận không khớp.";
+            TxtError.Text = LanguageManager.GetString("ui_Lock_PwdMismatch");
             return;
         }
 
