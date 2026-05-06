@@ -1,6 +1,6 @@
-# SmartMacroAI — Build & Release
+# SmartMacroAI - Build & Release
 # Trigger: push tag v* (e.g. v1.5.6)
-# Produces: portable self-contained ZIP
+# Produces: ZIP (portable), EXE (standalone), Setup EXE (installer)
 #
 # Created by Pham Duy - Giai phap tu dong hoa thong minh.
 
@@ -30,32 +30,51 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore
-        run: dotnet restore -r win-x64
+      - name: Publish portable (ZIP)
+        run: dotnet publish SmartMacroAI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 
-      - name: Publish
-        run: dotnet publish SmartMacroAI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64 --no-restore
+      - name: Publish standalone EXE
+        run: dotnet publish SmartMacroAI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_singlefile
 
-      - name: Remove .pdb files
+      - name: Clean .pdb
         shell: pwsh
         run: |
-          $pdbs = Get-ChildItem -Path "publish/win-x64" -Recurse -Filter "*.pdb" -ErrorAction SilentlyContinue
-          if ($pdbs) { $pdbs | Remove-Item -Force }
+          Get-ChildItem publish publish_singlefile -Recurse -Filter "*.pdb" -EA SilentlyContinue | Remove-Item -Force
 
       - name: Create ZIP
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $version = $tag -replace '^v',''
-          $zipName = "SmartMacroAI-v${version}-win-x64.zip"
-          Compress-Archive -Path "publish/win-x64/*" -DestinationPath $zipName
-          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+          $v = "${{ github.ref_name }}" -replace '^v',''
+          $zip = "SmartMacroAI-v${v}-win-x64.zip"
+          Compress-Archive -Path "publish/*" -DestinationPath $zip
+          echo "ZIP_NAME=$zip" >> $env:GITHUB_ENV
 
-      - name: Upload artifact
+      - name: Copy standalone EXE
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}" -replace '^v',''
+          Copy-Item "publish_singlefile/SmartMacroAI.exe" "SmartMacroAI-v${v}-win-x64.exe"
+          echo "EXE_NAME=SmartMacroAI-v${v}-win-x64.exe" >> $env:GITHUB_ENV
+
+      - name: Setup Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build Installer
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}" -replace '^v',''
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer/SmartMacroAI_Setup.iss" "/DMyAppVersion=$v"
+          Copy-Item "installer_out/SmartMacroAI_Setup_v${v}.exe" "SmartMacroAI_Setup_v${v}.exe"
+          echo "SETUP_NAME=SmartMacroAI_Setup_v${v}.exe" >> $env:GITHUB_ENV
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win-x64
-          path: ${{ env.ZIP_NAME }}
+          name: release-files
+          path: |
+            ${{ env.ZIP_NAME }}
+            ${{ env.EXE_NAME }}
+            ${{ env.SETUP_NAME }}
 
   release:
     needs: build
@@ -71,4 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: artifacts/*.zip
+          files: |
+            artifacts/SmartMacroAI-*.zip
+            artifacts/SmartMacroAI-v*.exe
+            artifacts/SmartMacroAI_Setup_*.exe
