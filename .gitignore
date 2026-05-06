@@ -26,6 +26,7 @@ _ocr_build_out/
 # Release packages
 *.zip
 *.exe
+!Resources/install-interception.exe
 
 # Obfuscator output
 obfuscar.xml
