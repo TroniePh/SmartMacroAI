@@ -110,6 +110,8 @@
     <system:String x:Key="ui_Action_TypeText">Gõ chữ</system:String>
     <system:String x:Key="ui_Action_Wait">Chờ</system:String>
     <system:String x:Key="ui_Action_IfImage">NẾU thấy ảnh</system:String>
+    <system:String x:Key="ui_IfImage_ThenLabel">✅ Nếu TÌM THẤY ảnh — thực hiện:</system:String>
+    <system:String x:Key="ui_IfImage_ElseLabel">❌ Nếu KHÔNG tìm thấy ảnh — thực hiện:</system:String>
     <system:String x:Key="ui_Action_IfText">NẾU thấy chữ</system:String>
     <system:String x:Key="ui_Action_WebAction">Thao tác Web</system:String>
     <system:String x:Key="ui_MacroWorkflow">Quy trình macro</system:String>
@@ -926,6 +928,7 @@ Chi tiết lỗi:
     <system:String x:Key="ui_Tmpl_ImageDetectDesc">Chờ cho đến khi hình ảnh xuất hiện rồi thực hiện hành động</system:String>
     <system:String x:Key="ui_Tmpl_CheckImage">Kiểm tra hình ảnh</system:String>
     <system:String x:Key="ui_Tmpl_IfImageFound">Nếu tìm thấy hình</system:String>
+    <system:String x:Key="ui_Tmpl_IfImageElseWait">⏳ Chờ 1 giây rồi thử lại</system:String>
     <system:String x:Key="ui_Tmpl_WaitAgain">Chờ lại</system:String>
     <system:String x:Key="ui_Tmpl_HotkeyAutoDesc">Nhấn tổ hợp phím tắt theo chu kỳ</system:String>
     <system:String x:Key="ui_Tmpl_LoopHotkey">Lặp phím tắt</system:String>

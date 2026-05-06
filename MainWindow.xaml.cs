@@ -53,6 +53,13 @@ public partial class MainWindow : Window
 
     private readonly record struct IfVarInsertTag(IfVariableAction Parent, bool IsThen);
 
+    private readonly record struct NestedIfImageChildTag(IfImageAction Parent, int ChildIndex, bool IsThen);
+
+    private readonly record struct IfImageInsertTag(IfImageAction Parent, bool IsThen);
+
+    /// <summary>Identifies a nested Then/Else branch as a drag-drop target.</summary>
+    private sealed record NestedBranchTag(List<MacroAction> TargetList, bool IsThen);
+
     private readonly ObservableCollection<DashboardRowVm> _dashboardRows = [];
 
     private bool _suppressWinRtOcrCombo;
@@ -1645,6 +1652,54 @@ public partial class MainWindow : Window
         AppendLog($"Added action: {action.DisplayName}");
     }
 
+    private void NestedBranch_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.StringFormat))
+            e.Effects = DragDropEffects.Copy;
+        else if (e.Data.GetData(typeof(MacroAction)) is MacroAction)
+            e.Effects = DragDropEffects.Move;
+        else
+            e.Effects = DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void NestedBranch_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is not FrameworkElement fe) return;
+
+        switch (fe.Tag)
+        {
+            case NestedBranchTag nb:
+            {
+                MacroAction? action = null;
+
+                if (e.Data.GetDataPresent(DataFormats.StringFormat))
+                {
+                    string actionType = (string)e.Data.GetData(DataFormats.StringFormat)!;
+                    action = CreateActionFromType(actionType);
+                }
+                else if (e.Data.GetData(typeof(MacroAction)) is MacroAction ma)
+                {
+                    // Moving an existing root action into a nested branch
+                    int oldIdx = _actions.IndexOf(ma);
+                    if (oldIdx >= 0)
+                        _actions.RemoveAt(oldIdx);
+                    action = ma;
+                }
+
+                if (action is null) break;
+
+                nb.TargetList.Add(action);
+                RebuildCanvas();
+                AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), action.DisplayName,
+                    nb.IsThen ? LanguageManager.GetString("ui_Canvas_ThenLabel") : LanguageManager.GetString("ui_Canvas_ElseLabel")));
+                break;
+            }
+        }
+
+        e.Handled = true;
+    }
+
     private static MacroAction? CreateActionFromType(string actionType) => actionType switch
     {
         "Click" => new ClickAction(),
@@ -1872,6 +1927,7 @@ public partial class MainWindow : Window
         RepeatAction r => BuildRepeatBlock(r, i),
         TryCatchAction t => BuildTryCatchBlock(t, i),
         IfVariableAction v => BuildIfVariableBlock(v, i),
+        IfImageAction img => BuildIfImageBlock(img, i),
         _ => BuildActionCard(a, i, i),
     };
 
@@ -1880,6 +1936,7 @@ public partial class MainWindow : Window
         RepeatAction r => BuildRepeatBlock(r, editDeleteTag),
         TryCatchAction t => BuildTryCatchBlock(t, editDeleteTag),
         IfVariableAction v => BuildIfVariableBlock(v, editDeleteTag),
+        IfImageAction img => BuildIfImageBlock(img, editDeleteTag),
         _ => BuildActionCard(child, displayIndex, editDeleteTag),
     };
 
@@ -2096,7 +2153,11 @@ public partial class MainWindow : Window
             Margin = new Thickness(12, 6, 4, 4),
             Padding = new Thickness(6),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#121820")),
+            AllowDrop = true,
+            Tag = new NestedBranchTag(iv.ThenActions, true),
         };
+        thenBorder.DragOver += NestedBranch_DragOver;
+        thenBorder.Drop += NestedBranch_Drop;
         var thenPanel = new StackPanel();
         for (int j = 0; j < iv.ThenActions.Count; j++)
             thenPanel.Children.Add(BuildWorkflowChildUniversal(iv.ThenActions[j], j, new NestedIfVarChildTag(iv, j, true)));
@@ -2125,7 +2186,11 @@ public partial class MainWindow : Window
             Margin = new Thickness(12, 4, 4, 4),
             Padding = new Thickness(6),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1A1A1A")),
+            AllowDrop = true,
+            Tag = new NestedBranchTag(iv.ElseActions, false),
         };
+        elseBorder.DragOver += NestedBranch_DragOver;
+        elseBorder.Drop += NestedBranch_Drop;
         var elsePanel = new StackPanel();
         for (int j = 0; j < iv.ElseActions.Count; j++)
             elsePanel.Children.Add(BuildWorkflowChildUniversal(iv.ElseActions[j], j, new NestedIfVarChildTag(iv, j, false)));
@@ -2163,6 +2228,152 @@ public partial class MainWindow : Window
             Margin = new Thickness(0, 4, 0, 0),
             Content = elseBorder,
             ToolTip = LanguageManager.GetString("ui_Tooltip_ElseBranch"),
+        });
+
+        card.Child = rootStack;
+        return card;
+    }
+
+    private UIElement BuildIfImageBlock(IfImageAction img, object headerTag)
+    {
+        var card = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(250, 179, 135)),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(8),
+            Margin = new Thickness(4, 2, 4, 2),
+            Padding = new Thickness(8),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#151F2A")),
+            DataContext = img,
+        };
+
+        var rootStack = new StackPanel();
+        var headerRow = new DockPanel { LastChildFill = false };
+        var titleTb = new TextBlock
+        {
+            Text = $"🔍 {img.DisplayName}: {FormatIfImageCardDetail(img)}",
+            Foreground = new SolidColorBrush(Color.FromRgb(250, 179, 135)),
+            FontWeight = FontWeights.Bold,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+            TextWrapping = TextWrapping.Wrap,
+        };
+        DockPanel.SetDock(titleTb, Dock.Left);
+        headerRow.Children.Add(titleTb);
+
+        var hdrButtons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var btnEdit = new Button
+        {
+            Content = LanguageManager.GetString("ui_Dash_EditBtn"),
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(8, 2, 8, 2),
+            Cursor = Cursors.Hand,
+            Margin = new Thickness(0, 0, 6, 0),
+            Tag = headerTag,
+        };
+        btnEdit.Click += BtnEditAction_Click;
+        var btnDel = new Button
+        {
+            Content = "X",
+            FontSize = 11,
+            Foreground = Brushes.White,
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F38BA8")),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(6, 2, 6, 2),
+            Cursor = Cursors.Hand,
+            Tag = headerTag,
+        };
+        btnDel.Click += BtnDeleteAction_Click;
+        hdrButtons.Children.Add(btnEdit);
+        hdrButtons.Children.Add(btnDel);
+        DockPanel.SetDock(hdrButtons, Dock.Right);
+        headerRow.Children.Add(hdrButtons);
+        rootStack.Children.Add(headerRow);
+
+        // ── THEN branch ──
+        var thenBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 180, 80)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(12, 6, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#121820")),
+            AllowDrop = true,
+            Tag = new NestedBranchTag(img.ThenActions, true),
+        };
+        thenBorder.DragOver += NestedBranch_DragOver;
+        thenBorder.Drop += NestedBranch_Drop;
+        var thenPanel = new StackPanel();
+        for (int j = 0; j < img.ThenActions.Count; j++)
+            thenPanel.Children.Add(BuildWorkflowChildUniversal(img.ThenActions[j], j, new NestedIfImageChildTag(img, j, true)));
+
+        var btnThen = new Button
+        {
+            Content = LanguageManager.GetString("ui_Canvas_AddToThen"),
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(35, 70, 35)),
+            Foreground = new SolidColorBrush(Color.FromRgb(160, 220, 160)),
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = new IfImageInsertTag(img, true),
+        };
+        btnThen.Click += BtnAddIfImageBranch_Click;
+        thenPanel.Children.Add(btnThen);
+        thenBorder.Child = thenPanel;
+
+        // ── ELSE branch ──
+        var elseBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(200, 80, 80)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(12, 4, 4, 4),
+            Padding = new Thickness(6),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1A1A1A")),
+            AllowDrop = true,
+            Tag = new NestedBranchTag(img.ElseActions, false),
+        };
+        elseBorder.DragOver += NestedBranch_DragOver;
+        elseBorder.Drop += NestedBranch_Drop;
+        var elsePanel = new StackPanel();
+        for (int j = 0; j < img.ElseActions.Count; j++)
+            elsePanel.Children.Add(BuildWorkflowChildUniversal(img.ElseActions[j], j, new NestedIfImageChildTag(img, j, false)));
+
+        var btnElse = new Button
+        {
+            Content = LanguageManager.GetString("ui_Canvas_AddToElse"),
+            Margin = new Thickness(2, 6, 2, 2),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = new SolidColorBrush(Color.FromRgb(70, 35, 35)),
+            Foreground = new SolidColorBrush(Color.FromRgb(220, 160, 160)),
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Tag = new IfImageInsertTag(img, false),
+        };
+        btnElse.Click += BtnAddIfImageBranch_Click;
+        elsePanel.Children.Add(btnElse);
+        elseBorder.Child = elsePanel;
+
+        rootStack.Children.Add(new Expander
+        {
+            Header = LanguageManager.GetString("ui_IfImage_ThenLabel"),
+            IsExpanded = true,
+            Foreground = new SolidColorBrush(Color.FromRgb(160, 220, 160)),
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = thenBorder,
+        });
+        rootStack.Children.Add(new Expander
+        {
+            Header = LanguageManager.GetString("ui_IfImage_ElseLabel"),
+            IsExpanded = false,
+            Foreground = new SolidColorBrush(Color.FromRgb(220, 160, 160)),
+            Margin = new Thickness(0, 4, 0, 0),
+            Content = elseBorder,
         });
 
         card.Child = rootStack;
@@ -2393,6 +2604,19 @@ public partial class MainWindow : Window
                 }
 
                 return;
+            case NestedIfImageChildTag ii:
+                if (ii.IsThen)
+                {
+                    if (ii.ChildIndex < 0 || ii.ChildIndex >= ii.Parent.ThenActions.Count) return;
+                    RemoveAtAndLog(ii.Parent.ThenActions, ii.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromThen"));
+                }
+                else
+                {
+                    if (ii.ChildIndex < 0 || ii.ChildIndex >= ii.Parent.ElseActions.Count) return;
+                    RemoveAtAndLog(ii.Parent.ElseActions, ii.ChildIndex, LanguageManager.GetString("ui_Log_RemovedFromElse"));
+                }
+
+                return;
             case int idx when idx >= 0 && idx < _actions.Count:
                 string name = _actions[idx].DisplayName;
                 _actions.RemoveAt(idx);
@@ -2432,6 +2656,8 @@ public partial class MainWindow : Window
         NestedTryCatchChildTag tc when !tc.IsTry && tc.ChildIndex >= 0 && tc.ChildIndex < tc.Parent.CatchActions.Count => tc.Parent.CatchActions[tc.ChildIndex],
         NestedIfVarChildTag iv when iv.IsThen && iv.ChildIndex >= 0 && iv.ChildIndex < iv.Parent.ThenActions.Count => iv.Parent.ThenActions[iv.ChildIndex],
         NestedIfVarChildTag iv when !iv.IsThen && iv.ChildIndex >= 0 && iv.ChildIndex < iv.Parent.ElseActions.Count => iv.Parent.ElseActions[iv.ChildIndex],
+        NestedIfImageChildTag ii when ii.IsThen && ii.ChildIndex >= 0 && ii.ChildIndex < ii.Parent.ThenActions.Count => ii.Parent.ThenActions[ii.ChildIndex],
+        NestedIfImageChildTag ii when !ii.IsThen && ii.ChildIndex >= 0 && ii.ChildIndex < ii.Parent.ElseActions.Count => ii.Parent.ElseActions[ii.ChildIndex],
         _ => null,
     };
 
@@ -2510,6 +2736,33 @@ public partial class MainWindow : Window
 
         RebuildCanvas();
         AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, marker.IsThen ? LanguageManager.GetString("ui_Canvas_ThenLabel") : LanguageManager.GetString("ui_Canvas_ElseLabel")));
+    }
+
+    private void BtnAddIfImageBranch_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.Tag is not IfImageInsertTag marker)
+            return;
+
+        var picker = new ActionTypePicker { Owner = this };
+        if (picker.ShowDialog() != true || string.IsNullOrEmpty(picker.SelectedType))
+            return;
+
+        MacroAction? newAction = CreateActionFromType(picker.SelectedType);
+        if (newAction is null)
+            return;
+
+        var dialog = new ActionEditDialog(newAction, _editorTargetHwnd) { Owner = this };
+        dialog.Log += msg => Dispatcher.Invoke(() => AppendLog(msg));
+        if (dialog.ShowDialog() != true)
+            return;
+
+        if (marker.IsThen)
+            marker.Parent.ThenActions.Add(newAction);
+        else
+            marker.Parent.ElseActions.Add(newAction);
+
+        RebuildCanvas();
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, marker.IsThen ? LanguageManager.GetString("ui_IfImage_ThenLabel") : LanguageManager.GetString("ui_IfImage_ElseLabel")));
     }
 
     private void BtnClearCanvas_Click(object sender, RoutedEventArgs e) { _actions.Clear(); RebuildCanvas(); AppendLog("Canvas cleared."); }
@@ -3687,7 +3940,8 @@ public partial class MainWindow : Window
             ? $" | ROI({img.RoiX},{img.RoiY},{img.RoiWidth}x{img.RoiHeight})"
             : " | Full window";
         string clickPart = img.ClickOnFound ? " \U0001F3AF Auto-Click" : " No-Click";
-        return Path.GetFileName(img.ImagePath) + clickPart + roiInfo;
+        string branchInfo = $" | THEN:{img.ThenActions.Count} ELSE:{img.ElseActions.Count}";
+        return Path.GetFileName(img.ImagePath) + clickPart + roiInfo + branchInfo;
     }
 }
 

@@ -110,6 +110,8 @@
     <system:String x:Key="ui_Action_TypeText">Type Text</system:String>
     <system:String x:Key="ui_Action_Wait">Wait</system:String>
     <system:String x:Key="ui_Action_IfImage">IF Image Found</system:String>
+    <system:String x:Key="ui_IfImage_ThenLabel">✅ If image FOUND — run:</system:String>
+    <system:String x:Key="ui_IfImage_ElseLabel">❌ If image NOT found — run:</system:String>
     <system:String x:Key="ui_Action_IfText">IF Text Found</system:String>
     <system:String x:Key="ui_Action_WebAction">Web Action</system:String>
     <system:String x:Key="ui_MacroWorkflow">Macro Workflow</system:String>
@@ -926,6 +928,7 @@ Error details:
     <system:String x:Key="ui_Tmpl_ImageDetectDesc">Wait for image to appear then perform action</system:String>
     <system:String x:Key="ui_Tmpl_CheckImage">Check image</system:String>
     <system:String x:Key="ui_Tmpl_IfImageFound">If image found</system:String>
+    <system:String x:Key="ui_Tmpl_IfImageElseWait">⏳ Wait 1s then retry</system:String>
     <system:String x:Key="ui_Tmpl_WaitAgain">Wait again</system:String>
     <system:String x:Key="ui_Tmpl_HotkeyAutoDesc">Press hotkey combination on a cycle</system:String>
     <system:String x:Key="ui_Tmpl_LoopHotkey">Loop hotkey</system:String>

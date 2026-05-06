@@ -104,7 +104,7 @@ public partial class SnippingToolWindow : Window
 
         if (w < 5 || h < 5 || _fullScreenshot is null)
         {
-            DialogResult = false;
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false;
             Close();
             return;
         }
@@ -124,11 +124,11 @@ public partial class SnippingToolWindow : Window
             cropped.Save(CapturedFilePath, ImageFormat.Png);
 
             SelectedScreenRectangle = new System.Drawing.Rectangle(x, y, w, h);
-            DialogResult = true;
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true;
         }
         catch
         {
-            DialogResult = false;
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false;
         }
 
         Close();
@@ -138,7 +138,7 @@ public partial class SnippingToolWindow : Window
     {
         if (e.Key == Key.Escape)
         {
-            DialogResult = false;
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false;
             Close();
         }
     }

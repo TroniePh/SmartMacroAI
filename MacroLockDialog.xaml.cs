@@ -47,15 +47,17 @@ public partial class MacroLockDialog : Window
 
         NewPasswordHash = MacroLockService.HashPassword(pwd);
         RemoveLock = false;
-        DialogResult = true;
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
     }
 
     private void BtnRemoveLock_Click(object sender, RoutedEventArgs e)
     {
         RemoveLock = true;
-        DialogResult = true;
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
     }
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
-        => DialogResult = false;
+    {
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
+    }
 }

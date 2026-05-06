@@ -1,0 +1,80 @@
+# SmartMacroAI — Build & Release
+# Trigger: push tag v* (e.g. v1.5.6)
+# Produces: portable self-contained ZIP + standalone EXE
+#
+# Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PROJECT: SmartMacroAI.csproj
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        runtime: [win-x64, win-x86, win-arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore -r ${{ matrix.runtime }}
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ env.PROJECT }}
+          -c Release
+          -r ${{ matrix.runtime }}
+          --self-contained true
+          -p:PublishSingleFile=false
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/${{ matrix.runtime }}
+
+      - name: Remove .pdb files
+        run: Get-ChildItem -Path "publish/${{ matrix.runtime }}" -Recurse -Filter "*.pdb" | Remove-Item -Force
+
+      - name: Create ZIP
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v',''
+          $zipName = "SmartMacroAI-v${version}-${{ matrix.runtime }}.zip"
+          Compress-Archive -Path "publish/${{ matrix.runtime }}/*" -DestinationPath $zipName
+          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.runtime }}
+          path: ${{ env.ZIP_NAME }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/*.zip

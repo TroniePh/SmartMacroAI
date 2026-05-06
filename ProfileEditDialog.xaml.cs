@@ -121,7 +121,7 @@ public sealed class ProfileEditDialog : Window
             BorderThickness = new Thickness(0),
             Cursor = System.Windows.Input.Cursors.Hand,
         };
-        btnCancel.Click += (_, _) => { DialogResult = false; };
+        btnCancel.Click += (_, _) => { if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close(); };
 
         var btnOk = new Button
         {
@@ -192,6 +192,6 @@ public sealed class ProfileEditDialog : Window
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        DialogResult = true;
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
     }
 }

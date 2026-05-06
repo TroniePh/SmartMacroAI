@@ -107,7 +107,15 @@ public static class MacroTemplateService
                             ClickOnFound = true,
                             RandomOffset = 5,
                             ThenActions = new List<MacroAction> { new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitProcess"), DelayMin = 500, DelayMax = 1000 } },
-                            ElseActions = new List<MacroAction>()
+                            ElseActions = new List<MacroAction>
+                            {
+                                new WaitAction
+                                {
+                                    DisplayName = LanguageManager.GetString("ui_Tmpl_IfImageElseWait"),
+                                    DelayMin = 1000,
+                                    DelayMax = 1000
+                                }
+                            }
                         },
                         new WaitAction { DisplayName = LanguageManager.GetString("ui_Tmpl_WaitAgain"), DelayMin = 500, DelayMax = 800 }
                     }

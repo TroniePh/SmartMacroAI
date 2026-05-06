@@ -24,11 +24,13 @@ public partial class PasswordDialog : Window
             TxtError.Text = LanguageManager.GetString("ui_Pwd_EnterPwd");
             return;
         }
-        DialogResult = true;
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
     }
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
-        => DialogResult = false;
+    {
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
+    }
 
     private void PwdInput_KeyDown(object sender, KeyEventArgs e)
     {

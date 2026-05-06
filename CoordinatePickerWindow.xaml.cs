@@ -110,16 +110,14 @@ public partial class CoordinatePickerWindow : Window
                 PickedPoint = new System.Drawing.Point(pt.X, pt.Y);
         }
 
-        DialogResult = true;
-        Close();
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
-            DialogResult = false;
-            Close();
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
         }
     }
 

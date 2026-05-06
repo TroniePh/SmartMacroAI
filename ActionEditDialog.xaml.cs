@@ -1431,7 +1431,7 @@ public partial class ActionEditDialog : Window
                     cma.WaitForFinish = GetCheckValue("WaitForFinish");
                     break;
             }
-            DialogResult = true;
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
         }
         catch (Exception ex)
         {
@@ -1442,6 +1442,6 @@ public partial class ActionEditDialog : Window
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = false;
+        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
     }
 }
