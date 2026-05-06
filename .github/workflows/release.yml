@@ -1,26 +1,22 @@
-# SmartMacroAI - Build & Release
-# Trigger: push tag v* (e.g. v1.5.6)
-# Produces: ZIP (portable), EXE (standalone), Setup EXE (installer)
-#
-# Created by Pham Duy - Giai phap tu dong hoa thong minh.
-
-name: Release
+name: Build & Release SmartMacroAI
 
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
-env:
-  DOTNET_NOLOGO: true
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [win-x64, win-x86]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,69 +24,91 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: '8.0.x'
 
-      - name: Publish portable (ZIP)
-        run: dotnet publish SmartMacroAI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+      - name: Restore
+        run: dotnet restore -r ${{ matrix.runtime }}
 
       - name: Publish standalone EXE
-        run: dotnet publish SmartMacroAI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_singlefile
-
-      - name: Clean .pdb
         shell: pwsh
         run: |
-          Get-ChildItem publish publish_singlefile -Recurse -Filter "*.pdb" -EA SilentlyContinue | Remove-Item -Force
+          dotnet publish SmartMacroAI.csproj `
+            -c Release `
+            -r ${{ matrix.runtime }} `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -o "publish_${{ matrix.runtime }}"
+
+      - name: Clean .pdb files
+        shell: pwsh
+        run: |
+          Get-ChildItem "publish_${{ matrix.runtime }}" -Recurse -Filter "*.pdb" -EA SilentlyContinue | Remove-Item -Force
 
       - name: Create ZIP
         shell: pwsh
         run: |
-          $v = "${{ github.ref_name }}" -replace '^v',''
-          $zip = "SmartMacroAI-v${v}-win-x64.zip"
-          Compress-Archive -Path "publish/*" -DestinationPath $zip
-          echo "ZIP_NAME=$zip" >> $env:GITHUB_ENV
-
-      - name: Copy standalone EXE
-        shell: pwsh
-        run: |
-          $v = "${{ github.ref_name }}" -replace '^v',''
-          Copy-Item "publish_singlefile/SmartMacroAI.exe" "SmartMacroAI-v${v}-win-x64.exe"
-          echo "EXE_NAME=SmartMacroAI-v${v}-win-x64.exe" >> $env:GITHUB_ENV
+          $version = "${{ github.ref_name }}"
+          $zipName = "SmartMacroAI-$version-${{ matrix.runtime }}.zip"
+          Compress-Archive -Path "publish_${{ matrix.runtime }}\*" -DestinationPath $zipName
+          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
 
       - name: Setup Inno Setup
-        run: choco install innosetup -y --no-progress
+        run: choco install innosetup --no-progress -y
 
       - name: Build Installer
         shell: pwsh
         run: |
-          $v = "${{ github.ref_name }}" -replace '^v',''
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer/SmartMacroAI_Setup.iss" "/DMyAppVersion=$v"
-          Copy-Item "installer_out/SmartMacroAI_Setup_v${v}.exe" "SmartMacroAI_Setup_v${v}.exe"
-          echo "SETUP_NAME=SmartMacroAI_Setup_v${v}.exe" >> $env:GITHUB_ENV
+          $version = "${{ github.ref_name }}" -replace '^v',''
+          $runtime = "${{ matrix.runtime }}"
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-files
-          path: |
-            ${{ env.ZIP_NAME }}
-            ${{ env.EXE_NAME }}
-            ${{ env.SETUP_NAME }}
+          $iss = @"
+          [Setup]
+          AppName=SmartMacroAI
+          AppVersion=$version
+          AppPublisher=Pham Duy
+          AppPublisherURL=https://github.com/${{ github.repository }}
+          DefaultDirName={autopf}\SmartMacroAI
+          DefaultGroupName=SmartMacroAI
+          OutputDir=installer_output
+          OutputBaseFilename=SmartMacroAI-$version-$runtime-Setup
+          Compression=lzma2
+          SolidCompression=yes
+          WizardStyle=modern
+          ArchitecturesAllowed=$( if ($runtime -eq 'win-x64') {'x64compatible'} else {'x86compatible'} )
+          ArchitecturesInstallIn64BitMode=x64compatible
+          MinVersion=10.0
+          PrivilegesRequired=admin
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
+          [Files]
+          Source: "publish_$runtime\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-      - name: Create GitHub Release
+          [Tasks]
+          Name: "desktopicon"; Description: "Create desktop shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
+
+          [Icons]
+          Name: "{group}\SmartMacroAI"; Filename: "{app}\SmartMacroAI.exe"
+          Name: "{autodesktop}\SmartMacroAI"; Filename: "{app}\SmartMacroAI.exe"; Tasks: desktopicon
+
+          [Run]
+          Filename: "{app}\SmartMacroAI.exe"; Description: "Launch SmartMacroAI"; Flags: nowait postinstall skipifsilent shellexec
+          "@
+
+          New-Item -ItemType Directory -Force -Path "installer_output" | Out-Null
+          $iss | Out-File -FilePath "setup_$runtime.iss" -Encoding UTF8
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_$runtime.iss"
+
+          $setupFile = "installer_output\SmartMacroAI-$version-$runtime-Setup.exe"
+          echo "SETUP_FILE=$setupFile" >> $env:GITHUB_ENV
+
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
           files: |
-            artifacts/SmartMacroAI-*.zip
-            artifacts/SmartMacroAI-v*.exe
-            artifacts/SmartMacroAI_Setup_*.exe
+            ${{ env.ZIP_NAME }}
+            ${{ env.SETUP_FILE }}
+          generate_release_notes: true
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
