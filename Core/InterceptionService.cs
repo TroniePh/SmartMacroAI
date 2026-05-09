@@ -40,16 +40,9 @@ public sealed class InterceptionService : IDisposable
                 return false;
             }
 
-            // Set filter to receive all mouse and keyboard events
-            InterceptionDriver.interception_set_filter(
-                _ctx,
-                device => InterceptionDriver.interception_is_mouse(device) > 0,
-                InterceptionDriver.INTERCEPTION_FILTER_MOUSE_ALL);
-
-            InterceptionDriver.interception_set_filter(
-                _ctx,
-                device => InterceptionDriver.interception_is_keyboard(device) > 0,
-                InterceptionDriver.INTERCEPTION_FILTER_KEY_ALL);
+            // DO NOT set filters — filters tell the driver to INTERCEPT (capture + hold)
+            // all input until interception_receive is called. Since we only SEND/inject
+            // strokes and never run a receive loop, setting filters freezes all input.
 
             // Scan for real connected devices by checking hardware IDs
             _mouseDevice = FindActiveMouseDevice();

@@ -17,14 +17,37 @@ namespace SmartMacroAI.Core;
 /// </summary>
 public static class InterceptionInstaller
 {
-    private static readonly string AppDir =
-        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+    private static readonly string AppDir;
+    private static readonly string DllPath;
+    private static readonly string InstallerPath;
 
-    private static readonly string DllPath =
-        Path.Combine(AppDir, "interception.dll");
+    static InterceptionInstaller()
+    {
+        try
+        {
+            // AppContext.BaseDirectory is safe for .NET 8 SingleFile publish
+            // (Assembly.GetExecutingAssembly().Location returns "" in SingleFile)
+            AppDir = AppContext.BaseDirectory;
 
-    private static readonly string InstallerPath =
-        Path.Combine(Path.GetTempPath(), "SmartMacroAI-interception-install.exe");
+            if (string.IsNullOrEmpty(AppDir))
+            {
+                AppDir = Path.GetDirectoryName(
+                    System.Diagnostics.Process.GetCurrentProcess()
+                          .MainModule?.FileName) ?? Environment.CurrentDirectory;
+            }
+
+            DllPath = Path.Combine(AppDir, "interception.dll");
+            InstallerPath = Path.Combine(Path.GetTempPath(), "SmartMacroAI-interception-install.exe");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[InterceptionInstaller] Init warning: {ex.Message}");
+            AppDir = Environment.CurrentDirectory;
+            DllPath = Path.Combine(AppDir, "interception.dll");
+            InstallerPath = Path.Combine(Path.GetTempPath(), "SmartMacroAI-interception-install.exe");
+        }
+    }
 
     // ── Log buffer for diagnostic output ──
     private static readonly List<string> _logBuffer = new();
@@ -267,7 +290,7 @@ public static class InterceptionInstaller
         var psi = new ProcessStartInfo
         {
             FileName        = Process.GetCurrentProcess().MainModule?.FileName
-                              ?? Assembly.GetExecutingAssembly().Location,
+                              ?? Path.Combine(AppContext.BaseDirectory, "SmartMacroAI.exe"),
             Verb            = "runas",
             UseShellExecute = true
         };
