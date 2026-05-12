@@ -3079,8 +3079,13 @@ public partial class MainWindow : Window
         else
             marker.Parent.ElseActions.Add(newAction);
 
+        // Force sync _actions to _currentScript before rebuild
+        _currentScript.Actions = [.. _actions];
         RebuildCanvas();
-        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, marker.IsThen ? LanguageManager.GetString("ui_IfImage_ThenLabel") : LanguageManager.GetString("ui_IfImage_ElseLabel")));
+
+        string branchName = marker.IsThen ? LanguageManager.GetString("ui_IfImage_ThenLabel") : LanguageManager.GetString("ui_IfImage_ElseLabel");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, branchName));
+        ShowToast($"Added \"{newAction.DisplayName}\" to {branchName}", isError: false);
     }
 
     private void BtnClearCanvas_Click(object sender, RoutedEventArgs e) { PushUndo(); _actions.Clear(); RebuildCanvas(); AppendLog("Canvas cleared."); }

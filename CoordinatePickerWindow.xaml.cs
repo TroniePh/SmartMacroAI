@@ -65,6 +65,13 @@ public partial class CoordinatePickerWindow : Window
         GuideCanvas.Children.Add(_coordLabel);
 
         MouseMove += CoordinatePickerWindow_MouseMove;
+
+        // Force focus on load so first click is captured immediately
+        Loaded += (_, _) =>
+        {
+            Activate();
+            Focus();
+        };
     }
 
     private void CoordinatePickerWindow_MouseMove(object sender, MouseEventArgs e)
