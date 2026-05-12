@@ -134,6 +134,34 @@ public partial class ActionEditDialog : Window
                 break;
             case IfImageAction img:
                 AddField("ImagePath", img.ImagePath, browse: true, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_TemplatePath"));
+
+                // Quick capture button — snip screen region and use as template immediately
+                var btnSnipTemplate = new Button
+                {
+                    Content = "📷 " + Localization.LanguageManager.GetString("ui_ActionEdit_SnipCapture"),
+                    Margin = new Thickness(0, 4, 0, 8),
+                    Padding = new Thickness(12, 8, 12, 8),
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#313244")),
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#89B4FA")),
+                    BorderThickness = new Thickness(0),
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                    FontWeight = FontWeights.SemiBold,
+                    ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_SnipCaptureTip"),
+                };
+                btnSnipTemplate.Click += (_, _) =>
+                {
+                    Hide();
+                    System.Threading.Thread.Sleep(200);
+                    var snip = new SnippingToolWindow();
+                    if (snip.ShowDialog() == true && !string.IsNullOrEmpty(snip.CapturedFilePath))
+                    {
+                        if (_fields.TryGetValue("ImagePath", out var tb))
+                            tb.Text = snip.CapturedFilePath;
+                    }
+                    Show();
+                };
+                FieldsPanel.Children.Add(btnSnipTemplate);
+
                 AddField("Threshold", img.Threshold.ToString("F2"), displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_MatchThreshold"));
                 AddCheckField("ClickOnFound", img.ClickOnFound,
                     Localization.LanguageManager.GetString("ui_ActionEdit_ClickOnFound"));
@@ -163,6 +191,17 @@ public partial class ActionEditDialog : Window
                 AddFieldWithPickerButton("Y", px.Y.ToString(), "Y");
                 AddField("ExpectedColor", px.ExpectedColor, displayCaption: "Expected Color (#RRGGBB)");
                 AddField("Tolerance", px.Tolerance.ToString(), displayCaption: "Tolerance (0-255)");
+                AddCheckField("ScanRegion", px.ScanRegion, "🔍 Scan Region (tìm pixel trong vùng thay vì 1 điểm)");
+                AddField("ScanWidth", px.ScanWidth.ToString(), displayCaption: "Scan Width (0 = full)");
+                AddField("ScanHeight", px.ScanHeight.ToString(), displayCaption: "Scan Height (0 = full)");
+                FieldsPanel.Children.Add(new TextBlock
+                {
+                    Text = "Khi bật Scan Region: X,Y là góc trên-trái vùng quét. Toạ độ tìm thấy lưu vào {{pixel_x}} {{pixel_y}}",
+                    Foreground = LabelBrush,
+                    FontSize = 10,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 4, 0, 0),
+                });
                 break;
             case WebAction wa:
                 AddComboField("ActionType",
@@ -545,6 +584,21 @@ public partial class ActionEditDialog : Window
 
         if (_targetHwnd != IntPtr.Zero)
         {
+            // If window is off-screen (stealth mode), move it back to original position first
+            IntPtr origXProp = Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigX");
+            if (origXProp != IntPtr.Zero)
+            {
+                int origX = (int)origXProp - 1;
+                int origY = (int)Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigY") - 1;
+                int origW = (int)Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigW");
+                int origH = (int)Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigH");
+                if (origW > 0 && origH > 0)
+                {
+                    Win32Api.SetWindowPos(_targetHwnd, IntPtr.Zero, origX, origY, origW, origH,
+                        Win32Api.SWP_NOZORDER | Win32Api.SWP_NOACTIVATE);
+                }
+            }
+
             Win32Api.ShowWindow(_targetHwnd, Win32Api.SW_RESTORE);
             Win32Api.SetForegroundWindow(_targetHwnd);
             await Task.Delay(300);
@@ -564,6 +618,18 @@ public partial class ActionEditDialog : Window
             if (_action is ClickAction ca)
             {
                 ca.MonitorIndex = picker.PickedMonitorIndex;
+            }
+        }
+
+        // If window was in stealth, move it back off-screen
+        if (_targetHwnd != IntPtr.Zero && Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigX") != IntPtr.Zero)
+        {
+            int origW = (int)Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigW");
+            int origH = (int)Win32Api.GetProp(_targetHwnd, "SmartMacro_OrigH");
+            if (origW > 0)
+            {
+                Win32Api.SetWindowPos(_targetHwnd, IntPtr.Zero, -32000, -32000, origW, origH,
+                    Win32Api.SWP_NOZORDER | Win32Api.SWP_NOACTIVATE);
             }
         }
 
@@ -1421,6 +1487,9 @@ public partial class ActionEditDialog : Window
                     px.Y = int.Parse(GetFieldValue("Y"));
                     px.ExpectedColor = GetFieldValue("ExpectedColor");
                     px.Tolerance = int.TryParse(GetFieldValue("Tolerance"), out int tol) ? Math.Clamp(tol, 0, 255) : 20;
+                    px.ScanRegion = GetCheckValue("ScanRegion");
+                    px.ScanWidth = int.TryParse(GetFieldValue("ScanWidth"), out int sw) ? Math.Max(0, sw) : 0;
+                    px.ScanHeight = int.TryParse(GetFieldValue("ScanHeight"), out int sh) ? Math.Max(0, sh) : 0;
                     break;
                 case WebAction wa:
                     if (Enum.TryParse<WebActionType>(GetComboValue("ActionType"), out var at))

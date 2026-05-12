@@ -11,16 +11,53 @@
         KeyDown="Window_KeyDown">
     <Grid>
         <Image x:Name="ScreenImage" Stretch="Fill" />
+        <!-- Dark overlay outside selection -->
         <Canvas x:Name="OverlayCanvas">
             <Border x:Name="SelectionRect" BorderBrush="#89B4FA" BorderThickness="2"
                     Background="#2289B4FA" Visibility="Collapsed" />
         </Canvas>
+
+        <!-- Top instruction -->
         <TextBlock Text="{DynamicResource ui_Snip_Instruction}"
                    Foreground="White" FontSize="16" FontWeight="SemiBold"
-                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0">
+                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0">
             <TextBlock.Effect>
                 <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.9" Color="Black" />
             </TextBlock.Effect>
         </TextBlock>
+
+        <!-- Info Panel (PMC-style) — shows cursor position, selection size, pixel color -->
+        <Border x:Name="InfoPanel" Background="#DD1E1E2E" BorderBrush="#45475A" BorderThickness="1"
+                Padding="12,8" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Margin="16,0,0,16" MinWidth="280">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="📍 Cursor: " Foreground="#A6ADC8" FontSize="12" FontFamily="Consolas"/>
+                    <TextBlock x:Name="TxtCursorPos" Text="0, 0" Foreground="#CDD6F4" FontSize="12" FontFamily="Consolas" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="📐 Size:   " Foreground="#A6ADC8" FontSize="12" FontFamily="Consolas"/>
+                    <TextBlock x:Name="TxtSelectionSize" Text="—" Foreground="#89B4FA" FontSize="12" FontFamily="Consolas" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="🎨 Color:  " Foreground="#A6ADC8" FontSize="12" FontFamily="Consolas"/>
+                    <Border x:Name="ColorPreview" Width="14" Height="14" BorderBrush="#585B70" BorderThickness="1" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtPixelColor" Text="#000000" Foreground="#A6E3A1" FontSize="12" FontFamily="Consolas" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🔍 RGB:    " Foreground="#A6ADC8" FontSize="12" FontFamily="Consolas"/>
+                    <TextBlock x:Name="TxtPixelRgb" Text="0, 0, 0" Foreground="#F9E2AF" FontSize="12" FontFamily="Consolas"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Magnifier (zoom lens near cursor) -->
+        <Border x:Name="MagnifierBorder" Width="120" Height="120"
+                BorderBrush="#89B4FA" BorderThickness="2"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Visibility="Visible" IsHitTestVisible="False"
+                Background="#1E1E2E">
+            <Image x:Name="MagnifierImage" Stretch="Fill" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+        </Border>
     </Grid>
 </Window>

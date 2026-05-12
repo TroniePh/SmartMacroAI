@@ -2683,7 +2683,7 @@ public partial class MainWindow : Window
         rootStack.Children.Add(new Expander
         {
             Header = LanguageManager.GetString("ui_IfImage_ElseLabel"),
-            IsExpanded = img.ElseActions.Count > 0,
+            IsExpanded = true,
             Foreground = new SolidColorBrush(Color.FromRgb(220, 160, 160)),
             Margin = new Thickness(0, 4, 0, 0),
             Content = elseBorder,
@@ -3937,6 +3937,20 @@ public partial class MainWindow : Window
     private void BtnClearRoi_Click(object sender, RoutedEventArgs e)
     {
         RoiX.Text = RoiY.Text = RoiWidth.Text = RoiHeight.Text = string.Empty;
+    }
+
+    private void BtnPickRoi_Click(object sender, RoutedEventArgs e)
+    {
+        var snip = new SnippingToolWindow();
+        if (snip.ShowDialog() == true)
+        {
+            var r = snip.SelectedScreenRectangle;
+            RoiX.Text = r.X.ToString();
+            RoiY.Text = r.Y.ToString();
+            RoiWidth.Text = r.Width.ToString();
+            RoiHeight.Text = r.Height.ToString();
+            AppendLog($"[ROI] Selected region: ({r.X},{r.Y}) {r.Width}×{r.Height}");
+        }
     }
 
     private async void BtnVisionStealthClick_Click(object sender, RoutedEventArgs e)

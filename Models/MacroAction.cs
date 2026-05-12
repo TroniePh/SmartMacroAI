@@ -684,6 +684,9 @@ public class DragAction : MacroAction
 /// <summary>
 /// Checks the pixel color at (X, Y) on the target window.
 /// If it matches the expected color (within tolerance), runs ThenActions; otherwise ElseActions.
+/// Supports two modes:
+/// - Point mode (default): checks pixel at fixed (X, Y)
+/// - Scan mode: scans a region to find the first pixel matching the color, saves coords to variables
 /// Much lighter than IfImageAction — no OpenCV needed.
 /// </summary>
 public class IfPixelColorAction : MacroAction
@@ -694,6 +697,14 @@ public class IfPixelColorAction : MacroAction
     public string ExpectedColor { get; set; } = "#FF0000";
     /// <summary>Color tolerance (0-255). 0 = exact match, 30 = allow slight variation.</summary>
     public int Tolerance { get; set; } = 20;
+
+    /// <summary>When true, scans the region (X,Y)→(X+ScanWidth, Y+ScanHeight) for the color instead of checking a single point.</summary>
+    public bool ScanRegion { get; set; } = false;
+    /// <summary>Width of scan region (only used when ScanRegion=true). 0 = full window width.</summary>
+    public int ScanWidth { get; set; } = 0;
+    /// <summary>Height of scan region (only used when ScanRegion=true). 0 = full window height.</summary>
+    public int ScanHeight { get; set; } = 0;
+
     public List<MacroAction> ThenActions { get; set; } = [];
     public List<MacroAction> ElseActions { get; set; } = [];
 

@@ -2623,7 +2623,7 @@ public sealed class MacroEngine
         IntPtr hwnd = _runtimeTargetHwnd;
         if (!IsTargetValid()) return;
 
-        // Capture pixel from target window
+        // Capture window
         using var bmp = Win32Api.CaptureHiddenWindow(hwnd);
         if (bmp == null)
         {
@@ -2632,17 +2632,6 @@ public sealed class MacroEngine
                 await ExecuteActionsAsync(ifPixel.ElseActions, token);
             return;
         }
-
-        // Get pixel color at (X, Y)
-        if (ifPixel.X < 0 || ifPixel.Y < 0 || ifPixel.X >= bmp.Width || ifPixel.Y >= bmp.Height)
-        {
-            OnLog($"  ⚠ IfPixelColor: ({ifPixel.X},{ifPixel.Y}) out of bounds ({bmp.Width}x{bmp.Height})");
-            if (ifPixel.ElseActions.Count > 0)
-                await ExecuteActionsAsync(ifPixel.ElseActions, token);
-            return;
-        }
-
-        var actualColor = bmp.GetPixel(ifPixel.X, ifPixel.Y);
 
         // Parse expected color
         System.Drawing.Color expectedColor;
@@ -2658,15 +2647,68 @@ public sealed class MacroEngine
             return;
         }
 
-        // Compare with tolerance
-        bool match = Math.Abs(actualColor.R - expectedColor.R) <= ifPixel.Tolerance &&
-                     Math.Abs(actualColor.G - expectedColor.G) <= ifPixel.Tolerance &&
-                     Math.Abs(actualColor.B - expectedColor.B) <= ifPixel.Tolerance;
+        bool match = false;
+        int foundX = ifPixel.X, foundY = ifPixel.Y;
 
-        OnLog($"  IfPixelColor ({ifPixel.X},{ifPixel.Y}): actual=#{actualColor.R:X2}{actualColor.G:X2}{actualColor.B:X2} expected={ifPixel.ExpectedColor} tol={ifPixel.Tolerance} → {(match ? "MATCH" : "NO MATCH")}");
+        if (ifPixel.ScanRegion)
+        {
+            // ── SCAN MODE: search region for first pixel matching color ──
+            int startX = Math.Max(0, ifPixel.X);
+            int startY = Math.Max(0, ifPixel.Y);
+            int endX = ifPixel.ScanWidth > 0 ? Math.Min(startX + ifPixel.ScanWidth, bmp.Width) : bmp.Width;
+            int endY = ifPixel.ScanHeight > 0 ? Math.Min(startY + ifPixel.ScanHeight, bmp.Height) : bmp.Height;
+
+            // Scan with step=2 for performance on large regions
+            int step = (endX - startX) * (endY - startY) > 100000 ? 2 : 1;
+
+            for (int py = startY; py < endY && !match; py += step)
+            {
+                for (int px = startX; px < endX && !match; px += step)
+                {
+                    var c = bmp.GetPixel(px, py);
+                    if (Math.Abs(c.R - expectedColor.R) <= ifPixel.Tolerance &&
+                        Math.Abs(c.G - expectedColor.G) <= ifPixel.Tolerance &&
+                        Math.Abs(c.B - expectedColor.B) <= ifPixel.Tolerance)
+                    {
+                        match = true;
+                        foundX = px;
+                        foundY = py;
+                    }
+                }
+            }
+
+            if (match)
+                OnLog($"  PixelSearch FOUND {ifPixel.ExpectedColor} at ({foundX},{foundY}) in region ({startX},{startY})-({endX},{endY})");
+            else
+                OnLog($"  PixelSearch NOT FOUND {ifPixel.ExpectedColor} in region ({startX},{startY})-({endX},{endY})");
+        }
+        else
+        {
+            // ── POINT MODE: check single pixel at (X, Y) ──
+            if (ifPixel.X < 0 || ifPixel.Y < 0 || ifPixel.X >= bmp.Width || ifPixel.Y >= bmp.Height)
+            {
+                OnLog($"  ⚠ IfPixelColor: ({ifPixel.X},{ifPixel.Y}) out of bounds ({bmp.Width}x{bmp.Height})");
+                if (ifPixel.ElseActions.Count > 0)
+                    await ExecuteActionsAsync(ifPixel.ElseActions, token);
+                return;
+            }
+
+            var actualColor = bmp.GetPixel(ifPixel.X, ifPixel.Y);
+            match = Math.Abs(actualColor.R - expectedColor.R) <= ifPixel.Tolerance &&
+                    Math.Abs(actualColor.G - expectedColor.G) <= ifPixel.Tolerance &&
+                    Math.Abs(actualColor.B - expectedColor.B) <= ifPixel.Tolerance;
+
+            OnLog($"  IfPixelColor ({ifPixel.X},{ifPixel.Y}): actual=#{actualColor.R:X2}{actualColor.G:X2}{actualColor.B:X2} expected={ifPixel.ExpectedColor} tol={ifPixel.Tolerance} → {(match ? "MATCH" : "NO MATCH")}");
+        }
 
         if (match)
         {
+            // Save found coordinates to variables (like Pulover's FoundX/FoundY)
+            _variableStore.Set("pixel_x", foundX.ToString());
+            _variableStore.Set("pixel_y", foundY.ToString());
+            _vars.Set("pixel_x", foundX);
+            _vars.Set("pixel_y", foundY);
+
             if (ifPixel.ThenActions.Count > 0)
                 await ExecuteActionsAsync(ifPixel.ThenActions, token);
         }
@@ -2781,9 +2823,15 @@ public sealed class MacroEngine
                 OnLog($"    → FOUND at ({match.Value.X}, {match.Value.Y}) after {elapsed}ms");
         }
 
-        // ── Image found → click (if enabled) + ThenActions ───────────────────────────────
+        // ── Image found → save coordinates to variables + click (if enabled) + ThenActions ─
         if (match.HasValue)
         {
+            // Save found coordinates to runtime variables for use in subsequent actions
+            _variableStore.Set("image_x", match.Value.X.ToString());
+            _variableStore.Set("image_y", match.Value.Y.ToString());
+            _vars.Set("image_x", match.Value.X);
+            _vars.Set("image_y", match.Value.Y);
+
             try
             {
                 var det = VisionEngine.FindImageOnWindowDetailed(hwnd, imagePath, ifImage.SearchRegion);

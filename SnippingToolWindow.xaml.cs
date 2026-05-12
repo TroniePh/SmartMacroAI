@@ -4,10 +4,17 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using DrawingPixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace SmartMacroAI;
 
+/// <summary>
+/// PMC-style screen capture tool with realtime info panel:
+/// cursor position, selection size, pixel color, magnifier zoom.
+/// Created by Phạm Duy – Giải pháp tự động hóa thông minh.
+/// </summary>
 public partial class SnippingToolWindow : Window
 {
     private System.Windows.Point _startPoint;
@@ -16,7 +23,7 @@ public partial class SnippingToolWindow : Window
 
     public string? CapturedFilePath { get; private set; }
 
-    /// <summary>Screen-space rectangle of the last successful selection (valid when <see cref="DialogResult"/> is true).</summary>
+    /// <summary>Screen-space rectangle of the last successful selection.</summary>
     public System.Drawing.Rectangle SelectedScreenRectangle { get; private set; }
 
     public static string TemplatesFolder
@@ -42,7 +49,7 @@ public partial class SnippingToolWindow : Window
         int x = (int)SystemParameters.VirtualScreenLeft;
         int y = (int)SystemParameters.VirtualScreenTop;
 
-        _fullScreenshot = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+        _fullScreenshot = new Bitmap(w, h, DrawingPixelFormat.Format32bppArgb);
         using var gfx = Graphics.FromImage(_fullScreenshot);
         gfx.CopyFromScreen(x, y, 0, 0, new System.Drawing.Size(w, h));
 
@@ -76,9 +83,21 @@ public partial class SnippingToolWindow : Window
 
     private void Window_MouseMove(object sender, MouseEventArgs e)
     {
-        if (!_isDragging) return;
-
         var current = e.GetPosition(OverlayCanvas);
+        int cx = (int)current.X;
+        int cy = (int)current.Y;
+
+        // Update cursor position
+        TxtCursorPos.Text = $"{cx}, {cy}";
+
+        // Update pixel color under cursor
+        UpdatePixelInfo(cx, cy);
+
+        // Update magnifier position and content
+        UpdateMagnifier(cx, cy);
+
+        // Update selection rectangle if dragging
+        if (!_isDragging) return;
 
         double x = Math.Min(_startPoint.X, current.X);
         double y = Math.Min(_startPoint.Y, current.Y);
@@ -89,6 +108,74 @@ public partial class SnippingToolWindow : Window
         Canvas.SetTop(SelectionRect, y);
         SelectionRect.Width = w;
         SelectionRect.Height = h;
+
+        TxtSelectionSize.Text = $"{(int)w} × {(int)h} px";
+    }
+
+    private void UpdatePixelInfo(int x, int y)
+    {
+        if (_fullScreenshot == null) return;
+
+        int bmpX = x - (int)SystemParameters.VirtualScreenLeft;
+        int bmpY = y - (int)SystemParameters.VirtualScreenTop;
+
+        if (bmpX < 0 || bmpY < 0 || bmpX >= _fullScreenshot.Width || bmpY >= _fullScreenshot.Height)
+            return;
+
+        try
+        {
+            var pixel = _fullScreenshot.GetPixel(bmpX, bmpY);
+            TxtPixelColor.Text = $"#{pixel.R:X2}{pixel.G:X2}{pixel.B:X2}";
+            TxtPixelRgb.Text = $"{pixel.R}, {pixel.G}, {pixel.B}";
+            ColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(pixel.R, pixel.G, pixel.B));
+        }
+        catch { }
+    }
+
+    private void UpdateMagnifier(int screenX, int screenY)
+    {
+        if (_fullScreenshot == null) return;
+
+        // Position magnifier near cursor (offset to avoid overlap)
+        double magX = screenX + 20;
+        double magY = screenY - 140;
+        if (magY < 0) magY = screenY + 20;
+        if (magX + 130 > ActualWidth) magX = screenX - 140;
+
+        Canvas.SetLeft(MagnifierBorder, magX);
+        Canvas.SetTop(MagnifierBorder, magY);
+
+        // Extract 15x15 pixel region around cursor and display zoomed
+        int bmpX = screenX - (int)SystemParameters.VirtualScreenLeft;
+        int bmpY = screenY - (int)SystemParameters.VirtualScreenTop;
+        int halfSize = 7;
+
+        int srcX = Math.Clamp(bmpX - halfSize, 0, _fullScreenshot.Width - 1);
+        int srcY = Math.Clamp(bmpY - halfSize, 0, _fullScreenshot.Height - 1);
+        int srcW = Math.Min(halfSize * 2 + 1, _fullScreenshot.Width - srcX);
+        int srcH = Math.Min(halfSize * 2 + 1, _fullScreenshot.Height - srcY);
+
+        if (srcW <= 0 || srcH <= 0) return;
+
+        try
+        {
+            using var region = _fullScreenshot.Clone(
+                new Rectangle(srcX, srcY, srcW, srcH), _fullScreenshot.PixelFormat);
+
+            using var ms = new MemoryStream();
+            region.Save(ms, ImageFormat.Bmp);
+            ms.Position = 0;
+
+            var bi = new BitmapImage();
+            bi.BeginInit();
+            bi.StreamSource = ms;
+            bi.CacheOption = BitmapCacheOption.OnLoad;
+            bi.EndInit();
+            bi.Freeze();
+
+            MagnifierImage.Source = bi;
+        }
+        catch { }
     }
 
     private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)

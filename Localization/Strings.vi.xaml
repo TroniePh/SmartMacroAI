@@ -134,6 +134,7 @@
     <system:String x:Key="ui_Vision_RoiTipH">Chiều cao vùng quét</system:String>
     <system:String x:Key="ui_Vision_RoiClear">✕ Xóa</system:String>
     <system:String x:Key="ui_Vision_RoiClearTip">Xóa ROI — quét cả cửa sổ</system:String>
+    <system:String x:Key="ui_Vision_RoiPickTip">Kéo chọn vùng ROI trên màn hình</system:String>
     <system:String x:Key="ui_Result">Kết quả</system:String>
     <system:String x:Key="ui_Vision_ResultPlaceholder">Chạy thử để xem kết quả tại đây...</system:String>
 
@@ -545,6 +546,8 @@ sc delete keyboard &amp; sc delete mouse</system:String>
     <system:String x:Key="ui_ActionEdit_BreakThreshold">Ngưỡng ảnh thoát (0,5–1,0)</system:String>
     <system:String x:Key="ui_ActionEdit_RepeatHint">Số lần lặp = 0 nghĩa là lặp vô hạn. Các bước trong vòng lặp chỉnh trên sơ đồ macro, không phải ở đây.</system:String>
     <system:String x:Key="ui_ActionEdit_TemplatePath">Đường dẫn ảnh mẫu</system:String>
+    <system:String x:Key="ui_ActionEdit_SnipCapture">Chụp vùng màn hình</system:String>
+    <system:String x:Key="ui_ActionEdit_SnipCaptureTip">Kéo chọn vùng trên màn hình → tự động chụp và dùng làm ảnh mẫu (giống Pulover's Macro)</system:String>
     <system:String x:Key="ui_ActionEdit_MatchThreshold">Ngưỡng khớp</system:String>
     <system:String x:Key="ui_ActionEdit_ClickOnFound">Tự nhấp vào tâm ảnh khi tìm thấy</system:String>
     <system:String x:Key="ui_ActionEdit_RandomOffset">Độ lệch ngẫu nhiên (px)</system:String>

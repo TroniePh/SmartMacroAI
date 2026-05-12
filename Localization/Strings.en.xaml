@@ -134,6 +134,7 @@
     <system:String x:Key="ui_Vision_RoiTipH">Height of scan area</system:String>
     <system:String x:Key="ui_Vision_RoiClear">✕ Clear</system:String>
     <system:String x:Key="ui_Vision_RoiClearTip">Clear ROI — scan full window</system:String>
+    <system:String x:Key="ui_Vision_RoiPickTip">Drag-select ROI region on screen</system:String>
     <system:String x:Key="ui_Result">Result</system:String>
     <system:String x:Key="ui_Vision_ResultPlaceholder">Run a test to see results here...</system:String>
 
@@ -545,6 +546,8 @@ sc delete keyboard &amp; sc delete mouse</system:String>
     <system:String x:Key="ui_ActionEdit_BreakThreshold">Break image threshold (0.5–1.0)</system:String>
     <system:String x:Key="ui_ActionEdit_RepeatHint">Repeat count = 0 means infinite loop. Loop steps are edited on the macro canvas, not here.</system:String>
     <system:String x:Key="ui_ActionEdit_TemplatePath">Template image path</system:String>
+    <system:String x:Key="ui_ActionEdit_SnipCapture">Capture screen region</system:String>
+    <system:String x:Key="ui_ActionEdit_SnipCaptureTip">Drag-select a region on screen → auto-capture and use as template image (like Pulover's Macro)</system:String>
     <system:String x:Key="ui_ActionEdit_MatchThreshold">Match threshold</system:String>
     <system:String x:Key="ui_ActionEdit_ClickOnFound">Auto-click on image center when found</system:String>
     <system:String x:Key="ui_ActionEdit_RandomOffset">Random offset (px)</system:String>

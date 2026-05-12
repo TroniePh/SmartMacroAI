@@ -1102,6 +1102,7 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBox x:Name="RoiX" Grid.Column="0" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipX}" />
                                                 <TextBox x:Name="RoiY" Grid.Column="1" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipY}" />
@@ -1109,6 +1110,8 @@
                                                 <TextBox x:Name="RoiHeight" Grid.Column="3" Margin="2" Style="{StaticResource DarkTextBoxStyle}" ToolTip="{DynamicResource ui_Vision_RoiTipH}" />
                                                 <Button x:Name="BtnClearRoi" Grid.Column="4" Margin="4,2" Padding="10,6" Style="{StaticResource PrimaryButtonStyle}"
                                                         Content="{DynamicResource ui_Vision_RoiClear}" Click="BtnClearRoi_Click" ToolTip="{DynamicResource ui_Vision_RoiClearTip}" />
+                                                <Button x:Name="BtnPickRoi" Grid.Column="5" Margin="4,2" Padding="10,6" Style="{StaticResource SidebarButtonStyle}"
+                                                        Content="📐" Click="BtnPickRoi_Click" ToolTip="{DynamicResource ui_Vision_RoiPickTip}" FontSize="14" />
                                             </Grid>
                                         </GroupBox>
                                     </StackPanel>
