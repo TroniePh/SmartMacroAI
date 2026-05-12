@@ -170,6 +170,75 @@ public static class MacroTemplateService
         },
         new MacroTemplate
         {
+            Name = "🍁 MapleStory Auto Farm",
+            Description = LanguageManager.GetString("ui_Tmpl_MapleDesc"),
+            Category = "Game",
+            TargetWindowTitle = "MapleStory",
+            Actions = new List<MacroAction>
+            {
+                // Buff phase (every loop iteration)
+                new SetVariableAction { DisplayName = "Set loop counter", VarName = "loop", Value = "0", Operation = "Set" },
+                new RepeatAction
+                {
+                    DisplayName = "🔄 Main Farm Loop (infinite)",
+                    RepeatCount = 0,
+                    IntervalMs = 500,
+                    LoopActions = new List<MacroAction>
+                    {
+                        // Increment counter
+                        new SetVariableAction { DisplayName = "loop++", VarName = "loop", Value = "1", Operation = "Increment" },
+
+                        // Buff every 30 loops (~60s)
+                        new IfVariableAction
+                        {
+                            DisplayName = "IF loop % 30 == 0 → Buff",
+                            VarName = "loop",
+                            CompareOp = "==",
+                            Value = "30",
+                            ThenActions = new List<MacroAction>
+                            {
+                                new KeyPressAction { DisplayName = "🛡️ Buff (Page Up)", KeyName = "PageUp", VirtualKeyCode = 0x21, HoldDurationMs = 100, InputMode = KeyInputMode.DriverLevel },
+                                new WaitAction { DisplayName = "Wait buff cast", DelayMin = 800, DelayMax = 1200 },
+                                new SetVariableAction { DisplayName = "Reset loop", VarName = "loop", Value = "0", Operation = "Set" },
+                            },
+                            ElseActions = new List<MacroAction>()
+                        },
+
+                        // HP Check — pixel color at HP bar position
+                        new IfPixelColorAction
+                        {
+                            DisplayName = "⚠️ IF HP low (check red pixel)",
+                            X = 100, Y = 580,
+                            ExpectedColor = "#1A1A1A", // Dark = HP depleted
+                            Tolerance = 40,
+                            ThenActions = new List<MacroAction>
+                            {
+                                new KeyPressAction { DisplayName = "💊 HP Pot (Insert)", KeyName = "Insert", VirtualKeyCode = 0x2D, HoldDurationMs = 50, InputMode = KeyInputMode.DriverLevel },
+                                new WaitAction { DisplayName = "Pot cooldown", DelayMin = 200, DelayMax = 400 },
+                            },
+                            ElseActions = new List<MacroAction>()
+                        },
+
+                        // Attack combo
+                        new KeyPressAction { DisplayName = "⚔️ Attack (Ctrl)", KeyName = "LControlKey", VirtualKeyCode = 0xA2, HoldDurationMs = 80, InputMode = KeyInputMode.DriverLevel },
+                        new WaitAction { DisplayName = "Attack delay", DelayMin = 300, DelayMax = 500 },
+
+                        new KeyPressAction { DisplayName = "⚔️ Skill 1 (A)", KeyName = "A", VirtualKeyCode = 0x41, HoldDurationMs = 80, InputMode = KeyInputMode.DriverLevel },
+                        new WaitAction { DisplayName = "Skill delay", DelayMin = 400, DelayMax = 700 },
+
+                        // Move (alternate left/right)
+                        new KeyPressAction { DisplayName = "➡️ Move Right", KeyName = "Right", VirtualKeyCode = 0x27, HoldDurationMs = 600, InputMode = KeyInputMode.DriverLevel },
+                        new WaitAction { DisplayName = "Move delay", DelayMin = 200, DelayMax = 400 },
+
+                        // Loot
+                        new KeyPressAction { DisplayName = "💰 Loot (Z)", KeyName = "Z", VirtualKeyCode = 0x5A, HoldDurationMs = 50, InputMode = KeyInputMode.DriverLevel },
+                        new WaitAction { DisplayName = "Loot delay", DelayMin = 100, DelayMax = 300 },
+                    }
+                }
+            }
+        },
+        new MacroTemplate
+        {
             Name = LanguageManager.GetString("ui_Tmpl_NameBlank"),
             Description = LanguageManager.GetString("ui_Tmpl_BlankDesc"),
             Category = "General",

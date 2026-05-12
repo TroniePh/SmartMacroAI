@@ -1544,33 +1544,45 @@ public sealed class MacroEngine
             return;
         }
 
+        // For Android emulators (LDPlayer, Nox, BlueStacks): send to render child window
+        IntPtr clickHwnd = hwnd;
+        if (IsEmulatorWindow(hwnd))
+        {
+            IntPtr renderChild = FindEmulatorRenderChild(hwnd);
+            if (renderChild != IntPtr.Zero)
+            {
+                clickHwnd = renderChild;
+                Log?.Invoke($"[Click/Stealth→Emulator] target=0x{renderChild:X} ({click.X},{click.Y})");
+            }
+        }
+
         // DirectX fix: send WM_ACTIVATE to ensure the window processes input messages
-        Win32Api.PostMessage(hwnd, Win32Api.WM_ACTIVATE, (IntPtr)Win32Api.WA_ACTIVE, IntPtr.Zero);
+        Win32Api.PostMessage(clickHwnd, Win32Api.WM_ACTIVATE, (IntPtr)Win32Api.WA_ACTIVE, IntPtr.Zero);
         await Task.Delay(10, token);
 
         IntPtr lParam = Win32Api.MakeLParam(click.X, click.Y);
-        Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
+        Win32Api.PostMessage(clickHwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
         await Task.Delay(5, token);
 
         if (click.Button == MouseButton.Right)
         {
-            Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONDOWN, (IntPtr)Win32Api.MK_RBUTTON, lParam);
+            Win32Api.PostMessage(clickHwnd, Win32Api.WM_RBUTTONDOWN, (IntPtr)Win32Api.MK_RBUTTON, lParam);
             await Task.Delay(20, token);
-            Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONUP, IntPtr.Zero, lParam);
+            Win32Api.PostMessage(clickHwnd, Win32Api.WM_RBUTTONUP, IntPtr.Zero, lParam);
             Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y}) right-click");
         }
         else if (click.Button == MouseButton.Middle)
         {
-            Win32Api.PostMessage(hwnd, Win32Api.WM_MBUTTONDOWN, (IntPtr)Win32Api.MK_MBUTTON, lParam);
+            Win32Api.PostMessage(clickHwnd, Win32Api.WM_MBUTTONDOWN, (IntPtr)Win32Api.MK_MBUTTON, lParam);
             await Task.Delay(20, token);
-            Win32Api.PostMessage(hwnd, Win32Api.WM_MBUTTONUP, IntPtr.Zero, lParam);
+            Win32Api.PostMessage(clickHwnd, Win32Api.WM_MBUTTONUP, IntPtr.Zero, lParam);
             Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y}) middle-click");
         }
         else
         {
-            Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONDOWN, (IntPtr)Win32Api.MK_LBUTTON, lParam);
+            Win32Api.PostMessage(clickHwnd, Win32Api.WM_LBUTTONDOWN, (IntPtr)Win32Api.MK_LBUTTON, lParam);
             await Task.Delay(20, token);
-            Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
+            Win32Api.PostMessage(clickHwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
             Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y})");
         }
     }
@@ -3619,6 +3631,70 @@ public sealed class MacroEngine
                className.Contains("unitywnd") ||
                className.Contains("afx:") ||
                className.Contains("rwidget");
+    }
+
+    /// <summary>
+    /// Detects Android emulator windows (LDPlayer, Nox, BlueStacks, MEmu).
+    /// These apps need PostMessage sent to their render child window, not the top-level frame.
+    /// </summary>
+    private static bool IsEmulatorWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return false;
+        string className = Win32Api.GetWindowClassName(hwnd).ToLowerInvariant();
+        return className.Contains("ldplayermainframe") ||
+               className.Contains("noxplayer") ||
+               className.Contains("bstkcontainer") ||    // BlueStacks
+               className.Contains("memuhyperv") ||
+               className.Contains("ld_mainframe") ||
+               className.Contains("therender");
+    }
+
+    /// <summary>
+    /// Finds the render child window of an Android emulator.
+    /// LDPlayer: TheRender → sub
+    /// Nox: ScreenBoardClassWindow
+    /// BlueStacks: BlueStacksApp
+    /// </summary>
+    private static IntPtr FindEmulatorRenderChild(IntPtr parent)
+    {
+        IntPtr found = IntPtr.Zero;
+        EnumChildWindows(parent, (child, _) =>
+        {
+            string cls = Win32Api.GetWindowClassName(child).ToLowerInvariant();
+            if (cls.Contains("therender") || cls.Contains("sub") ||
+                cls.Contains("screenboardclasswindow") ||
+                cls.Contains("bluestacksapp") ||
+                cls.Contains("renderwindow"))
+            {
+                found = child;
+                return false;
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        // If found "TheRender", look deeper for "sub" (actual render surface)
+        if (found != IntPtr.Zero)
+        {
+            string foundCls = Win32Api.GetWindowClassName(found).ToLowerInvariant();
+            if (foundCls.Contains("therender"))
+            {
+                IntPtr subChild = IntPtr.Zero;
+                EnumChildWindows(found, (child, _) =>
+                {
+                    string cls = Win32Api.GetWindowClassName(child).ToLowerInvariant();
+                    if (cls == "sub" || cls.Contains("render"))
+                    {
+                        subChild = child;
+                        return false;
+                    }
+                    return true;
+                }, IntPtr.Zero);
+                if (subChild != IntPtr.Zero)
+                    found = subChild;
+            }
+        }
+
+        return found;
     }
 
     // ═══════════════════════════════════════════════

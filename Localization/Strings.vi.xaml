@@ -976,6 +976,7 @@ Chi tiết lỗi:
     <system:String x:Key="ui_Tmpl_ClickField2">Click trường 2</system:String>
     <system:String x:Key="ui_Tmpl_ClickSubmit">Click Submit</system:String>
     <system:String x:Key="ui_Tmpl_GameFarmingDesc">Lặp kỹ năng/phím trong game (farming, combat)</system:String>
+    <system:String x:Key="ui_Tmpl_MapleDesc">Auto farm MapleStory: buff, attack, HP pot, move, loot — Driver Level mode (bypass anti-cheat)</system:String>
     <system:String x:Key="ui_Tmpl_LoopSkills">Lặp kỹ năng</system:String>
     <system:String x:Key="ui_Tmpl_SkillKey">Kỹ năng {0}</system:String>
     <system:String x:Key="ui_Tmpl_NameAutoLogin">🔐 Tự động đăng nhập</system:String>

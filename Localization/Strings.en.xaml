@@ -976,6 +976,7 @@ Error details:
     <system:String x:Key="ui_Tmpl_ClickField2">Click field 2</system:String>
     <system:String x:Key="ui_Tmpl_ClickSubmit">Click Submit</system:String>
     <system:String x:Key="ui_Tmpl_GameFarmingDesc">Repeat skill/key rotation for game farming and combat</system:String>
+    <system:String x:Key="ui_Tmpl_MapleDesc">MapleStory auto farm: buff, attack, HP pot, move, loot — Driver Level mode (bypass anti-cheat)</system:String>
     <system:String x:Key="ui_Tmpl_LoopSkills">Loop skills</system:String>
     <system:String x:Key="ui_Tmpl_SkillKey">Skill {0}</system:String>
     <system:String x:Key="ui_Tmpl_NameAutoLogin">🔐 Auto Login</system:String>
