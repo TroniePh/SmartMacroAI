@@ -116,22 +116,15 @@ public partial class CoordinatePickerWindow : Window
             POINT pt = new POINT { X = screen.X, Y = screen.Y };
             if (ScreenToClient(_targetHwnd, ref pt))
             {
-                // Validate: client coords should be within reasonable bounds
-                // GetClientRect to verify the conversion makes sense
                 if (GetClientRect(_targetHwnd, out RECT clientRect))
                 {
                     int cw = clientRect.Right - clientRect.Left;
                     int ch = clientRect.Bottom - clientRect.Top;
-                    // Accept if within client area (with some tolerance for edge clicks)
                     if (pt.X >= -10 && pt.Y >= -10 && pt.X <= cw + 10 && pt.Y <= ch + 10)
                     {
                         PickedPoint = new System.Drawing.Point(pt.X, pt.Y);
                     }
-                    else
-                    {
-                        // Click was outside target window — keep screen coords
-                        PickedPoint = screen;
-                    }
+                    // else: keep screen coords (click outside target window)
                 }
                 else
                 {
@@ -140,7 +133,8 @@ public partial class CoordinatePickerWindow : Window
             }
         }
 
-        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
+        // Always set DialogResult = true to signal successful pick
+        try { DialogResult = true; } catch { Close(); }
     }
 
     [DllImport("user32.dll")]
@@ -159,7 +153,7 @@ public partial class CoordinatePickerWindow : Window
     {
         if (e.Key == Key.Escape)
         {
-            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
+            try { DialogResult = false; } catch { Close(); }
         }
     }
 

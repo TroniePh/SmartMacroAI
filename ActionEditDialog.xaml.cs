@@ -746,13 +746,14 @@ public partial class ActionEditDialog : Window
         await Task.Delay(200);
 
         var picker = new CoordinatePickerWindow(_targetHwnd);
-        if (picker.ShowDialog() == true)
+        // Don't set Owner — picker is fullscreen and parent is hidden
+        bool? result = picker.ShowDialog();
+        if (result == true)
         {
             var pt = picker.PickedPoint;
             if (_coordXBox != null) _coordXBox.Text = pt.X.ToString();
             if (_coordYBox != null) _coordYBox.Text = pt.Y.ToString();
 
-            // For ClickAction, store the monitor index where the coordinate was captured
             if (_action is ClickAction ca)
             {
                 ca.MonitorIndex = picker.PickedMonitorIndex;
