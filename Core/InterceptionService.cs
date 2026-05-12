@@ -48,9 +48,15 @@ public sealed class InterceptionService : IDisposable
             _mouseDevice = FindActiveMouseDevice();
             _keyDevice = FindActiveKeyboardDevice();
 
-            // Fallback if no device found
-            if (_mouseDevice < 0) _mouseDevice = 11;
-            if (_keyDevice < 0) _keyDevice = 1;
+            if (_mouseDevice < 0 || _keyDevice < 0)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[Interception] Device scan failed - mouse={_mouseDevice}, key={_keyDevice}; using fallback input modes");
+                InterceptionDriver.interception_destroy_context(_ctx);
+                _ctx = IntPtr.Zero;
+                IsInitialized = false;
+                return false;
+            }
 
             IsInitialized = true;
             System.Diagnostics.Debug.WriteLine($"[Interception] ✅ Ready — mouse device={_mouseDevice}, key device={_keyDevice}");
@@ -121,11 +127,11 @@ public sealed class InterceptionService : IDisposable
         _mouseDevice = FindActiveMouseDevice();
         _keyDevice = FindActiveKeyboardDevice();
 
-        if (_mouseDevice < 0) _mouseDevice = 11;
-        if (_keyDevice < 0) _keyDevice = 1;
+        if (_mouseDevice < 0 || _keyDevice < 0)
+            return false;
 
         System.Diagnostics.Debug.WriteLine($"[Interception] Rescan — mouse={_mouseDevice}, key={_keyDevice}");
-        return true;
+        return _mouseDevice >= 0 && _keyDevice >= 0;
     }
 
     /// <summary>

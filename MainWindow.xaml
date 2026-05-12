@@ -22,13 +22,18 @@
         Loaded="Window_Loaded">
 
     <Window.Resources>
-        <!-- ── System-color overrides: force dark popup / highlight for ALL ComboBoxes ── -->
+        <!-- ── System-color overrides: force dark popup / highlight for ALL ComboBoxes & Menus ── -->
         <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#1E1E2E" />
         <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#CDD6F4" />
         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#45475A" />
         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White" />
         <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#585B70" />
         <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#CDD6F4" />
+        <!-- Menu popup background -->
+        <SolidColorBrush x:Key="{x:Static SystemColors.MenuBrushKey}" Color="#1E1E2E" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}" Color="#CDD6F4" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.MenuHighlightBrushKey}" Color="#45475A" />
+        <SolidColorBrush x:Key="{x:Static SystemColors.MenuBarBrushKey}" Color="#1E1E2E" />
 
         <!-- ── Dark ComboBoxItem ControlTemplate ── -->
         <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
@@ -263,6 +268,12 @@
                             <TextBlock Text="{DynamicResource ui_About}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="BtnDonate" Style="{StaticResource SidebarButtonStyle}" Click="BtnDonate_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="☕" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource ui_Donate}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="BtnSettingsNav" Style="{StaticResource SidebarButtonStyle}" Click="BtnSettings_Click">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="{StaticResource SettingsIcon}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Width="20" Height="20" Stretch="Uniform" Margin="0,0,12,0" Fill="Transparent" />
@@ -329,6 +340,19 @@
                     <!-- File Menu -->
                     <Menu DockPanel.Dock="Left" Background="Transparent" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" Margin="0,0,16,0">
                         <MenuItem Header="{DynamicResource ui_Menu_File}" Foreground="{StaticResource TextBrush}" FontSize="12" BorderThickness="0" Background="Transparent">
+                            <MenuItem.ItemContainerStyle>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    <Setter Property="Background" Value="#1E1E2E"/>
+                                    <Setter Property="Padding" Value="8,6"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter Property="Background" Value="#45475A"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </MenuItem.ItemContainerStyle>
                             <MenuItem Header="{DynamicResource ui_Menu_NewMacro}" Click="BtnNewMacro_Click" />
                             <MenuItem Header="{DynamicResource ui_Menu_OpenMacro}" Click="BtnLoadMacro_Click" />
                             <MenuItem Header="{DynamicResource ui_Menu_SaveMacro}" Click="BtnSaveMacro_Click" />
@@ -1645,6 +1669,72 @@
                                     </StackPanel>
                                 </ScrollViewer>
                             </TabItem>
+                            <TabItem x:Name="TabDriver" Header="{DynamicResource ui_Settings_Tab_Driver}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel MaxWidth="620" Margin="0,8,0,24">
+                                        <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                    <TextBlock Text="🎮" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{DynamicResource ui_Drv_ModeLabel}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                                                        <TextBlock Text="{DynamicResource ui_Drv_Subtitle}" FontSize="12" Foreground="{StaticResource SubtextBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,12" LineHeight="20">
+                                                    <Run Text="{DynamicResource ui_Drv_Desc1}"/><Bold Foreground="{StaticResource TextBrush}"><Run Text="{DynamicResource ui_Drv_DescBold}"/></Bold><Run Text="{DynamicResource ui_Drv_Desc2}"/>
+                                                </TextBlock>
+
+                                                <StackPanel Margin="0,0,0,12">
+                                                    <TextBlock Text="✅ " FontSize="12" Foreground="{StaticResource SubtextBrush}">
+                                                        <Run Text="{DynamicResource ui_Drv_Feat1}"/><Bold Foreground="{StaticResource TextBrush}"><Run Text="{DynamicResource ui_Drv_Feat1Bold}"/></Bold>
+                                                    </TextBlock>
+                                                    <TextBlock FontSize="12" Foreground="{StaticResource SubtextBrush}">
+                                                        <Run Text="✅ "/><Run Text="{DynamicResource ui_Drv_Feat2}"/>
+                                                    </TextBlock>
+                                                    <TextBlock FontSize="12" Foreground="{StaticResource SubtextBrush}">
+                                                        <Run Text="✅ "/><Run Text="{DynamicResource ui_Drv_Feat3}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <!-- Status -->
+                                                <Border Background="#11111B" BorderBrush="#45475A" BorderThickness="1" Padding="12" Margin="0,0,0,12">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock x:Name="TxtDriverStatus" Text="{DynamicResource ui_Drv_StatusChecking}" FontSize="12" Foreground="{StaticResource TextBrush}"/>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- Buttons -->
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                    <Button x:Name="BtnDriverInstall" Style="{StaticResource PrimaryButtonStyle}"
+                                                            Content="{DynamicResource ui_Drv_InstallBtn}"
+                                                            Click="BtnDriverInstall_Click"
+                                                            Padding="16,10" FontSize="13" Margin="0,0,8,0"/>
+                                                    <Button x:Name="BtnDriverUninstall" Style="{StaticResource SidebarButtonStyle}"
+                                                            Content="{DynamicResource ui_Drv_UninstallBtn}"
+                                                            Click="BtnDriverUninstall_Click"
+                                                            Padding="16,10" FontSize="12" Margin="0,0,8,0"/>
+                                                    <Button x:Name="BtnDriverManualGuide" Style="{StaticResource SidebarButtonStyle}"
+                                                            Content="{DynamicResource ui_Drv_ManualGuideBtn}"
+                                                            Click="BtnDriverManualGuide_Click"
+                                                            Padding="16,10" FontSize="12"/>
+                                                </StackPanel>
+
+                                                <!-- Progress -->
+                                                <StackPanel x:Name="DriverProgressPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                                                    <ProgressBar IsIndeterminate="True" Height="4" Background="#333" Foreground="#4FC3F7" Margin="0,0,0,6"/>
+                                                    <TextBlock x:Name="TxtDriverProgress" Text="" FontSize="11" Foreground="{StaticResource SubtextBrush}"/>
+                                                </StackPanel>
+
+                                                <!-- AMD Warning -->
+                                                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#F9E2AF" Margin="0,4,0,0"
+                                                           Text="{DynamicResource ui_Drv_AmdNote}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
                         </TabControl>
                     </Grid>
 
@@ -1734,25 +1824,69 @@
                                     </DockPanel>
                                 </Border>
 
-                                <!-- Coffee / Support -->
-                                <Border Background="{StaticResource BaseBrush}"
-                                        BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
-                                        Padding="14,12" Margin="0,0,0,12">
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- ────── Donate View ────── -->
+                    <Grid x:Name="DonateView" Visibility="Collapsed">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel MaxWidth="520" HorizontalAlignment="Center" Margin="0,8,0,24">
+                                <!-- Header -->
+                                <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="{DynamicResource ui_Coffee_Title}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentPeachBrush}" HorizontalAlignment="Center" Margin="0,0,0,8" />
-                                        <TextBlock Text="{DynamicResource ui_Coffee_Blurb}"
-                                                   TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource SubtextBrush}"
-                                                   HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,16" />
-                                        <Border Width="220" Height="220" CornerRadius="0"
-                                                Background="White"
-                                                BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
-                                                HorizontalAlignment="Center" Padding="4">
-                                            <Image Source="/Assets/qr_bank.png" Stretch="Uniform" />
-                                        </Border>
-                                        <TextBlock Text="{DynamicResource ui_Bank_Line}" FontSize="10"
+                                        <TextBlock Text="☕" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{DynamicResource ui_Donate_Title}" FontSize="20" FontWeight="Bold"
+                                                   Foreground="{StaticResource AccentPeachBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource ui_Donate_Subtitle}" FontSize="13"
                                                    Foreground="{StaticResource SubtextBrush}" HorizontalAlignment="Center"
-                                                   Margin="0,8,0,0" />
+                                                   TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0"/>
                                     </StackPanel>
+                                </Border>
+
+                                <!-- QR Bank -->
+                                <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource ui_Donate_BankTitle}" FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                        <Border Width="240" Height="240" Background="White"
+                                                BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
+                                                HorizontalAlignment="Center" Padding="6">
+                                            <Image Source="/Assets/qr_bank.png" Stretch="Uniform"/>
+                                        </Border>
+                                        <TextBlock Text="{DynamicResource ui_Donate_BankNote}" FontSize="11"
+                                                   Foreground="{StaticResource SubtextBrush}" HorizontalAlignment="Center"
+                                                   TextAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- PayPal -->
+                                <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,12">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource ui_Donate_PaypalTitle}" FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                        <Border Background="#11111B" BorderBrush="{StaticResource Surface1Brush}" BorderThickness="1"
+                                                Padding="16,12" HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="📧" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="nhocbobi22@gmail.com" FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBlueBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Text="{DynamicResource ui_Donate_PaypalNote}" FontSize="11"
+                                                   Foreground="{StaticResource SubtextBrush}" HorizontalAlignment="Center"
+                                                   TextAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                                        <Button Content="{DynamicResource ui_Donate_CopyPaypal}" Click="BtnCopyPaypal_Click"
+                                                Style="{StaticResource PrimaryButtonStyle}" Padding="20,10"
+                                                HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Thank you -->
+                                <Border Style="{StaticResource CardStyle}" Padding="16">
+                                    <TextBlock Text="{DynamicResource ui_Donate_Thanks}" FontSize="13"
+                                               Foreground="{StaticResource SubtextBrush}" TextWrapping="Wrap"
+                                               TextAlignment="Center" HorizontalAlignment="Center"/>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>

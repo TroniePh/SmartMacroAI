@@ -88,6 +88,8 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
             if (_status != value)
             {
                 _status = value;
+                // Sync IsRunning from status string
+                IsRunning = string.Equals(value, "Running", StringComparison.OrdinalIgnoreCase);
                 Notify();
                 Notify(nameof(CanStart));
                 Notify(nameof(CanStop));
@@ -114,8 +116,8 @@ public sealed class DashboardRowVm : INotifyPropertyChanged
         }
     }
 
-    public bool CanStart => !_isRunning;
-    public bool CanStop => _isRunning;
+    public bool CanStart => !IsRunning;
+    public bool CanStop => IsRunning;
 
     public ScheduleSettings? Schedule => Script.Schedule;
 

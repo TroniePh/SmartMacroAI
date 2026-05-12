@@ -54,6 +54,9 @@ public enum ClickMode
 [JsonDerivedType(typeof(TelegramAction), "Telegram")]
 [JsonDerivedType(typeof(CallMacroAction), "CallMacro")]
 [JsonDerivedType(typeof(ResetVariablesAction), "ResetVars")]
+[JsonDerivedType(typeof(ScrollAction), "Scroll")]
+[JsonDerivedType(typeof(DragAction), "Drag")]
+[JsonDerivedType(typeof(IfPixelColorAction), "IfPixelColor")]
 public abstract class MacroAction
 {
     public string DisplayName { get; set; } = string.Empty;
@@ -638,4 +641,61 @@ public class TelegramAction : MacroAction
     {
         DisplayName = LanguageManager.GetString("ui_Action_Telegram");
     }
+}
+
+// ── Scroll & Drag actions ──
+
+/// <summary>
+/// Scrolls the mouse wheel at (X, Y) client coordinates on the target window.
+/// Positive delta = scroll up, negative = scroll down.
+/// </summary>
+public class ScrollAction : MacroAction
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    /// <summary>Scroll amount. 120 = one notch up, -120 = one notch down. Default = -360 (3 notches down).</summary>
+    public int Delta { get; set; } = -360;
+    /// <summary>Click mode for scroll delivery.</summary>
+    public ClickMode Mode { get; set; } = ClickMode.Stealth;
+
+    public ScrollAction() { DisplayName = "Scroll"; }
+}
+
+/// <summary>
+/// Drags from (StartX, StartY) to (EndX, EndY) on the target window.
+/// Simulates mouse down → move → mouse up.
+/// </summary>
+public class DragAction : MacroAction
+{
+    public int StartX { get; set; }
+    public int StartY { get; set; }
+    public int EndX { get; set; }
+    public int EndY { get; set; }
+    /// <summary>Duration of the drag movement in milliseconds.</summary>
+    public int DurationMs { get; set; } = 300;
+    /// <summary>Which mouse button to drag with.</summary>
+    public MouseButton Button { get; set; } = MouseButton.Left;
+    /// <summary>Click mode for drag delivery.</summary>
+    public ClickMode Mode { get; set; } = ClickMode.Stealth;
+
+    public DragAction() { DisplayName = "Drag"; }
+}
+
+/// <summary>
+/// Checks the pixel color at (X, Y) on the target window.
+/// If it matches the expected color (within tolerance), runs ThenActions; otherwise ElseActions.
+/// Much lighter than IfImageAction — no OpenCV needed.
+/// </summary>
+public class IfPixelColorAction : MacroAction
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    /// <summary>Expected color in hex format, e.g. "#FF0000" for red.</summary>
+    public string ExpectedColor { get; set; } = "#FF0000";
+    /// <summary>Color tolerance (0-255). 0 = exact match, 30 = allow slight variation.</summary>
+    public int Tolerance { get; set; } = 20;
+    public List<MacroAction> ThenActions { get; set; } = [];
+    public List<MacroAction> ElseActions { get; set; } = [];
+
+    public IfPixelColorAction() { DisplayName = "IF Pixel Color"; }
 }

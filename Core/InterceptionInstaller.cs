@@ -132,6 +132,12 @@ public static class InterceptionInstaller
         try
         {
             // ── STEP A: Enumerate embedded resources ──
+            if (IsReady())
+            {
+                Log("Interception driver and DLL are already available.");
+                return InstallResult.AlreadyInstalled;
+            }
+
             var asm = Assembly.GetExecutingAssembly();
             var allResources = asm.GetManifestResourceNames();
             Log($"Embedded resources ({allResources.Length}): {string.Join(" | ", allResources)}");
@@ -258,6 +264,11 @@ public static class InterceptionInstaller
             // ── STEP I: Post-install verification ──
             bool driverNowInstalled = IsDriverInstalled();
             Log($"Post-install check: IsDriverInstalled={driverNowInstalled}, DllExists={File.Exists(DllPath)}");
+            if (!driverNowInstalled || !File.Exists(DllPath))
+            {
+                Log("[ERROR] Installer exited without a verifiable driver/DLL state.");
+                return InstallResult.Failed;
+            }
 
             Report(LanguageManager.GetString("ui_Install_Done"));
             return InstallResult.NeedRestart;
@@ -296,6 +307,127 @@ public static class InterceptionInstaller
         };
         Process.Start(psi);
         Application.Current.Shutdown();
+    }
+
+    /// <summary>
+    /// Gỡ cài đặt Interception driver. Chạy installer với /uninstall flag.
+    /// Nếu thất bại, trả về hướng dẫn gỡ thủ công.
+    /// </summary>
+    public static async Task<(bool Success, string Message)> UninstallAsync(Action<string>? progressLog = null)
+    {
+        ClearLogs();
+        Log("=== Interception Uninstall Start ===");
+
+        void Report(string msg)
+        {
+            Log(msg);
+            progressLog?.Invoke(msg);
+        }
+
+        try
+        {
+            if (!IsDriverInstalled())
+            {
+                return (true, LanguageManager.GetString("ui_Drv_NotInstalled"));
+            }
+
+            // Try to extract and run installer with /uninstall
+            var asm = Assembly.GetExecutingAssembly();
+            var allResources = asm.GetManifestResourceNames();
+            string? installerResource = allResources
+                .FirstOrDefault(r => r.EndsWith("install-interception.exe", StringComparison.OrdinalIgnoreCase));
+
+            if (installerResource != null)
+            {
+                Report(LanguageManager.GetString("ui_Drv_Uninstalling"));
+                Directory.CreateDirectory(Path.GetDirectoryName(InstallerPath)!);
+                using (var stream = asm.GetManifestResourceStream(installerResource)!)
+                using (var fs = File.Create(InstallerPath))
+                    await stream.CopyToAsync(fs);
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = InstallerPath,
+                    Arguments = "/uninstall",
+                    Verb = "runas",
+                    UseShellExecute = true,
+                    CreateNoWindow = false
+                };
+
+                Process? process;
+                try
+                {
+                    process = Process.Start(psi);
+                }
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
+                {
+                    return (false, LanguageManager.GetString("ui_Drv_CancelledAdmin"));
+                }
+                catch (Exception ex)
+                {
+                    Log($"[ERROR] {ex.Message}");
+                    return (false, GetManualUninstallGuide());
+                }
+
+                if (process != null)
+                {
+                    bool exited = await Task.Run(() => process.WaitForExit(30_000));
+                    if (exited && process.ExitCode == 0)
+                    {
+                        // Also delete the DLL
+                        try { if (File.Exists(DllPath)) File.Delete(DllPath); } catch { }
+                        return (true, LanguageManager.GetString("ui_Drv_UninstallSuccess"));
+                    }
+                }
+            }
+
+            // Installer failed or not available — return manual guide
+            return (false, GetManualUninstallGuide());
+        }
+        catch (Exception ex)
+        {
+            Log($"[ERROR] {ex.Message}");
+            return (false, GetManualUninstallGuide());
+        }
+    }
+
+    /// <summary>
+    /// Trả về hướng dẫn gỡ driver thủ công bằng command prompt / registry.
+    /// </summary>
+    public static string GetManualUninstallGuide()
+    {
+        return @"═══ HƯỚNG DẪN GỠ INTERCEPTION DRIVER THỦ CÔNG ═══
+
+Nếu driver gây khoá chuột/phím sau khi restart:
+
+▶ CÁCH 1: Dùng Command Prompt (khuyến nghị)
+  1. Khởi động lại máy, giữ Shift + nhấn Restart
+  2. Chọn: Troubleshoot → Advanced Options → Command Prompt
+  3. Gõ lần lượt:
+     sc delete keyboard
+     sc delete mouse
+  4. Restart bình thường
+
+▶ CÁCH 2: Boot USB Windows PE
+  1. Boot từ USB cài Windows
+  2. Chọn 'Repair your computer' → Command Prompt
+  3. Gõ:
+     sc delete keyboard
+     sc delete mouse
+
+▶ CÁCH 3: Registry Editor (nếu vào được Safe Mode)
+  1. Mở regedit
+  2. Xoá key:
+     HKLM\SYSTEM\CurrentControlSet\Services\keyboard
+     HKLM\SYSTEM\CurrentControlSet\Services\mouse
+  3. Restart
+
+▶ CÁCH 4: Safe Mode + Device Manager
+  1. Boot Safe Mode (F8 hoặc Shift+Restart)
+  2. Mở Device Manager
+  3. Tìm 'Interception' trong Keyboards/Mice
+  4. Right-click → Uninstall device
+  5. Restart";
     }
 }
 

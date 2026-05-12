@@ -11,6 +11,7 @@
     <system:String x:Key="ui_StealthManager">Quản lý Stealth</system:String>
     <system:String x:Key="ui_Settings">Cài đặt</system:String>
     <system:String x:Key="ui_About">Giới thiệu</system:String>
+    <system:String x:Key="ui_Donate">Mời cà phê</system:String>
 
     <system:String x:Key="ui_Header_Ready">Sẵn sàng</system:String>
     <system:String x:Key="ui_Header_Running">Đang chạy...</system:String>
@@ -199,7 +200,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Xem trước đường đi</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Đã lưu cài đặt chuột.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.5.7 — Công cụ tự động RPA</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.5.8 — Công cụ tự động RPA</system:String>
     <system:String x:Key="ui_About_Description">Tự động hóa không chiếm chuột/bàn phím vật lý trên Windows 10/11. Dùng Win32 API để gửi click và phím tới cửa sổ nền.</system:String>
     <system:String x:Key="ui_About_TechStack">Công nghệ</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -207,17 +208,31 @@
     <system:String x:Key="ui_About_Contact">Liên hệ hỗ trợ</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Kiểm tra cập nhật</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Cập nhật phần mềm</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.5.7</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Phiên bản hiện tại: v1.5.8</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Mời cà phê</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Mời tác giả một ly cà phê nếu phần mềm này giúp ích cho bạn!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
+
+    <!-- Donate Page -->
+    <system:String x:Key="ui_Page_Donate">Mời cà phê</system:String>
+    <system:String x:Key="ui_PageSub_Donate">Ủng hộ tác giả phát triển phần mềm</system:String>
+    <system:String x:Key="ui_Donate_Title">Mời tác giả một ly cà phê ☕</system:String>
+    <system:String x:Key="ui_Donate_Subtitle">Nếu SmartMacroAI giúp ích cho công việc của bạn, hãy ủng hộ để tác giả tiếp tục phát triển và cập nhật phần mềm miễn phí!</system:String>
+    <system:String x:Key="ui_Donate_BankTitle">🏦 Chuyển khoản ngân hàng (QR)</system:String>
+    <system:String x:Key="ui_Donate_BankNote">Quét mã QR bằng app ngân hàng bất kỳ để chuyển khoản.
+MB Bank — PHAM QUOC DUY — 379997999</system:String>
+    <system:String x:Key="ui_Donate_PaypalTitle">💳 PayPal</system:String>
+    <system:String x:Key="ui_Donate_PaypalNote">Gửi qua PayPal tới email bên trên. Hỗ trợ mọi loại thẻ quốc tế.</system:String>
+    <system:String x:Key="ui_Donate_CopyPaypal">📋 Copy email PayPal</system:String>
+    <system:String x:Key="ui_Donate_Copied">Đã copy email PayPal!</system:String>
+    <system:String x:Key="ui_Donate_Thanks">Cảm ơn bạn rất nhiều! Mỗi đóng góp đều giúp tác giả có thêm động lực phát triển SmartMacroAI tốt hơn. 🙏</system:String>
 
     <system:String x:Key="ui_StopAllMacros">⏹ DỪNG TẤT CẢ MACRO</system:String>
     <system:String x:Key="ui_ProcessBar_Fmt">Đang chạy: {0} macro  |  Đã ẩn: {1} cửa sổ</system:String>
     <system:String x:Key="ui_LogConsole">NHẬT KÝ</system:String>
     <system:String x:Key="ui_Log_Clear">Xóa</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.7</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.8</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Tác giả Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
@@ -280,6 +295,11 @@ Người dùng AMD Ryzen: khởi động vào Safe Mode và chạy:
 sc delete keyboard &amp; sc delete mouse</system:String>
     <system:String x:Key="ui_Drv_LaterBtn">Để sau</system:String>
     <system:String x:Key="ui_Drv_InstallBtn">⚡ Cài đặt ngay</system:String>
+    <system:String x:Key="ui_Drv_UninstallBtn">🗑 Gỡ driver</system:String>
+    <system:String x:Key="ui_Drv_ManualGuideBtn">📋 Hướng dẫn gỡ thủ công</system:String>
+    <system:String x:Key="ui_Drv_NotInstalled">Driver chưa được cài đặt.</system:String>
+    <system:String x:Key="ui_Drv_Uninstalling">Đang gỡ cài đặt driver...</system:String>
+    <system:String x:Key="ui_Drv_UninstallSuccess">Đã gỡ driver thành công. Cần restart để hoàn tất.</system:String>
 
     <!-- Action Edit Dialog -->
     <system:String x:Key="ui_ActionEdit_Title">Chỉnh sửa thao tác</system:String>
@@ -434,6 +454,10 @@ sc delete keyboard &amp; sc delete mouse</system:String>
     <!-- MainWindow: Settings - Tabs -->
     <system:String x:Key="ui_Settings_Tab_DataCSV">Data CSV</system:String>
     <system:String x:Key="ui_Settings_Tab_Telegram">Telegram</system:String>
+    <system:String x:Key="ui_Settings_Tab_Driver">Driver</system:String>
+    <system:String x:Key="ui_Drv_StatusChecking">Đang kiểm tra...</system:String>
+    <system:String x:Key="ui_Drv_StatusInstalled">✅ Driver đã cài đặt — sẵn sàng sử dụng</system:String>
+    <system:String x:Key="ui_Drv_StatusNotInstalled">❌ Driver chưa cài đặt</system:String>
 
     <!-- MainWindow: Help -->
     <system:String x:Key="ui_About_HelpDesc">📖 Hướng dẫn sử dụng chi tiết</system:String>
@@ -828,6 +852,9 @@ Chi tiết lỗi:
     <system:String x:Key="ui_ActionType_WebClick">Web: Nhấp</system:String>
     <system:String x:Key="ui_ActionType_WebType">Web: Gõ chữ</system:String>
     <system:String x:Key="ui_Action_CallMacro">📂 Gọi kịch bản con</system:String>
+    <system:String x:Key="ui_Action_Scroll">🖱️ Cuộn chuột</system:String>
+    <system:String x:Key="ui_Action_Drag">↔️ Kéo thả</system:String>
+    <system:String x:Key="ui_Action_IfPixelColor">🎨 IF Màu Pixel</system:String>
 
     <!-- MacroLockDialog -->
     <system:String x:Key="ui_Lock_EmptyPwd">Mật khẩu không được trống.</system:String>

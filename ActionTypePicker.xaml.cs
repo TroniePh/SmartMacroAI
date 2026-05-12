@@ -27,6 +27,7 @@ public partial class ActionTypePicker : Window
             new("TryCatch", LanguageManager.GetString("ui_Action_TryCatch")),
             new("IfImageFound", LanguageManager.GetString("ui_Action_IfImage")),
             new("IfTextFound", LanguageManager.GetString("ui_Action_IfText")),
+            new("IfPixelColor", LanguageManager.GetString("ui_Action_IfPixelColor")),
             new("OcrRegion", LanguageManager.GetString("ui_Action_OcrRegion")),
             new("ClearVar", LanguageManager.GetString("ui_Action_ClearVar")),
             new("LogVar", LanguageManager.GetString("ui_Action_LogVar")),
@@ -37,6 +38,8 @@ public partial class ActionTypePicker : Window
             new("KeyPress", LanguageManager.GetString("ui_Action_KeyPress")),
             new("Telegram", LanguageManager.GetString("ui_Action_Telegram")),
             new("CallMacro", LanguageManager.GetString("ui_Action_CallMacro")),
+            new("Scroll", LanguageManager.GetString("ui_Action_Scroll")),
+            new("Drag", LanguageManager.GetString("ui_Action_Drag")),
         };
         LstTypes.DisplayMemberPath = nameof(ActionTypePickItem.Label);
         LstTypes.SelectedValuePath = nameof(ActionTypePickItem.Key);

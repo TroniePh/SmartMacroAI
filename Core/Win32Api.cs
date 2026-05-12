@@ -375,14 +375,120 @@ public static class Win32Api
     private static extern uint MapVirtualKeyA(uint uCode, uint uMapType);
 
     /// <summary>
-    /// Shows or hides a window without affecting its message queue.
-    /// PostMessage-based automation continues to work on hidden windows.
+    /// Shows or hides a window for stealth automation.
+    /// For Chromium/Electron windows: moves off-screen + sets WS_EX_TOOLWINDOW to hide
+    /// from taskbar and Alt+Tab, while keeping the window "alive" for PostMessage.
+    /// For other windows: uses SW_HIDE (fully invisible, PostMessage still works).
+    /// Toggle show restores original position and brings window to foreground.
     /// </summary>
     public static void SetWindowVisibility(IntPtr hwnd, bool visible)
     {
-        if (hwnd != IntPtr.Zero && IsWindow(hwnd))
-            ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+        if (hwnd == IntPtr.Zero || !IsWindow(hwnd))
+            return;
+
+        if (visible)
+        {
+            // Check if we used off-screen approach (Chromium)
+            if (GetProp(hwnd, "SmartMacro_OrigX") != IntPtr.Zero)
+            {
+                int origX = (int)GetProp(hwnd, "SmartMacro_OrigX") - 1;
+                int origY = (int)GetProp(hwnd, "SmartMacro_OrigY") - 1;
+                int origW = (int)GetProp(hwnd, "SmartMacro_OrigW");
+                int origH = (int)GetProp(hwnd, "SmartMacro_OrigH");
+                long origExStyle = (long)GetProp(hwnd, "SmartMacro_OrigExStyle");
+
+                // Restore original extended style (taskbar visibility)
+                SetWindowLongPtr(hwnd, GWL_EXSTYLE, (IntPtr)origExStyle);
+
+                // Move back to original position
+                SetWindowPos(hwnd, IntPtr.Zero, origX, origY, origW, origH,
+                    SWP_NOZORDER | SWP_FRAMECHANGED);
+                ShowWindow(hwnd, SW_SHOW);
+                SetForegroundWindow(hwnd);
+
+                RemoveProp(hwnd, "SmartMacro_OrigX");
+                RemoveProp(hwnd, "SmartMacro_OrigY");
+                RemoveProp(hwnd, "SmartMacro_OrigW");
+                RemoveProp(hwnd, "SmartMacro_OrigH");
+                RemoveProp(hwnd, "SmartMacro_OrigExStyle");
+            }
+            else
+            {
+                // Was hidden with SW_HIDE
+                ShowWindow(hwnd, SW_SHOW);
+                SetForegroundWindow(hwnd);
+            }
+        }
+        else
+        {
+            // Detect Chromium/Electron windows
+            string className = GetWindowClassName(hwnd);
+            bool isChromium = className.Contains("Chrome_WidgetWin", StringComparison.OrdinalIgnoreCase) ||
+                              className.Contains("CefBrowserWindow", StringComparison.OrdinalIgnoreCase) ||
+                              className.Contains("MozillaWindowClass", StringComparison.OrdinalIgnoreCase);
+
+            if (isChromium)
+            {
+                if (GetWindowRect(hwnd, out RECT rect))
+                {
+                    int w = rect.Right - rect.Left;
+                    int h = rect.Bottom - rect.Top;
+                    long currentExStyle = (long)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+                    // Save original state
+                    SetProp(hwnd, "SmartMacro_OrigX", (IntPtr)(rect.Left + 1));
+                    SetProp(hwnd, "SmartMacro_OrigY", (IntPtr)(rect.Top + 1));
+                    SetProp(hwnd, "SmartMacro_OrigW", (IntPtr)w);
+                    SetProp(hwnd, "SmartMacro_OrigH", (IntPtr)h);
+                    SetProp(hwnd, "SmartMacro_OrigExStyle", (IntPtr)currentExStyle);
+
+                    // Hide from taskbar + Alt+Tab: set WS_EX_TOOLWINDOW, remove WS_EX_APPWINDOW
+                    long newExStyle = (currentExStyle | WS_EX_TOOLWINDOW) & ~WS_EX_APPWINDOW;
+                    SetWindowLongPtr(hwnd, GWL_EXSTYLE, (IntPtr)newExStyle);
+
+                    // Move off-screen — window stays "visible" so Chromium keeps processing messages
+                    SetWindowPos(hwnd, IntPtr.Zero, -32000, -32000, w, h,
+                        SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+                }
+            }
+            else
+            {
+                // Standard Win32 apps: SW_HIDE is fully stealth and PostMessage works
+                ShowWindow(hwnd, SW_HIDE);
+            }
+        }
     }
+
+    // ═══════════════════════════════════════════════
+    //  P/INVOKE — Window Positioning & Style (for stealth)
+    // ═══════════════════════════════════════════════
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
+        int X, int Y, int cx, int cy, uint uFlags);
+
+    public const uint SWP_NOZORDER = 0x0004;
+    public const uint SWP_NOACTIVATE = 0x0010;
+    public const uint SWP_FRAMECHANGED = 0x0020;
+
+    private const int GWL_EXSTYLE = -20;
+    private const long WS_EX_TOOLWINDOW = 0x00000080L;
+    private const long WS_EX_APPWINDOW = 0x00040000L;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern bool SetProp(IntPtr hWnd, string lpString, IntPtr hData);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern IntPtr GetProp(IntPtr hWnd, string lpString);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern IntPtr RemoveProp(IntPtr hWnd, string lpString);
 
     /// <summary>
     /// Brings the window to the foreground and flashes it so the user

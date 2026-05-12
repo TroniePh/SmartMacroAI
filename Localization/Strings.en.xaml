@@ -11,6 +11,7 @@
     <system:String x:Key="ui_StealthManager">Stealth Manager</system:String>
     <system:String x:Key="ui_Settings">Settings</system:String>
     <system:String x:Key="ui_About">About</system:String>
+    <system:String x:Key="ui_Donate">Donate</system:String>
 
     <system:String x:Key="ui_Header_Ready">Ready</system:String>
     <system:String x:Key="ui_Header_Running">Running...</system:String>
@@ -199,7 +200,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Path preview</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Mouse settings saved.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.5.7 — RPA Automation Tool</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.5.8 — RPA Automation Tool</system:String>
     <system:String x:Key="ui_About_Description">Non-invasive automation for Windows 10/11. Uses Win32 API to send clicks and keystrokes directly to background windows without hijacking your physical mouse or keyboard.</system:String>
     <system:String x:Key="ui_About_TechStack">Technology Stack</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -207,17 +208,31 @@
     <system:String x:Key="ui_About_Contact">Support contact</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Check for updates</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Software updates</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.5.7</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.5.8</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Buy me a coffee</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Treat the author to a coffee if this app helps you!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
+
+    <!-- Donate Page -->
+    <system:String x:Key="ui_Page_Donate">Donate</system:String>
+    <system:String x:Key="ui_PageSub_Donate">Support the developer</system:String>
+    <system:String x:Key="ui_Donate_Title">Buy the author a coffee ☕</system:String>
+    <system:String x:Key="ui_Donate_Subtitle">If SmartMacroAI helps your work, please consider supporting the author to keep developing and updating this free software!</system:String>
+    <system:String x:Key="ui_Donate_BankTitle">🏦 Bank Transfer (QR)</system:String>
+    <system:String x:Key="ui_Donate_BankNote">Scan the QR code with any banking app to transfer.
+MB Bank — PHAM QUOC DUY — 379997999</system:String>
+    <system:String x:Key="ui_Donate_PaypalTitle">💳 PayPal</system:String>
+    <system:String x:Key="ui_Donate_PaypalNote">Send via PayPal to the email above. Supports all international cards.</system:String>
+    <system:String x:Key="ui_Donate_CopyPaypal">📋 Copy PayPal email</system:String>
+    <system:String x:Key="ui_Donate_Copied">PayPal email copied!</system:String>
+    <system:String x:Key="ui_Donate_Thanks">Thank you so much! Every contribution motivates the author to keep improving SmartMacroAI. 🙏</system:String>
 
     <system:String x:Key="ui_StopAllMacros">⏹ STOP ALL MACROS</system:String>
     <system:String x:Key="ui_ProcessBar_Fmt">Active: {0} macro(s) running  |  Hidden: {1} window(s)</system:String>
     <system:String x:Key="ui_LogConsole">LOG CONSOLE</system:String>
     <system:String x:Key="ui_Log_Clear">Clear</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.7</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.8</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Created by Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>
@@ -280,6 +295,11 @@ AMD Ryzen users: boot into Safe Mode and run:
 sc delete keyboard &amp; sc delete mouse</system:String>
     <system:String x:Key="ui_Drv_LaterBtn">Later</system:String>
     <system:String x:Key="ui_Drv_InstallBtn">Install Now</system:String>
+    <system:String x:Key="ui_Drv_UninstallBtn">🗑 Uninstall</system:String>
+    <system:String x:Key="ui_Drv_ManualGuideBtn">📋 Manual Removal Guide</system:String>
+    <system:String x:Key="ui_Drv_NotInstalled">Driver is not installed.</system:String>
+    <system:String x:Key="ui_Drv_Uninstalling">Uninstalling driver...</system:String>
+    <system:String x:Key="ui_Drv_UninstallSuccess">Driver removed successfully. Restart required.</system:String>
 
     <!-- Action Edit Dialog -->
     <system:String x:Key="ui_ActionEdit_Title">Edit Action</system:String>
@@ -434,6 +454,10 @@ sc delete keyboard &amp; sc delete mouse</system:String>
     <!-- MainWindow: Settings - Tabs -->
     <system:String x:Key="ui_Settings_Tab_DataCSV">Data CSV</system:String>
     <system:String x:Key="ui_Settings_Tab_Telegram">Telegram</system:String>
+    <system:String x:Key="ui_Settings_Tab_Driver">Driver</system:String>
+    <system:String x:Key="ui_Drv_StatusChecking">Checking...</system:String>
+    <system:String x:Key="ui_Drv_StatusInstalled">✅ Driver installed — ready to use</system:String>
+    <system:String x:Key="ui_Drv_StatusNotInstalled">❌ Driver not installed</system:String>
 
     <!-- MainWindow: Help -->
     <system:String x:Key="ui_About_HelpDesc">Detailed user guide</system:String>
@@ -828,6 +852,9 @@ Error details:
     <system:String x:Key="ui_ActionType_WebClick">Web: Click</system:String>
     <system:String x:Key="ui_ActionType_WebType">Web: Type Text</system:String>
     <system:String x:Key="ui_Action_CallMacro">📂 Call Sub-Macro</system:String>
+    <system:String x:Key="ui_Action_Scroll">🖱️ Scroll</system:String>
+    <system:String x:Key="ui_Action_Drag">↔️ Drag</system:String>
+    <system:String x:Key="ui_Action_IfPixelColor">🎨 IF Pixel Color</system:String>
 
     <!-- MacroLockDialog -->
     <system:String x:Key="ui_Lock_EmptyPwd">Password cannot be empty.</system:String>

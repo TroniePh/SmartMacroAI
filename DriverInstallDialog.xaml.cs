@@ -103,4 +103,55 @@ public partial class DriverInstallDialog : Window
     }
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e) => Close();
+
+    private async void BtnUninstall_Click(object sender, RoutedEventArgs e)
+    {
+        BtnUninstall.IsEnabled = false;
+        BtnInstall.IsEnabled = false;
+        BtnCancel.IsEnabled = false;
+        ProgressPanel.Visibility = Visibility.Visible;
+
+        var (success, message) = await InterceptionInstaller.UninstallAsync(msg =>
+        {
+            Dispatcher.Invoke(() => TxtStatus.Text = msg);
+        });
+
+        ProgressPanel.Visibility = Visibility.Collapsed;
+        BtnUninstall.IsEnabled = true;
+        BtnInstall.IsEnabled = true;
+        BtnCancel.IsEnabled = true;
+
+        if (success)
+        {
+            var restart = MessageBox.Show(
+                message + "\n\n" + LanguageManager.GetString("ui_Drv_RestartRequired"),
+                LanguageManager.GetString("ui_Drv_InstallComplete"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+            if (restart == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "shutdown",
+                    Arguments = "/r /t 5 /c \"SmartMacroAI: Interception driver removed\"",
+                    UseShellExecute = false
+                });
+                Application.Current.Shutdown();
+            }
+        }
+        else
+        {
+            MessageBox.Show(message,
+                LanguageManager.GetString("ui_Drv_InstallError"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnManualGuide_Click(object sender, RoutedEventArgs e)
+    {
+        string guide = InterceptionInstaller.GetManualUninstallGuide();
+        MessageBox.Show(guide,
+            "Driver Removal Guide",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
 }

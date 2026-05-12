@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -30,6 +31,34 @@ public static class VisionEngine
     public static string TessLanguage { get; set; } = "eng";
 
     private static readonly Dictionary<string, TesseractOcr.TesseractEngine> _engineCache = new();
+
+    // ═══════════════════════════════════════════════════
+    //  TEMPLATE IMAGE CACHE
+    // ═══════════════════════════════════════════════════
+
+    private static readonly ConcurrentDictionary<string, Mat> _templateCache = new();
+
+    private static Mat LoadTemplate(string path)
+    {
+        if (_templateCache.TryGetValue(path, out var cached))
+            return cached;
+
+        var template = CvInvoke.Imread(path, ImreadModes.ColorBgr);
+        if (template != null && !template.IsEmpty)
+            _templateCache[path] = template;
+        return template!;
+    }
+
+    /// <summary>
+    /// Clears all cached template images and disposes their Mat resources.
+    /// Call when templates on disk may have changed or on app shutdown.
+    /// </summary>
+    public static void ClearTemplateCache()
+    {
+        foreach (var kvp in _templateCache)
+            kvp.Value?.Dispose();
+        _templateCache.Clear();
+    }
 
     // ═══════════════════════════════════════════════════
     //  BITMAP ↔ MAT CONVERSION
@@ -207,7 +236,7 @@ public static class VisionEngine
         scales ??= DefaultMultiScales;
 
         using Mat sourceMat = BitmapToMat(source);
-        using Mat templateMat = CvInvoke.Imread(templatePath, ImreadModes.ColorBgr);
+        Mat templateMat = LoadTemplate(templatePath);
 
         var best = MatchTemplateMultiScaleCore(sourceMat, templateMat, scales, searchRegion);
         if (best is null)
@@ -262,7 +291,7 @@ public static class VisionEngine
 
         using Bitmap captured = CaptureHiddenWindow(hwnd);
         using Mat sourceMat = BitmapToMat(captured);
-        using Mat templateMat = CvInvoke.Imread(templatePath, ImreadModes.ColorBgr);
+        Mat templateMat = LoadTemplate(templatePath);
 
         var best = MatchTemplateMultiScaleCore(sourceMat, templateMat, BuildScalesFromSettings(), searchRegion);
         if (best is null)

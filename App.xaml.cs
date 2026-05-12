@@ -9,7 +9,8 @@ namespace SmartMacroAI;
 
 public partial class App : Application
 {
-    public static bool DriverLevelEnabled { get; set; } = true;
+    public static bool DriverLevelEnabled { get; set; }
+    private static int _driverWarningShown;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -41,8 +42,8 @@ public partial class App : Application
             LanguageManager.ApplySavedLanguage();
             System.Diagnostics.Debug.WriteLine($"[Startup] Language applied: {LanguageManager.CurrentLanguage}");
 
-            // BƯỚC 2: Safe-check Interception driver (timeout protection for Ryzen/AMD freeze)
-            SafeCheckInterceptionDriver();
+            // BƯỚC 2: Safe-check Interception driver without blocking WPF startup.
+            BeginSafeCheckInterceptionDriver();
 
             // BƯỚC 3: Tạo và hiển thị MainWindow SAU KHI language đã apply
             base.OnStartup(e);
@@ -57,7 +58,7 @@ public partial class App : Application
         }
     }
 
-    private void SafeCheckInterceptionDriver()
+    private void BeginSafeCheckInterceptionDriver()
     {
         try
         {
@@ -67,49 +68,58 @@ public partial class App : Application
                 return;
             }
 
-            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(2));
-            bool initOk = false;
-            try
+            DriverLevelEnabled = false;
+            var initTask = Task.Run(() =>
             {
-                initOk = Task.Run(() =>
+                try
                 {
-                    try
-                    {
-                        return InterceptionService.Instance.Initialize();
-                    }
-                    catch { return false; }
-                }, cts.Token).GetAwaiter().GetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                System.Diagnostics.Debug.WriteLine("[Driver] ⚠️ Interception timeout (2s) — possible input freeze");
-                DriverLevelEnabled = false;
-                Dispatcher.Invoke(() =>
+                    return InterceptionService.Instance.Initialize();
+                }
+                catch
                 {
-                    MessageBox.Show(
-                        LanguageManager.GetString("ui_Drv_FreezeWarning"),
-                        "⚠️ Driver Warning",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                });
-                return;
-            }
+                    return false;
+                }
+            });
 
-            if (initOk)
+            _ = Task.Delay(TimeSpan.FromSeconds(2)).ContinueWith(_ =>
             {
-                DriverLevelEnabled = true;
-                System.Diagnostics.Debug.WriteLine("[Startup] ✅ Interception ready");
-            }
-            else
-            {
+                if (initTask.IsCompleted) return;
+
+                System.Diagnostics.Debug.WriteLine("[Driver] Interception init timeout (2s) - using Raw/SendInput fallback");
                 DriverLevelEnabled = false;
-                System.Diagnostics.Debug.WriteLine("[Startup] ⚠️ Driver file present but init failed — using Raw mode");
-            }
+                ShowDriverWarningOnce();
+            }, TaskScheduler.Default);
+
+            initTask.ContinueWith(t =>
+            {
+                DriverLevelEnabled = t.Status == TaskStatus.RanToCompletion && t.Result;
+                System.Diagnostics.Debug.WriteLine(DriverLevelEnabled
+                    ? "[Startup] Interception ready"
+                    : "[Startup] Driver file present but init failed - using Raw/SendInput fallback");
+            }, TaskScheduler.Default);
         }
         catch
         {
             DriverLevelEnabled = false;
         }
+    }
+
+    private void ShowDriverWarningOnce()
+    {
+        if (Interlocked.Exchange(ref _driverWarningShown, 1) != 0) return;
+
+        try
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("ui_Drv_FreezeWarning"),
+                    "Driver Warning",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            });
+        }
+        catch { }
     }
 
     protected override void OnExit(ExitEventArgs e)

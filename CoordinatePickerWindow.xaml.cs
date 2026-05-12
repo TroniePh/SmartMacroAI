@@ -92,9 +92,17 @@ public partial class CoordinatePickerWindow : Window
         System.Windows.Controls.Canvas.SetLeft(_coordLabel, labelX);
         System.Windows.Controls.Canvas.SetTop(_coordLabel, labelY);
 
-        string display = _targetHwnd != IntPtr.Zero
-            ? $"S: {screenPos.X},{screenPos.Y}  W: {screenPos.X},{screenPos.Y}"
-            : $"X: {screenPos.X}  Y: {screenPos.Y}";
+        string display;
+        if (_targetHwnd != IntPtr.Zero && IsWindow(_targetHwnd))
+        {
+            POINT pt = new POINT { X = screenPos.X, Y = screenPos.Y };
+            ScreenToClient(_targetHwnd, ref pt);
+            display = $"Client: {pt.X},{pt.Y}  Screen: {screenPos.X},{screenPos.Y}";
+        }
+        else
+        {
+            display = $"X: {screenPos.X}  Y: {screenPos.Y}";
+        }
         _coordLabel.Text = display;
     }
 
@@ -103,14 +111,48 @@ public partial class CoordinatePickerWindow : Window
         var screen = GetCursorPosOnScreen();
         PickedPoint = screen;
 
-        if (_targetHwnd != IntPtr.Zero)
+        if (_targetHwnd != IntPtr.Zero && IsWindow(_targetHwnd))
         {
             POINT pt = new POINT { X = screen.X, Y = screen.Y };
             if (ScreenToClient(_targetHwnd, ref pt))
-                PickedPoint = new System.Drawing.Point(pt.X, pt.Y);
+            {
+                // Validate: client coords should be within reasonable bounds
+                // GetClientRect to verify the conversion makes sense
+                if (GetClientRect(_targetHwnd, out RECT clientRect))
+                {
+                    int cw = clientRect.Right - clientRect.Left;
+                    int ch = clientRect.Bottom - clientRect.Top;
+                    // Accept if within client area (with some tolerance for edge clicks)
+                    if (pt.X >= -10 && pt.Y >= -10 && pt.X <= cw + 10 && pt.Y <= ch + 10)
+                    {
+                        PickedPoint = new System.Drawing.Point(pt.X, pt.Y);
+                    }
+                    else
+                    {
+                        // Click was outside target window — keep screen coords
+                        PickedPoint = screen;
+                    }
+                }
+                else
+                {
+                    PickedPoint = new System.Drawing.Point(pt.X, pt.Y);
+                }
+            }
         }
 
         if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left, Top, Right, Bottom;
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)

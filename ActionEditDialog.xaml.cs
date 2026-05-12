@@ -158,6 +158,12 @@ public partial class ActionEditDialog : Window
                 AddCheckField("IgnoreCase", txt.IgnoreCase, Localization.LanguageManager.GetString("ui_ActionEdit_IgnoreCase"));
                 AddCheckField("PartialMatch", txt.PartialMatch, Localization.LanguageManager.GetString("ui_ActionEdit_PartialMatch"));
                 break;
+            case IfPixelColorAction px:
+                AddFieldWithPickerButton("X", px.X.ToString(), "X");
+                AddFieldWithPickerButton("Y", px.Y.ToString(), "Y");
+                AddField("ExpectedColor", px.ExpectedColor, displayCaption: "Expected Color (#RRGGBB)");
+                AddField("Tolerance", px.Tolerance.ToString(), displayCaption: "Tolerance (0-255)");
+                break;
             case WebAction wa:
                 AddComboField("ActionType",
                     ["Navigate", "Click", "Type", "Scrape"],
@@ -226,7 +232,7 @@ public partial class ActionEditDialog : Window
                 break;
             case IfVariableAction iv:
                 AddField("VarName", iv.VarName, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_VarName"));
-                AddComboField("CompareOp", ["==", "!=", "contains", "notcontains", ">", "<", ">=", "<="], iv.CompareOp, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CompareOp"));
+                AddComboField("CompareOp", ["==", "!=", "contains", "notcontains", ">", "<", ">=", "<=", "matches", "notmatches"], iv.CompareOp, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CompareOp"));
                 AddField("Value", iv.Value, displayCaption: Localization.LanguageManager.GetString("ui_ActionEdit_CompareValue"));
                 FieldsPanel.Children.Add(new TextBlock
                 {
@@ -361,6 +367,21 @@ public partial class ActionEditDialog : Window
                     TextWrapping = TextWrapping.Wrap,
                     Margin = new Thickness(0, 6, 0, 0),
                 });
+                break;
+            case ScrollAction sc:
+                AddFieldWithPickerButton("X", sc.X.ToString(), "X");
+                AddFieldWithPickerButton("Y", sc.Y.ToString(), "Y");
+                AddField("Delta", sc.Delta.ToString(), displayCaption: "Scroll Delta (120=up, -120=down)");
+                AddClickModeSelector("ClickMode", sc.Mode);
+                break;
+            case Models.DragAction dr:
+                AddField("StartX", dr.StartX.ToString(), displayCaption: "Start X");
+                AddField("StartY", dr.StartY.ToString(), displayCaption: "Start Y");
+                AddField("EndX", dr.EndX.ToString(), displayCaption: "End X");
+                AddField("EndY", dr.EndY.ToString(), displayCaption: "End Y");
+                AddField("DurationMs", dr.DurationMs.ToString(), displayCaption: "Duration (ms)");
+                AddMouseButtonSelector("MouseButton", dr.Button);
+                AddClickModeSelector("ClickMode", dr.Mode);
                 break;
         }
     }
@@ -662,7 +683,9 @@ public partial class ActionEditDialog : Window
             Foreground = InputFg,
         };
 
-        var grid = new Grid { Margin = new Thickness(0, 6, 0, 0) };
+        var outerPanel = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
+
+        var grid = new Grid();
         for (int i = 0; i < 4; i++)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -711,7 +734,35 @@ public partial class ActionEditDialog : Window
             grid.Children.Add(tb);
         }
 
-        exp.Content = grid;
+        outerPanel.Children.Add(grid);
+
+        // ── Pick Region button — drag-select ROI on screen ──
+        var btnPickRoi = new Button
+        {
+            Content = Localization.LanguageManager.GetString("ui_ActionEdit_PickRegion"),
+            Margin = new Thickness(0, 8, 0, 0),
+            Padding = new Thickness(12, 8, 12, 8),
+            Background = AccentBrush,
+            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#11111B")),
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            FontWeight = FontWeights.SemiBold,
+            ToolTip = Localization.LanguageManager.GetString("ui_ActionEdit_RoiTip"),
+        };
+        btnPickRoi.Click += (_, _) =>
+        {
+            var snip = new SnippingToolWindow();
+            if (snip.ShowDialog() != true)
+                return;
+            System.Drawing.Rectangle r = snip.SelectedScreenRectangle;
+            if (_fields.TryGetValue("RoiX", out var tbx)) tbx.Text = r.X.ToString();
+            if (_fields.TryGetValue("RoiY", out var tby)) tby.Text = r.Y.ToString();
+            if (_fields.TryGetValue("RoiWidth", out var tbw)) tbw.Text = r.Width.ToString();
+            if (_fields.TryGetValue("RoiHeight", out var tbh)) tbh.Text = r.Height.ToString();
+        };
+        outerPanel.Children.Add(btnPickRoi);
+
+        exp.Content = outerPanel;
         FieldsPanel.Children.Add(exp);
     }
 
@@ -1017,7 +1068,7 @@ public partial class ActionEditDialog : Window
         };
         rbDriverKey.Checked += (s, e) =>
         {
-            if (InterceptionInstaller.IsReady()) return;
+            if (InterceptionInstaller.IsReady() && App.DriverLevelEnabled) return;
             var dialog = new DriverInstallDialog { Owner = Window.GetWindow(this) };
             dialog.ShowDialog();
             if (!dialog.InstallSucceeded)
@@ -1162,7 +1213,7 @@ public partial class ActionEditDialog : Window
         };
         rbDriver.Checked += (s, e) =>
         {
-            if (InterceptionInstaller.IsReady()) return;
+            if (InterceptionInstaller.IsReady() && App.DriverLevelEnabled) return;
             var dialog = new DriverInstallDialog { Owner = Window.GetWindow(this) };
             dialog.ShowDialog();
             if (!dialog.InstallSucceeded)
@@ -1365,6 +1416,12 @@ public partial class ActionEditDialog : Window
                     txt.IgnoreCase = GetCheckValue("IgnoreCase");
                     txt.PartialMatch = GetCheckValue("PartialMatch");
                     break;
+                case IfPixelColorAction px:
+                    px.X = int.Parse(GetFieldValue("X"));
+                    px.Y = int.Parse(GetFieldValue("Y"));
+                    px.ExpectedColor = GetFieldValue("ExpectedColor");
+                    px.Tolerance = int.TryParse(GetFieldValue("Tolerance"), out int tol) ? Math.Clamp(tol, 0, 255) : 20;
+                    break;
                 case WebAction wa:
                     if (Enum.TryParse<WebActionType>(GetComboValue("ActionType"), out var at))
                         wa.ActionType = at;
@@ -1429,6 +1486,21 @@ public partial class ActionEditDialog : Window
                     cma.MacroName = GetFieldValue("MacroName");
                     cma.PassVariables = GetCheckValue("PassVariables");
                     cma.WaitForFinish = GetCheckValue("WaitForFinish");
+                    break;
+                case ScrollAction sc:
+                    sc.X = int.Parse(GetFieldValue("X"));
+                    sc.Y = int.Parse(GetFieldValue("Y"));
+                    sc.Delta = int.Parse(GetFieldValue("Delta"));
+                    sc.Mode = GetClickModeValue("ClickMode");
+                    break;
+                case Models.DragAction dr:
+                    dr.StartX = int.Parse(GetFieldValue("StartX"));
+                    dr.StartY = int.Parse(GetFieldValue("StartY"));
+                    dr.EndX = int.Parse(GetFieldValue("EndX"));
+                    dr.EndY = int.Parse(GetFieldValue("EndY"));
+                    dr.DurationMs = int.Parse(GetFieldValue("DurationMs"));
+                    dr.Button = GetMouseButtonValue("MouseButton");
+                    dr.Mode = GetClickModeValue("ClickMode");
                     break;
             }
             if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();

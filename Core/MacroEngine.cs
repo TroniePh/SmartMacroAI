@@ -608,6 +608,9 @@ public sealed class MacroEngine
                 break;
         }
 
+        if (t.Contains("{{") && t.Contains("}}"))
+            OnLog($"  ⚠ Variable expansion may have circular reference: \"{Truncate(t, 60)}\"");
+
         return _vars.Resolve(t);
     }
 
@@ -1037,8 +1040,16 @@ public sealed class MacroEngine
             "!=" => !string.Equals(left, right, StringComparison.Ordinal),
             "contains" => left.Contains(right, StringComparison.OrdinalIgnoreCase),
             "notcontains" => !left.Contains(right, StringComparison.OrdinalIgnoreCase),
+            "matches" => TryRegexMatch(left, right),
+            "notmatches" => !TryRegexMatch(left, right),
             _ => false,
         };
+    }
+
+    private static bool TryRegexMatch(string input, string pattern)
+    {
+        try { return System.Text.RegularExpressions.Regex.IsMatch(input, pattern); }
+        catch { return false; }
     }
 
     // ═══════════════════════════════════════════════
@@ -1112,6 +1123,11 @@ public sealed class MacroEngine
                     case IfImageAction ifImage:
                         EnsureDesktopTargetBound();
                         await ExecuteIfImageAsync(ifImage, token);
+                        break;
+
+                    case IfPixelColorAction ifPixel:
+                        EnsureDesktopTargetBound();
+                        await ExecuteIfPixelColorAsync(ifPixel, token);
                         break;
 
                     case IfTextAction ifText:
@@ -1236,6 +1252,16 @@ public sealed class MacroEngine
 
                     case CallMacroAction cma:
                         await ExecuteCallMacroAsync(cma, token).ConfigureAwait(false);
+                        break;
+
+                    case ScrollAction scroll:
+                        EnsureDesktopTargetBound();
+                        await ExecuteScrollAsync(scroll, token);
+                        break;
+
+                    case DragAction drag:
+                        EnsureDesktopTargetBound();
+                        await ExecuteDragAsync(drag, token);
                         break;
 
                     default:
@@ -1507,6 +1533,17 @@ public sealed class MacroEngine
         }
 
         // ── STEALTH MODE (default): PostMessage — no cursor hijack, runs in background ─
+        // For Chromium/Electron apps, PostMessage alone doesn't work — use thread-attach + child enum
+        // Note: Chromium windows in stealth mode are moved off-screen (not SW_HIDE) so they remain
+        // "visible" to Windows and continue processing messages normally.
+        if (RequiresSendInput(hwnd))
+        {
+            bool isRight = click.Button == MouseButton.Right;
+            await ElectronClickAsync(hwnd, click.X, click.Y, isRight, token);
+            Log?.Invoke($"[Click/Stealth→Electron] ({click.X},{click.Y}){(isRight ? " right-click" : "")}");
+            return;
+        }
+
         // DirectX fix: send WM_ACTIVATE to ensure the window processes input messages
         Win32Api.PostMessage(hwnd, Win32Api.WM_ACTIVATE, (IntPtr)Win32Api.WA_ACTIVE, IntPtr.Zero);
         await Task.Delay(10, token);
@@ -1536,6 +1573,121 @@ public sealed class MacroEngine
             Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
             Log?.Invoke($"[Click/Stealth] ({click.X},{click.Y})");
         }
+    }
+
+    private async Task ExecuteScrollAsync(ScrollAction scroll, CancellationToken token)
+    {
+        IntPtr hwnd = _runtimeTargetHwnd;
+        if (!IsTargetValid()) return;
+
+        if (scroll.Mode == ClickMode.Raw || scroll.Mode == ClickMode.Hardware)
+        {
+            // SendInput scroll
+            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token)) return;
+            try
+            {
+                var pt = new POINT { X = scroll.X, Y = scroll.Y };
+                ClientToScreen(hwnd, ref pt);
+                SetCursorPos(pt.X, pt.Y);
+                await Task.Delay(10, token);
+
+                var input = new INPUT
+                {
+                    type = INPUT_MOUSE,
+                    u = new INPUTUNION { mi = new MOUSEINPUT { mouseData = unchecked((uint)scroll.Delta), dwFlags = 0x0800 /* MOUSEEVENTF_WHEEL */ } }
+                };
+                SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+                Log?.Invoke($"[Scroll/Raw] ({scroll.X},{scroll.Y}) delta={scroll.Delta}");
+            }
+            finally { _osResourceLock.Release(); }
+            return;
+        }
+
+        // Stealth: PostMessage WM_MOUSEWHEEL
+        IntPtr lParam = Win32Api.MakeLParam(scroll.X, scroll.Y);
+        IntPtr wParam = (IntPtr)((scroll.Delta << 16) | 0); // HIWORD=delta, LOWORD=keys
+        Win32Api.PostMessage(hwnd, 0x020A /* WM_MOUSEWHEEL */, wParam, lParam);
+        Log?.Invoke($"[Scroll/Stealth] ({scroll.X},{scroll.Y}) delta={scroll.Delta}");
+    }
+
+    private async Task ExecuteDragAsync(DragAction drag, CancellationToken token)
+    {
+        IntPtr hwnd = _runtimeTargetHwnd;
+        if (!IsTargetValid()) return;
+
+        if (drag.Mode == ClickMode.Raw || drag.Mode == ClickMode.Hardware)
+        {
+            // SendInput drag
+            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token)) return;
+            try
+            {
+                var ptStart = new POINT { X = drag.StartX, Y = drag.StartY };
+                ClientToScreen(hwnd, ref ptStart);
+                var ptEnd = new POINT { X = drag.EndX, Y = drag.EndY };
+                ClientToScreen(hwnd, ref ptEnd);
+
+                int screenW = GetSystemMetrics(0);
+                int screenH = GetSystemMetrics(1);
+
+                SetForegroundWindow(hwnd);
+                await Task.Delay(30, token);
+                SetCursorPos(ptStart.X, ptStart.Y);
+                await Task.Delay(10, token);
+
+                uint downFlag = drag.Button == MouseButton.Right ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_LEFTDOWN;
+                uint upFlag = drag.Button == MouseButton.Right ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_LEFTUP;
+
+                // Mouse down
+                mouse_event(downFlag, 0, 0, 0, UIntPtr.Zero);
+                await Task.Delay(20, token);
+
+                // Interpolate movement
+                int steps = Math.Max(5, drag.DurationMs / 16);
+                for (int i = 1; i <= steps; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    double t = (double)i / steps;
+                    int cx = (int)(ptStart.X + (ptEnd.X - ptStart.X) * t);
+                    int cy = (int)(ptStart.Y + (ptEnd.Y - ptStart.Y) * t);
+                    SetCursorPos(cx, cy);
+                    await Task.Delay(drag.DurationMs / steps, token);
+                }
+
+                // Mouse up
+                mouse_event(upFlag, 0, 0, 0, UIntPtr.Zero);
+                Log?.Invoke($"[Drag/Raw] ({drag.StartX},{drag.StartY})→({drag.EndX},{drag.EndY}) {drag.DurationMs}ms");
+            }
+            finally { _osResourceLock.Release(); }
+            return;
+        }
+
+        // Stealth: PostMessage drag
+        uint mk = drag.Button == MouseButton.Right ? Win32Api.MK_RBUTTON : Win32Api.MK_LBUTTON;
+        uint downMsg = drag.Button == MouseButton.Right ? Win32Api.WM_RBUTTONDOWN : Win32Api.WM_LBUTTONDOWN;
+        uint upMsg = drag.Button == MouseButton.Right ? Win32Api.WM_RBUTTONUP : Win32Api.WM_LBUTTONUP;
+
+        IntPtr startLParam = Win32Api.MakeLParam(drag.StartX, drag.StartY);
+        Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, startLParam);
+        await Task.Delay(10, token);
+        Win32Api.PostMessage(hwnd, downMsg, (IntPtr)mk, startLParam);
+        await Task.Delay(20, token);
+
+        // Interpolate movement messages
+        int msgSteps = Math.Max(3, drag.DurationMs / 30);
+        for (int i = 1; i <= msgSteps; i++)
+        {
+            token.ThrowIfCancellationRequested();
+            double t = (double)i / msgSteps;
+            int cx = (int)(drag.StartX + (drag.EndX - drag.StartX) * t);
+            int cy = (int)(drag.StartY + (drag.EndY - drag.StartY) * t);
+            IntPtr moveLParam = Win32Api.MakeLParam(cx, cy);
+            Win32Api.PostMessage(hwnd, Win32Api.WM_MOUSEMOVE, (IntPtr)mk, moveLParam);
+            await Task.Delay(drag.DurationMs / msgSteps, token);
+        }
+
+        IntPtr endLParam = Win32Api.MakeLParam(drag.EndX, drag.EndY);
+        Win32Api.PostMessage(hwnd, upMsg, IntPtr.Zero, endLParam);
+        Log?.Invoke($"[Drag/Stealth] ({drag.StartX},{drag.StartY})→({drag.EndX},{drag.EndY}) {drag.DurationMs}ms");
     }
 
     private async Task ExecuteWaitAsync(WaitAction wait, CancellationToken token)
@@ -2454,6 +2606,65 @@ public sealed class MacroEngine
         return (IntPtr)lParam;
     }
 
+    private async Task ExecuteIfPixelColorAsync(IfPixelColorAction ifPixel, CancellationToken token)
+    {
+        IntPtr hwnd = _runtimeTargetHwnd;
+        if (!IsTargetValid()) return;
+
+        // Capture pixel from target window
+        using var bmp = Win32Api.CaptureHiddenWindow(hwnd);
+        if (bmp == null)
+        {
+            OnLog("  ⚠ IfPixelColor: failed to capture window");
+            if (ifPixel.ElseActions.Count > 0)
+                await ExecuteActionsAsync(ifPixel.ElseActions, token);
+            return;
+        }
+
+        // Get pixel color at (X, Y)
+        if (ifPixel.X < 0 || ifPixel.Y < 0 || ifPixel.X >= bmp.Width || ifPixel.Y >= bmp.Height)
+        {
+            OnLog($"  ⚠ IfPixelColor: ({ifPixel.X},{ifPixel.Y}) out of bounds ({bmp.Width}x{bmp.Height})");
+            if (ifPixel.ElseActions.Count > 0)
+                await ExecuteActionsAsync(ifPixel.ElseActions, token);
+            return;
+        }
+
+        var actualColor = bmp.GetPixel(ifPixel.X, ifPixel.Y);
+
+        // Parse expected color
+        System.Drawing.Color expectedColor;
+        try
+        {
+            expectedColor = System.Drawing.ColorTranslator.FromHtml(ifPixel.ExpectedColor);
+        }
+        catch
+        {
+            OnLog($"  ⚠ IfPixelColor: invalid color format \"{ifPixel.ExpectedColor}\"");
+            if (ifPixel.ElseActions.Count > 0)
+                await ExecuteActionsAsync(ifPixel.ElseActions, token);
+            return;
+        }
+
+        // Compare with tolerance
+        bool match = Math.Abs(actualColor.R - expectedColor.R) <= ifPixel.Tolerance &&
+                     Math.Abs(actualColor.G - expectedColor.G) <= ifPixel.Tolerance &&
+                     Math.Abs(actualColor.B - expectedColor.B) <= ifPixel.Tolerance;
+
+        OnLog($"  IfPixelColor ({ifPixel.X},{ifPixel.Y}): actual=#{actualColor.R:X2}{actualColor.G:X2}{actualColor.B:X2} expected={ifPixel.ExpectedColor} tol={ifPixel.Tolerance} → {(match ? "MATCH" : "NO MATCH")}");
+
+        if (match)
+        {
+            if (ifPixel.ThenActions.Count > 0)
+                await ExecuteActionsAsync(ifPixel.ThenActions, token);
+        }
+        else
+        {
+            if (ifPixel.ElseActions.Count > 0)
+                await ExecuteActionsAsync(ifPixel.ElseActions, token);
+        }
+    }
+
     private async Task ExecuteIfImageAsync(IfImageAction ifImage, CancellationToken token)
     {
         IntPtr hwnd = _runtimeTargetHwnd;
@@ -3086,44 +3297,167 @@ public sealed class MacroEngine
     private static extern bool EnumChildWindows(IntPtr hWndParent, Win32Api.EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
     /// <summary>
-    /// Sends a PostMessage click to Electron/Chromium windows instead of using real mouse.
-    /// Works on hidden windows via AttachThreadInput. Falls back to child windows.
+    /// Sends a click to Electron/Chromium windows.
+    /// Chromium ignores PostMessage for mouse input — it requires the window to be
+    /// visible and uses its own IPC for input routing.
+    /// Strategy: if window is off-screen/hidden (stealth mode), temporarily flash it
+    /// on-screen, perform a quick SendInput click, then move it back off-screen.
+    /// If window is visible (non-stealth), use PostMessage to child renderer.
     /// </summary>
     private async Task ElectronClickAsync(IntPtr hwnd, int x, int y, bool rightClick, CancellationToken token)
     {
-        IntPtr lParam = Win32Api.MakeLParam(x, y);
-
-        // Attach thread to target so PostMessage reaches hidden window
-        uint targetThread = GetWindowThreadProcessId(hwnd, out _);
-        uint currentThread = GetCurrentThreadId();
-        bool attached = targetThread != currentThread && AttachThreadInput(currentThread, targetThread, true);
-        await Task.Delay(20, token);
-
-        try
+        // ── PRIORITY 1: Try CDP (Chrome DevTools Protocol) — 100% background, no flicker ──
+        // Works when browser has --remote-debugging-port enabled (AdsPower, Playwright, manual)
+        bool cdpSuccess = await CdpStealthService.TryCdpClickAsync(hwnd, x, y, rightClick, token).ConfigureAwait(false);
+        if (cdpSuccess)
         {
-            // Try main window first
-            if (rightClick)
-            {
-                Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONDOWN, (IntPtr)Win32Api.MK_RBUTTON, lParam);
-                await Task.Delay(30, token);
-                Win32Api.PostMessage(hwnd, Win32Api.WM_RBUTTONUP, IntPtr.Zero, lParam);
-            }
-            else
-            {
-                Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONDOWN, (IntPtr)1, lParam);
-                await Task.Delay(30, token);
-                Win32Api.PostMessage(hwnd, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
-            }
-            await Task.Delay(50, token);
+            Log?.Invoke($"[Click/CDP] ({x},{y}){(rightClick ? " right" : "")} — background");
+            return;
+        }
 
-            // Also try Electron renderer child windows
-            EnumChildWindowsForClick(hwnd, x, y, rightClick, token);
-        }
-        finally
+        // ── PRIORITY 2: Check if window is off-screen (stealth mode) ──
+        bool isOffScreen = Win32Api.GetProp(hwnd, "SmartMacro_OrigX") != IntPtr.Zero;
+
+        if (isOffScreen)
         {
-            if (attached)
-                AttachThreadInput(currentThread, targetThread, false);
+            // Chromium stealth flash-click: briefly show window → SendInput → hide again
+            // Chromium requires window visible + foreground for real input events.
+            // Total visible time: ~90ms (imperceptible flicker)
+            if (!await _osResourceLock.WaitAsync(TimeSpan.FromSeconds(5), token))
+            {
+                OnLog("[WARN] OS resource lock timeout on Electron stealth click — skipping");
+                return;
+            }
+            try
+            {
+                int origX = (int)Win32Api.GetProp(hwnd, "SmartMacro_OrigX") - 1;
+                int origY = (int)Win32Api.GetProp(hwnd, "SmartMacro_OrigY") - 1;
+                int origW = (int)Win32Api.GetProp(hwnd, "SmartMacro_OrigW");
+                int origH = (int)Win32Api.GetProp(hwnd, "SmartMacro_OrigH");
+                if (origW <= 0) origW = 1280;
+                if (origH <= 0) origH = 720;
+
+                int screenW = GetSystemMetrics(0);
+                int screenH = GetSystemMetrics(1);
+
+                // Step 1: Move window back to original position (on-screen)
+                Win32Api.SetWindowPos(hwnd, IntPtr.Zero, origX, origY, origW, origH,
+                    Win32Api.SWP_NOZORDER | Win32Api.SWP_NOACTIVATE);
+
+                // Step 2: Bring to foreground so Chromium accepts input
+                SetForegroundWindow(hwnd);
+                BringWindowToTop(hwnd);
+                await Task.Delay(30, token);
+
+                // Step 3: Calculate screen coords and click with SendInput
+                var pt = new POINT { X = x, Y = y };
+                ClientToScreen(hwnd, ref pt);
+
+                pt.X = Math.Clamp(pt.X, 0, screenW - 1);
+                pt.Y = Math.Clamp(pt.Y, 0, screenH - 1);
+
+                int absX = (int)((pt.X + 0.5) * 65536.0 / screenW);
+                int absY = (int)((pt.Y + 0.5) * 65536.0 / screenH);
+
+                SetCursorPos(pt.X, pt.Y);
+
+                uint downFlag = rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_LEFTDOWN;
+                uint upFlag = rightClick ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_LEFTUP;
+
+                var inputs = new[]
+                {
+                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dx = absX, dy = absY, dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESKTOP } } },
+                    new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = downFlag } } },
+                };
+                SendInput(2, inputs, Marshal.SizeOf<INPUT>());
+                await Task.Delay(15, token);
+                var inputUp = new[] { new INPUT { type = INPUT_MOUSE, u = new INPUTUNION { mi = new MOUSEINPUT { dwFlags = upFlag } } } };
+                SendInput(1, inputUp, Marshal.SizeOf<INPUT>());
+
+                // Step 4: Hide again — move back off-screen immediately
+                Win32Api.SetWindowPos(hwnd, IntPtr.Zero, -32000, -32000, origW, origH,
+                    Win32Api.SWP_NOZORDER | Win32Api.SWP_NOACTIVATE);
+            }
+            finally { _osResourceLock.Release(); }
         }
+        else
+        {
+            // Window is visible (non-stealth) — use PostMessage to child renderer
+            uint targetThread = GetWindowThreadProcessId(hwnd, out _);
+            uint currentThread = GetCurrentThreadId();
+            bool attached = targetThread != currentThread && AttachThreadInput(currentThread, targetThread, true);
+            await Task.Delay(10, token);
+
+            try
+            {
+                IntPtr rendererChild = FindChromiumRendererChild(hwnd);
+                IntPtr clickTarget;
+                int clickX, clickY;
+
+                if (rendererChild != IntPtr.Zero)
+                {
+                    var pt = new POINT { X = x, Y = y };
+                    ClientToScreen(hwnd, ref pt);
+                    ScreenToClient(rendererChild, ref pt);
+                    clickTarget = rendererChild;
+                    clickX = pt.X;
+                    clickY = pt.Y;
+                }
+                else
+                {
+                    clickTarget = hwnd;
+                    clickX = x;
+                    clickY = y;
+                }
+
+                IntPtr lParam = Win32Api.MakeLParam(clickX, clickY);
+
+                Win32Api.PostMessage(clickTarget, Win32Api.WM_MOUSEMOVE, IntPtr.Zero, lParam);
+                await Task.Delay(10, token);
+
+                if (rightClick)
+                {
+                    Win32Api.PostMessage(clickTarget, Win32Api.WM_RBUTTONDOWN, (IntPtr)Win32Api.MK_RBUTTON, lParam);
+                    await Task.Delay(30, token);
+                    Win32Api.PostMessage(clickTarget, Win32Api.WM_RBUTTONUP, IntPtr.Zero, lParam);
+                }
+                else
+                {
+                    Win32Api.PostMessage(clickTarget, Win32Api.WM_LBUTTONDOWN, (IntPtr)Win32Api.MK_LBUTTON, lParam);
+                    await Task.Delay(30, token);
+                    Win32Api.PostMessage(clickTarget, Win32Api.WM_LBUTTONUP, IntPtr.Zero, lParam);
+                }
+            }
+            finally
+            {
+                if (attached)
+                    AttachThreadInput(currentThread, targetThread, false);
+            }
+        }
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
+
+    /// <summary>
+    /// Finds the first Chrome_RenderWidgetHostHWND or Intermediate D3D child window
+    /// which is the actual content renderer in Chromium-based apps.
+    /// </summary>
+    private IntPtr FindChromiumRendererChild(IntPtr parent)
+    {
+        IntPtr found = IntPtr.Zero;
+        EnumChildWindows(parent, (child, _) =>
+        {
+            string cls = Win32Api.GetWindowClassName(child);
+            if (cls.Contains("Chrome_RenderWidgetHostHWND", StringComparison.OrdinalIgnoreCase) ||
+                cls.Contains("Intermediate", StringComparison.OrdinalIgnoreCase))
+            {
+                found = child;
+                return false; // stop enumeration
+            }
+            return true;
+        }, IntPtr.Zero);
+        return found;
     }
 
     /// <summary>

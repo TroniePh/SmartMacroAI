@@ -53,12 +53,16 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "startupicon"; Description: "Start with Windows"; GroupDescription: "Additional options:"; Flags: unchecked
 
 [Files]
-; SingleFile publish — chỉ cần 1 file .exe (driver đã embed bên trong)
-Source: "..\publish\SmartMacroAI\SmartMacroAI.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Main application (single-file .exe with managed code embedded)
+Source: "..\publish\SmartMacroAI.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Native DLLs required at runtime (not embedded in single-file)
+Source: "..\publish\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; PDB for crash diagnostics (optional)
-Source: "..\publish\SmartMacroAI\SmartMacroAI.pdb"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\publish\SmartMacroAI.pdb"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+; OCR trained data (required for OCR features)
+Source: "..\publish\tessdata\*"; DestDir: "{app}\tessdata"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Playwright browsers (optional, nếu có)
-Source: "..\publish\SmartMacroAI\.playwright\*"; DestDir: "{app}\.playwright"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: playwright
+Source: "..\publish\.playwright\*"; DestDir: "{app}\.playwright"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: playwright
 
 [Components]
 Name: "main"; Description: "SmartMacroAI Core (required)"; Types: full compact custom; Flags: fixed

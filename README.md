@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"><img src="https://img.shields.io/badge/version-1.5.7-0078D4?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"><img src="https://img.shields.io/badge/version-1.5.8-0078D4?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2B-0078D4?style=flat-square&logo=windows" alt="Platform">
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet" alt=".NET">
   <img src="https://img.shields.io/badge/language-VI%20%7C%20EN-F7931E?style=flat-square" alt="Language">
@@ -22,6 +22,7 @@
   <a href="#quick-start">Quick Start</a> •
   <a href="#driver-level-mode">Driver Level</a> •
   <a href="#build-from-source">Build</a> •
+  <a href="#donate">Donate</a> •
   <a href="#tiếng-việt">Tiếng Việt</a>
 </p>
 
@@ -33,37 +34,44 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 
 > *Created by Phạm Duy – Giải pháp tự động hóa thông minh.*
 
+<p align="center">
+  <img src="docs/screenshot_dashboard.png" alt="Dashboard" width="800">
+</p>
+
 ---
 
 ## Features
 
 ### Input Automation
-| Mode | Click | Key Press | Description |
-|------|:-----:|:---------:|-------------|
-| **Stealth** | ✅ | ✅ | Background PostMessage — window doesn't need focus |
-| **Raw Input** | ✅ | ✅ | SendInput with hardware scan codes |
-| **Hardware** | ✅ | ✅ | SetCursorPos + mouse_event |
-| **Driver Level** | ✅ | ✅ | Kernel Interception driver — bypasses anti-cheat |
+| Mode | Click | Key Press | Scroll | Drag | Description |
+|------|:-----:|:---------:|:------:|:----:|-------------|
+| **Stealth** | ✅ | ✅ | ✅ | ✅ | Background PostMessage — window doesn't need focus |
+| **Raw Input** | ✅ | ✅ | ✅ | ✅ | SendInput with hardware scan codes |
+| **Hardware** | ✅ | ✅ | ✅ | ✅ | SetCursorPos + mouse_event |
+| **Driver Level** | ✅ | ✅ | ✅ | ✅ | Kernel Interception driver — bypasses anti-cheat |
 
 ### Core Capabilities
 
 - **Image Recognition** — Find image on screen with confidence threshold, auto-click at found position
+- **Pixel Color Detection** — Check pixel color at coordinates (lightweight alternative to image match)
 - **OCR Text Detection** — Read text from screen regions via Tesseract 5.2
 - **If/Else Branching** — Conditional logic with nested Then/Else action branches
 - **Loop Control** — Count-based, infinite, and break-condition loops
-- **Variables** — Set, read, and branch on macro-scoped variables
+- **Variables** — Set, read, branch (supports regex matching)
 - **CSV Auto Fill** — Loop CSV rows into web/desktop forms automatically
 - **AI Integration** — OpenAI & Gemini for smart decision-making within macros
 - **Web Automation** — Playwright-based browser control for web tasks
+- **CDP Stealth** — Chrome DevTools Protocol for 100% background Chromium clicks
 
 ### Productivity
 
 - **Multi Dashboard** — Monitor and control multiple macros simultaneously
-- **Macro Recording** — Record mouse/keyboard actions in real-time
+- **Macro Recording** — Record mouse clicks, scroll, keyboard in real-time
 - **Scheduler** — Time-based, interval, or startup-triggered execution
 - **Undo/Redo** — Full Ctrl+Z / Ctrl+Y support in macro editor
 - **Copy/Paste** — Duplicate actions with Ctrl+C / Ctrl+V
 - **Drag & Drop** — Reorder actions, move in/out of If/Else branches
+- **ROI Picker** — Visual drag-select region for image search area
 - **6 Templates** — Pre-built macro templates ready to customize
 - **Run History** — Execution logs with filtering and statistics
 
@@ -73,7 +81,8 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 - **Script Sharing** — Share macros via encoded strings
 - **Anti-Detection** — Bézier mouse curves + randomized delays
 - **Telegram Alerts** — Receive notifications on macro completion
-- **Bilingual UI** — Full English & Vietnamese (826 localization keys)
+- **Bilingual UI** — Full English & Vietnamese (830+ localization keys)
+- **Driver Uninstall Guide** — Built-in manual removal instructions
 
 ---
 
@@ -81,9 +90,9 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 
 | File | Description |
 |------|-------------|
-| [**SmartMacroAI-v1.5.7-Setup.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Windows installer (recommended) |
-| [**SmartMacroAI-v1.5.7-portable-win-x64.zip**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable — extract and run |
-| [**SmartMacroAI-v1.5.7-win-x64.zip**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Full package with web automation |
+| [**SmartMacroAI-v1.5.8-Setup.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Windows installer (recommended) |
+| [**SmartMacroAI-v1.5.8-win-x64.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable standalone — run directly |
+| [**SmartMacroAI-v1.5.8-win-x64.zip**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable — extract and run |
 
 ---
 
@@ -102,7 +111,7 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 ## Quick Start
 
 1. Download the latest installer from [Releases](https://github.com/TroniePh/SmartMacroAI/releases/latest)
-2. Run `SmartMacroAI-v1.5.7-Setup.exe` as Administrator
+2. Run `SmartMacroAI-v1.5.8-Setup.exe` as Administrator
 3. Launch SmartMacroAI
 4. Click **+ New Macro** — choose a template or start blank
 5. Select your target window → add actions → press **Run** (F5)
@@ -113,11 +122,7 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 
 > Enables macros inside games protected by anti-cheat systems (MapleStory, Cabal Online, etc.)
 
-```
-Settings → Driver Level → Install Now → Reboot → Select "Driver Level" in actions
-```
-
-1. Navigate to **Settings → Driver Level**
+1. Navigate to **Settings → Driver**
 2. Click **Install Now** — approve the UAC prompt
 3. **Restart your PC** (required for kernel driver)
 4. Open SmartMacroAI → select **Driver Level** mode in any Click/Key action
@@ -125,18 +130,7 @@ Settings → Driver Level → Install Now → Reboot → Select "Driver Level" i
 
 **Supported:** MapleStory, Cabal Online, MU Online, and most DirectX/OpenGL games with kernel anti-cheat.
 
----
-
-## Templates
-
-| Template | Actions | Use Case |
-|----------|:-------:|----------|
-| Auto Login Website | 7 | Web authentication |
-| Auto Fill CSV Data | 9 (loop) | Bulk form submission |
-| Auto Repeat Task | 3 (loop) | General automation |
-| Image Detection Loop | 4 (loop) | Visual condition loops |
-| Hotkey Automation | 3 (loop) | Key sequence macros |
-| Game Farming Loop | 6 (loop) | Game skill rotation |
+**Uninstall:** Settings → Driver → Uninstall, or use the Manual Removal Guide button.
 
 ---
 
@@ -155,14 +149,8 @@ dotnet run
 ### Publish Release
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish/SmartMacroAI-v1.5.7
-```
-
-### Build Installer
-
-```powershell
-# Requires Inno Setup 6
-& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
+.\build-release.ps1 win-x64
+# Output: release_output/
 ```
 
 ---
@@ -171,27 +159,36 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
-### v1.5.7 (2026-05-08)
-- Full project audit with auto-fix across 6 phases
-- Undo/Redo (Ctrl+Z/Y) in macro editor
-- Copy/Paste actions (Ctrl+C/V)
-- Fixed GDI resource leaks in screenshot capture
-- Fixed CancellationToken handling in scheduler
-- DLL whitelist expanded — eliminates false-positive security warnings
-- 826 localization keys fully synchronized (EN/VI)
-- 0 build warnings, 0 errors
+### v1.5.8 (2026-05-12)
+- **New:** Scroll action (record & playback mouse wheel)
+- **New:** Drag action (mouse down → move → up with interpolation)
+- **New:** IF Pixel Color condition (lightweight alternative to image match)
+- **New:** Regex support in IF Variable (matches/notmatches operators)
+- **New:** CDP Stealth Service for 100% background Chromium clicks
+- **New:** ROI Picker button for image search region (drag-select on screen)
+- **New:** Donate tab with QR Bank + PayPal
+- **New:** Driver tab in Settings (install/uninstall/manual guide)
+- **Fixed:** Stealth click on Edge/Chrome (Chromium detection + proper child window targeting)
+- **Fixed:** Double-click bug (was clicking both parent + child renderer)
+- **Fixed:** Coordinate picker returning (0,0) in Stealth mode
+- **Fixed:** Dashboard Stop button not working (IsRunning sync)
+- **Fixed:** Loading macros from external folders now imports to Scripts/
+- **Fixed:** Menu dropdown invisible text (dark theme MenuItem style)
+- **Fixed:** Installer missing native DLLs + tessdata
+- **Improved:** Stealth mode hides from taskbar + Alt+Tab for Chromium
+- **Improved:** Image template caching (ConcurrentDictionary)
+- **Improved:** Recorder skips non-client area clicks
 
 ---
 
-## Contributing
-
-Pull requests are welcome. Please open an issue first to discuss proposed changes.
-
----
-
-## Support the Developer
+## Donate
 
 If SmartMacroAI helps your workflow, consider supporting continued development:
+
+<p align="center">
+  <img src="Assets/qr_bank.png" alt="QR Bank Transfer" width="250"><br>
+  <strong>MB Bank — PHAM QUOC DUY — 379997999</strong>
+</p>
 
 <p align="center">
   <a href="https://www.paypal.com/paypalme/nhocbobi22">
@@ -199,8 +196,9 @@ If SmartMacroAI helps your workflow, consider supporting continued development:
   </a>
 </p>
 
-- **PayPal:** nhocbobi22@gmail.com
-- **Bank QR:** Available in the app's About section
+**PayPal:** nhocbobi22@gmail.com
+
+Every contribution motivates continued development and free updates. Thank you! 🙏
 
 ---
 
@@ -221,42 +219,25 @@ SmartMacroAI là công cụ tự động hóa macro chuyên nghiệp cho Windows
 
 - **4 chế độ input** — Stealth, Raw Input, Hardware, Driver Level (vượt anti-cheat)
 - **Nhận diện hình ảnh** — Tìm ảnh trên màn hình, tự click vào vị trí
+- **Kiểm tra màu pixel** — Nhẹ hơn 100x so với image match, dùng cho game check HP/MP
 - **OCR đọc chữ** — Nhận dạng text từ vùng màn hình (Tesseract 5.2)
-- **Logic If/Else** — Phân nhánh điều kiện với Then/Else lồng nhau
+- **Cuộn chuột & Kéo thả** — Ghi và phát lại scroll + drag
+- **Logic If/Else** — Phân nhánh điều kiện (hỗ trợ regex)
 - **Vòng lặp** — Lặp theo số lần, vô hạn, hoặc điều kiện dừng
-- **Biến số** — Đặt, đọc, và phân nhánh theo biến macro
 - **Tự động điền CSV** — Lặp dữ liệu CSV vào form web/desktop
-- **Tích hợp AI** — OpenAI & Gemini hỗ trợ quyết định thông minh
 - **Web Automation** — Điều khiển trình duyệt qua Playwright
+- **CDP Stealth** — Click background 100% trên Chrome/Edge
 - **Multi Dashboard** — Quản lý nhiều macro cùng lúc
-- **Ghi macro** — Thu hành động chuột/phím thời gian thực
-- **Lịch chạy** — Chạy theo giờ, khoảng cách, hoặc khởi động Windows
-- **Undo/Redo** — Ctrl+Z / Ctrl+Y đầy đủ trong editor
-- **Copy/Paste** — Nhân bản action bằng Ctrl+C / Ctrl+V
-- **Kéo thả** — Sắp xếp action, di chuyển vào/ra nhánh If/Else
-- **6 mẫu có sẵn** — Template macro sẵn sàng tùy chỉnh
-- **Khóa macro** — Bảo vệ bằng mật khẩu
+- **Ghi macro** — Thu hành động chuột/phím/scroll thời gian thực
 - **Chống phát hiện** — Chuột Bézier + delay ngẫu nhiên
-- **Thông báo Telegram** — Nhận tin khi macro hoàn thành
-- **Giao diện song ngữ** — 826 khóa ngôn ngữ Anh/Việt
-
-### Bắt đầu nhanh
-
-1. Tải installer mới nhất tại [Releases](https://github.com/TroniePh/SmartMacroAI/releases/latest)
-2. Chạy `SmartMacroAI-v1.5.7-Setup.exe` với quyền Administrator
-3. Mở SmartMacroAI
-4. Bấm **+ Macro mới** → chọn mẫu hoặc tạo từ đầu
-5. Chọn cửa sổ mục tiêu → thêm action → bấm **Chạy** (F5)
-
-### Driver Level (Game Anti-Cheat)
-
-```
-Cài đặt → Driver Level → Cài đặt ngay → Khởi động lại → Chọn "Driver Level" trong action
-```
-
-**Game hỗ trợ:** MapleStory, Cabal Online, MU Online và hầu hết game DirectX/OpenGL có anti-cheat.
+- **Giao diện song ngữ** — 830+ khóa ngôn ngữ Anh/Việt
 
 ### Ủng hộ tác giả
+
+<p align="center">
+  <img src="Assets/qr_bank.png" alt="QR Chuyển khoản" width="250"><br>
+  <strong>MB Bank — PHAM QUOC DUY — 379997999</strong>
+</p>
 
 <p align="center">
   <a href="https://www.paypal.com/paypalme/nhocbobi22">
@@ -264,8 +245,9 @@ Cài đặt → Driver Level → Cài đặt ngay → Khởi động lại → C
   </a>
 </p>
 
-- **PayPal:** nhocbobi22@gmail.com
-- **QR Bank:** Xem trong phần **About** của ứng dụng
+**PayPal:** nhocbobi22@gmail.com
+
+Mỗi đóng góp đều giúp tác giả có thêm động lực phát triển SmartMacroAI tốt hơn. Cảm ơn bạn! 🙏
 
 ---
 

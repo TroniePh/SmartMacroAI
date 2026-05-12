@@ -97,7 +97,7 @@ public partial class MainWindow : Window
     // ── Update Checker ──
     /// <summary>Fallback display / parse if assembly version is unavailable.</summary>
     public static string AppVersion => CurrentVersion;
-    private const string CurrentVersion   = "v1.5.7";
+    private const string CurrentVersion   = "v1.5.8";
     private const string GitHubApiUrl     = "https://api.github.com/repos/TroniePh/SmartMacroAI/releases/latest";
     private const string LandingPageUrl   = "https://tronieph.github.io/SmartMacroAI-Website/";
     /// <summary>GitHub rejects API calls without a descriptive User-Agent.</summary>
@@ -681,6 +681,7 @@ public partial class MainWindow : Window
         ProfileManagerView.Visibility = Visibility.Collapsed;
         SettingsView.Visibility = Visibility.Collapsed;
         AboutView.Visibility = Visibility.Collapsed;
+        DonateView.Visibility = Visibility.Collapsed;
         ResetSidebarButtons();
 
         switch (viewName)
@@ -715,10 +716,15 @@ public partial class MainWindow : Window
             case "Settings":
                 SettingsView.Visibility = Visibility.Visible;
                 BtnSettingsNav.Style = (Style)FindResource("SidebarButtonActiveStyle");
+                RefreshDriverStatus();
                 break;
             case "About":
                 AboutView.Visibility = Visibility.Visible;
                 BtnAbout.Style = (Style)FindResource("SidebarButtonActiveStyle");
+                break;
+            case "Donate":
+                DonateView.Visibility = Visibility.Visible;
+                BtnDonate.Style = (Style)FindResource("SidebarButtonActiveStyle");
                 break;
         }
 
@@ -736,6 +742,7 @@ public partial class MainWindow : Window
             "StealthManager" => ("ui_Page_StealthManager", "ui_PageSub_StealthManager"),
             "Settings" => ("ui_Page_Settings", "ui_PageSub_Settings"),
             "About" => ("ui_Page_About", "ui_PageSub_About"),
+            "Donate" => ("ui_Page_Donate", "ui_PageSub_Donate"),
             _ => ("ui_Page_Dashboard", "ui_PageSub_Dashboard"),
         };
         TxtPageTitle.Text = LanguageManager.GetString(titleKey);
@@ -769,6 +776,7 @@ public partial class MainWindow : Window
         BtnProfileManager.Style = s;
         BtnSettingsNav.Style = s;
         BtnAbout.Style = s;
+        BtnDonate.Style = s;
     }
 
     private void BtnDashboard_Click(object sender, RoutedEventArgs e) => SetActiveView("Dashboard");
@@ -779,6 +787,17 @@ public partial class MainWindow : Window
     private void BtnProfileManager_Click(object sender, RoutedEventArgs e) => SetActiveView("ProfileManager");
     private void BtnSettings_Click(object sender, RoutedEventArgs e) => SetActiveView("Settings");
     private void BtnAbout_Click(object sender, RoutedEventArgs e) => SetActiveView("About");
+    private void BtnDonate_Click(object sender, RoutedEventArgs e) => SetActiveView("Donate");
+
+    private void BtnCopyPaypal_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Clipboard.SetText("nhocbobi22@gmail.com");
+            ShowToast(LanguageManager.GetString("ui_Donate_Copied"), isError: false);
+        }
+        catch { }
+    }
 
     private void BtnDashEdit_Click(object sender, RoutedEventArgs e)
     {
@@ -1213,6 +1232,111 @@ public partial class MainWindow : Window
             ShowToast(LanguageManager.GetString("ui_Msg_TelegramSent"), isError: false);
         else
             ShowToast(LanguageManager.GetString("ui_Msg_TelegramFailed"), isError: true);
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  DRIVER SETTINGS TAB
+    // ═══════════════════════════════════════════════════
+
+    private void RefreshDriverStatus()
+    {
+        bool ready = InterceptionInstaller.IsReady();
+        TxtDriverStatus.Text = ready
+            ? LanguageManager.GetString("ui_Drv_StatusInstalled")
+            : LanguageManager.GetString("ui_Drv_StatusNotInstalled");
+    }
+
+    private async void BtnDriverInstall_Click(object sender, RoutedEventArgs e)
+    {
+        BtnDriverInstall.IsEnabled = false;
+        BtnDriverUninstall.IsEnabled = false;
+        DriverProgressPanel.Visibility = Visibility.Visible;
+
+        var result = await InterceptionInstaller.InstallAsync(msg =>
+        {
+            Dispatcher.Invoke(() => TxtDriverProgress.Text = msg);
+        });
+
+        DriverProgressPanel.Visibility = Visibility.Collapsed;
+        BtnDriverInstall.IsEnabled = true;
+        BtnDriverUninstall.IsEnabled = true;
+
+        switch (result)
+        {
+            case InstallResult.NeedRestart:
+                RefreshDriverStatus();
+                var restart = MessageBox.Show(
+                    LanguageManager.GetString("ui_Drv_InstallSuccessMsg"),
+                    LanguageManager.GetString("ui_Drv_InstallComplete"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Information);
+                if (restart == MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "shutdown",
+                        Arguments = "/r /t 5 /c \"SmartMacroAI: Interception driver installed\"",
+                        UseShellExecute = false
+                    });
+                    Application.Current.Shutdown();
+                }
+                break;
+            case InstallResult.AlreadyInstalled:
+                RefreshDriverStatus();
+                ShowToast(LanguageManager.GetString("ui_Drv_StatusInstalled"), isError: false);
+                break;
+            case InstallResult.UserCancelled:
+                ShowToast(LanguageManager.GetString("ui_Drv_CancelledAdmin"), isError: true);
+                break;
+            case InstallResult.Failed:
+                ShowToast(LanguageManager.GetString("ui_Drv_InstallError"), isError: true);
+                break;
+        }
+    }
+
+    private async void BtnDriverUninstall_Click(object sender, RoutedEventArgs e)
+    {
+        BtnDriverInstall.IsEnabled = false;
+        BtnDriverUninstall.IsEnabled = false;
+        DriverProgressPanel.Visibility = Visibility.Visible;
+
+        var (success, message) = await InterceptionInstaller.UninstallAsync(msg =>
+        {
+            Dispatcher.Invoke(() => TxtDriverProgress.Text = msg);
+        });
+
+        DriverProgressPanel.Visibility = Visibility.Collapsed;
+        BtnDriverInstall.IsEnabled = true;
+        BtnDriverUninstall.IsEnabled = true;
+        RefreshDriverStatus();
+
+        if (success)
+        {
+            var restart = MessageBox.Show(
+                message + "\n\n" + LanguageManager.GetString("ui_Drv_RestartRequired"),
+                LanguageManager.GetString("ui_Drv_InstallComplete"),
+                MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (restart == MessageBoxResult.Yes)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "shutdown",
+                    Arguments = "/r /t 5 /c \"SmartMacroAI: Interception driver removed\"",
+                    UseShellExecute = false
+                });
+                Application.Current.Shutdown();
+            }
+        }
+        else
+        {
+            MessageBox.Show(message, LanguageManager.GetString("ui_Drv_InstallError"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnDriverManualGuide_Click(object sender, RoutedEventArgs e)
+    {
+        string guide = InterceptionInstaller.GetManualUninstallGuide();
+        MessageBox.Show(guide, "Driver Removal Guide", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     // ═══════════════════════════════════════════════════
@@ -1727,6 +1851,7 @@ public partial class MainWindow : Window
         "TryCatch" => new TryCatchAction(),
         "IfImageFound" => new IfImageAction(),
         "IfTextFound" => new IfTextAction(),
+        "IfPixelColor" => new IfPixelColorAction(),
         "WebAction" => new WebAction(),
         "WebNavigate" => new WebNavigateAction(),
         "WebClick" => new WebClickAction(),
@@ -1737,6 +1862,8 @@ public partial class MainWindow : Window
         "LogVar" => new LogVariableAction(),
         "Telegram" => CreateTelegramActionWithDefaults(),
         "CallMacro" => new CallMacroAction(),
+        "Scroll" => new ScrollAction(),
+        "Drag" => new Models.DragAction(),
         _ => null,
     };
 
@@ -3147,10 +3274,28 @@ public partial class MainWindow : Window
                     _currentScript.Name = baseName;
             }
 
+            // If file is outside the Scripts folder, copy it in so Dashboard can see it
+            string scriptsFolder = ScriptManager.DefaultScriptsFolder;
+            string sourceDir = Path.GetDirectoryName(dlg.FileName) ?? "";
+            if (!string.Equals(sourceDir, scriptsFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                string destPath = Path.Combine(scriptsFolder, Path.GetFileName(dlg.FileName));
+                // Avoid overwriting existing file with same name
+                if (File.Exists(destPath))
+                {
+                    string stem = Path.GetFileNameWithoutExtension(dlg.FileName);
+                    string ext = Path.GetExtension(dlg.FileName);
+                    destPath = Path.Combine(scriptsFolder, $"{stem}_{DateTime.Now:yyyyMMdd_HHmmss}{ext}");
+                }
+                File.Copy(dlg.FileName, destPath, overwrite: false);
+                AppendLog($"Imported to Scripts folder: {Path.GetFileName(destPath)}");
+            }
+
             _actions.Clear();
             foreach (var a in _currentScript.Actions) _actions.Add(a);
             SyncScriptToUi();
             RebuildCanvas();
+            LoadDashboard(); // Refresh dashboard to show the newly imported macro
             AppendLog($"Loaded: {dlg.FileName} ({_actions.Count} actions)");
             ShowToast($"Loaded \"{_currentScript.Name}\" ({_actions.Count} actions)", isError: false);
         }
@@ -3320,7 +3465,8 @@ public partial class MainWindow : Window
 
         AppendLog(string.Format(LanguageManager.GetString("ui_Game_AutoDetectFound"), Win32Api.GetWindowTitle(hwnd), detectResult));
 
-        if (!InterceptionInstaller.IsReady())
+        bool driverInstalled = InterceptionInstaller.IsReady();
+        if (!driverInstalled)
         {
             // Ask user to install driver
             bool? yesNo = null;
@@ -3344,7 +3490,8 @@ public partial class MainWindow : Window
             }
 
             // Use DriverLevel if installed, else fall back to Raw
-            if (InterceptionInstaller.IsReady())
+            driverInstalled = InterceptionInstaller.IsReady();
+            if (driverInstalled && App.DriverLevelEnabled)
             {
                 ApplyDefaultModeToCurrentScript(Models.ClickMode.DriverLevel, Models.KeyInputMode.DriverLevel);
                 AppendLog(LanguageManager.GetString("ui_Game_DriverInstalled"));
@@ -3358,6 +3505,15 @@ public partial class MainWindow : Window
                     TxtGameDetectedSub.Text = LanguageManager.GetString("ui_Game_DriverWarning");
                 });
             }
+        }
+        else if (!App.DriverLevelEnabled)
+        {
+            ApplyDefaultModeToCurrentScript(Models.ClickMode.Raw, Models.KeyInputMode.SendInput);
+            AppendLog(LanguageManager.GetString("ui_Game_DriverUnavailable"));
+            await Dispatcher.InvokeAsync(() =>
+            {
+                TxtGameDetectedSub.Text = LanguageManager.GetString("ui_Game_DriverWarning");
+            });
         }
         else
         {

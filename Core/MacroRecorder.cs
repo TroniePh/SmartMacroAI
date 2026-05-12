@@ -86,6 +86,7 @@ public sealed class MacroRecorder : IDisposable
         _lastBufferedVkCode = 0;
 
         _hookManager.MouseClicked += OnMouseClicked;
+        _hookManager.MouseScrolled += OnMouseScrolled;
         _hookManager.KeyPressed += OnKeyPressed;
         _hookManager.KeyPressedFull += OnKeyPressedFull;
         _hookManager.SetSpecialKeyCallbacks(QueueChar, HandleBackspace, OnHotkey);
@@ -111,6 +112,7 @@ public sealed class MacroRecorder : IDisposable
         _flushTimer = null;
 
         _hookManager.MouseClicked -= OnMouseClicked;
+        _hookManager.MouseScrolled -= OnMouseScrolled;
         _hookManager.KeyPressed -= OnKeyPressed;
         _hookManager.KeyPressedFull -= OnKeyPressedFull;
 
@@ -130,6 +132,7 @@ public sealed class MacroRecorder : IDisposable
         if (!Win32Api.GetWindowRect(_targetHwnd, out var rect))
             return;
 
+        // Filter: only record clicks inside the target window's bounding rect
         if (screenX < rect.Left || screenX > rect.Right ||
             screenY < rect.Top || screenY > rect.Bottom)
             return;
@@ -140,6 +143,11 @@ public sealed class MacroRecorder : IDisposable
         var pt = new Win32Api.POINT { X = screenX, Y = screenY };
         Win32Api.ScreenToClient(_targetHwnd, ref pt);
 
+        // Skip clicks with negative client coords (title bar, borders, etc.)
+        // These are non-client area clicks that can't be replayed via PostMessage
+        if (pt.X < 0 || pt.Y < 0)
+            return;
+
         var click = new ClickAction
         {
             X = pt.X,
@@ -149,6 +157,29 @@ public sealed class MacroRecorder : IDisposable
         _recordedActions.Add(click);
 
         Log?.Invoke($"  {button}Click at ({pt.X}, {pt.Y})");
+        ActionRecorded?.Invoke(_recordedActions.Count);
+    }
+
+    // ═══════════════════════════════════════════════
+    //  SCROLL HANDLER
+    // ═══════════════════════════════════════════════
+
+    private void OnMouseScrolled(int screenX, int screenY, int delta)
+    {
+        if (_isPaused) return;
+        if (!Win32Api.GetWindowRect(_targetHwnd, out var rect)) return;
+        if (screenX < rect.Left || screenX > rect.Right || screenY < rect.Top || screenY > rect.Bottom) return;
+
+        FlushTextBuffer();
+        AddWaitIfNeeded();
+
+        var pt = new Win32Api.POINT { X = screenX, Y = screenY };
+        Win32Api.ScreenToClient(_targetHwnd, ref pt);
+        if (pt.X < 0 || pt.Y < 0) return;
+
+        var scroll = new ScrollAction { X = pt.X, Y = pt.Y, Delta = delta };
+        _recordedActions.Add(scroll);
+        Log?.Invoke($"  Scroll at ({pt.X}, {pt.Y}) delta={delta}");
         ActionRecorded?.Invoke(_recordedActions.Count);
     }
 

@@ -16,6 +16,7 @@ public sealed class GlobalHookManager : IDisposable
     private const int WM_LBUTTONDOWN = 0x0201;
     private const int WM_RBUTTONDOWN = 0x0204;
     private const int WM_MBUTTONDOWN = 0x0207;
+    private const int WM_MOUSEWHEEL = 0x020A;
     private const int WM_KEYDOWN = 0x0100;
     private const int WM_SYSKEYDOWN = 0x0104;
 
@@ -87,6 +88,12 @@ public sealed class GlobalHookManager : IDisposable
     /// Fires on every left/right/middle mouse click. Coordinates are screen-absolute.
     /// </summary>
     public event Action<int, int, MouseButton>? MouseClicked;
+
+    /// <summary>
+    /// Fires on every mouse scroll. Provides screen coordinates and scroll delta.
+    /// Positive delta = scroll up, negative = scroll down.
+    /// </summary>
+    public event Action<int, int, int>? MouseScrolled;
 
     /// <summary>
     /// Fires on every key-down. Provides both the virtual-key code and the
@@ -198,6 +205,14 @@ public sealed class GlobalHookManager : IDisposable
         if (nCode >= 0)
         {
             int msg = (int)wParam;
+
+            if (msg == WM_MOUSEWHEEL)
+            {
+                var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                int delta = (short)((data.mouseData >> 16) & 0xFFFF); // HIWORD of mouseData
+                MouseScrolled?.Invoke(data.pt.X, data.pt.Y, delta);
+            }
+
             if (msg is WM_LBUTTONDOWN or WM_RBUTTONDOWN or WM_MBUTTONDOWN)
             {
                 var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
