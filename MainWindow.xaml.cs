@@ -3051,8 +3051,13 @@ public partial class MainWindow : Window
         else
             marker.Parent.ElseActions.Add(newAction);
 
+        _currentScript.Actions = [.. _actions];
         RebuildCanvas();
-        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, marker.IsThen ? LanguageManager.GetString("ui_Canvas_ThenLabel") : LanguageManager.GetString("ui_Canvas_ElseLabel")));
+        
+
+        string branchName = marker.IsThen ? LanguageManager.GetString("ui_Canvas_ThenLabel") : LanguageManager.GetString("ui_Canvas_ElseLabel");
+        AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, branchName));
+        ShowToast($"✅ Added \"{newAction.DisplayName}\" → {branchName}", isError: false);
     }
 
     private void BtnAddIfImageBranch_Click(object sender, RoutedEventArgs e)
@@ -3083,9 +3088,12 @@ public partial class MainWindow : Window
         _currentScript.Actions = [.. _actions];
         RebuildCanvas();
 
+        // Scroll canvas to show the newly added action
+        
+
         string branchName = marker.IsThen ? LanguageManager.GetString("ui_IfImage_ThenLabel") : LanguageManager.GetString("ui_IfImage_ElseLabel");
         AppendLog(string.Format(LanguageManager.GetString("ui_Log_AddedToThenElse"), newAction.DisplayName, branchName));
-        ShowToast($"Added \"{newAction.DisplayName}\" to {branchName}", isError: false);
+        ShowToast($"✅ Added \"{newAction.DisplayName}\" → {branchName}", isError: false);
     }
 
     private void BtnClearCanvas_Click(object sender, RoutedEventArgs e) { PushUndo(); _actions.Clear(); RebuildCanvas(); AppendLog("Canvas cleared."); }

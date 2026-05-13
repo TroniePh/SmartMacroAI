@@ -10,7 +10,7 @@
         WindowState="Maximized"
         ShowInTaskbar="False"
         Cursor="Cross"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        PreviewMouseLeftButtonDown="Window_MouseLeftButtonDown"
         KeyDown="Window_KeyDown">
     <Grid Background="#01000000">
         <Canvas x:Name="GuideCanvas" />
