@@ -310,6 +310,100 @@ public static class VisionEngine
         => FindImageInBitmapMultiScale(source, templatePath, threshold, new[] { 1.0 }, null);
 
     /// <summary>
+    /// Batch multi-image search: captures the window ONCE, then matches all templates
+    /// against the same screenshot. Returns the first match (index + point) or null.
+    /// Much faster than calling FindImageOnWindowMultiScale N times for N images.
+    /// </summary>
+    public static (int Index, Point Location, double Confidence)?
+        FindFirstImageBatch(
+            IntPtr hwnd,
+            IReadOnlyList<string> templatePaths,
+            double threshold = 0.8,
+            Rectangle? searchRegion = null)
+    {
+        using Bitmap captured = CaptureHiddenWindow(hwnd);
+        return FindFirstImageInBitmapBatch(captured, templatePaths, threshold, searchRegion);
+    }
+
+    /// <summary>
+    /// Batch multi-image search on a pre-captured bitmap.
+    /// Converts to Mat once, then matches all templates sequentially.
+    /// </summary>
+    public static (int Index, Point Location, double Confidence)?
+        FindFirstImageInBitmapBatch(
+            Bitmap source,
+            IReadOnlyList<string> templatePaths,
+            double threshold = 0.8,
+            Rectangle? searchRegion = null)
+    {
+        using Mat sourceMat = BitmapToMat(source);
+        double[] scales = BuildScalesFromSettings();
+
+        for (int i = 0; i < templatePaths.Count; i++)
+        {
+            string path = templatePaths[i];
+            if (!File.Exists(path)) continue;
+
+            Mat templateMat = LoadTemplate(path);
+            if (templateMat == null || templateMat.IsEmpty) continue;
+
+            var best = MatchTemplateMultiScaleCore(sourceMat, templateMat, scales, searchRegion);
+            if (best.HasValue && best.Value.Confidence >= threshold)
+            {
+                return (i, best.Value.Center, best.Value.Confidence);
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Batch search with detailed info (best confidence across all images).
+    /// Returns match result + best confidence for diagnostics.
+    /// </summary>
+    public static (int MatchedIndex, Point Location, double MatchConfidence, double BestConfidence, string BestImage)?
+        FindFirstImageBatchDetailed(
+            IntPtr hwnd,
+            IReadOnlyList<string> templatePaths,
+            double threshold = 0.8,
+            Rectangle? searchRegion = null)
+    {
+        using Bitmap captured = CaptureHiddenWindow(hwnd);
+        using Mat sourceMat = BitmapToMat(captured);
+        double[] scales = BuildScalesFromSettings();
+
+        double bestConf = 0;
+        string bestImg = "";
+
+        for (int i = 0; i < templatePaths.Count; i++)
+        {
+            string path = templatePaths[i];
+            if (!File.Exists(path)) continue;
+
+            Mat templateMat = LoadTemplate(path);
+            if (templateMat == null || templateMat.IsEmpty) continue;
+
+            var best = MatchTemplateMultiScaleCore(sourceMat, templateMat, scales, searchRegion);
+            if (best == null) continue;
+
+            if (best.Value.Confidence > bestConf)
+            {
+                bestConf = best.Value.Confidence;
+                bestImg = Path.GetFileName(path);
+            }
+
+            if (best.Value.Confidence >= threshold)
+            {
+                return (i, best.Value.Center, best.Value.Confidence, bestConf, bestImg);
+            }
+        }
+
+        // No match found — return diagnostic info
+        if (bestConf > 0)
+            return (-1, Point.Empty, 0, bestConf, bestImg);
+        return null;
+    }
+
+    /// <summary>
     /// Multi-scale match with best confidence and scale for UI / diagnostics.
     /// </summary>
     public static (Point Location, double Confidence, double Scale, Rectangle ScannedRegion)?

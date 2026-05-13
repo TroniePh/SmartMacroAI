@@ -2783,24 +2783,45 @@ public sealed class MacroEngine
               $"(threshold={ifImage.Threshold:P0}, timeout={maxWait}ms, retryUntilFound={retryUntilFound})");
 
         // Helper: search all images in order, return first match
-        Point? SearchAllImages()
+        // Uses batch capture (single screenshot for all images) for performance
+        double bestConfidence = 0;
+        string bestConfidenceImage = "";
+        Point? SearchAllImages(bool trackConfidence = false)
         {
-            for (int i = 0; i < imagePaths.Count; i++)
+            if (!trackConfidence)
             {
-                string path = imagePaths[i];
-                if (!File.Exists(path)) continue;
+                // Fast path: single capture, match all images
+                var batchResult = VisionEngine.FindFirstImageBatch(
+                    hwnd, imagePaths, ifImage.Threshold, ifImage.SearchRegion);
 
-                var result = VisionEngine.FindImageOnWindowMultiScale(
-                    hwnd, path, ifImage.Threshold, scales: null, searchRegion: ifImage.SearchRegion);
-
-                if (result.HasValue)
+                if (batchResult.HasValue)
                 {
-                    matchedImagePath = path;
-                    matchedIndex = i;
-                    return result;
+                    matchedIndex = batchResult.Value.Index;
+                    matchedImagePath = imagePaths[matchedIndex];
+                    return batchResult.Value.Location;
                 }
+                return null;
             }
-            return null;
+            else
+            {
+                // Detailed path: get confidence info for diagnostics
+                var detailedResult = VisionEngine.FindFirstImageBatchDetailed(
+                    hwnd, imagePaths, ifImage.Threshold, ifImage.SearchRegion);
+
+                if (detailedResult.HasValue)
+                {
+                    bestConfidence = detailedResult.Value.BestConfidence;
+                    bestConfidenceImage = detailedResult.Value.BestImage;
+
+                    if (detailedResult.Value.MatchedIndex >= 0)
+                    {
+                        matchedIndex = detailedResult.Value.MatchedIndex;
+                        matchedImagePath = imagePaths[matchedIndex];
+                        return detailedResult.Value.Location;
+                    }
+                }
+                return null;
+            }
         }
 
         // ── RetryUntilFound mode ────────
@@ -2810,7 +2831,8 @@ public sealed class MacroEngine
             {
                 token.ThrowIfCancellationRequested();
 
-                try { match = SearchAllImages(); }
+                bool isLastAttempt = maxRetries > 0 && retryCount >= maxRetries - 1;
+                try { match = SearchAllImages(trackConfidence: isLastAttempt); }
                 catch (Exception ex)
                 {
                     OnLog($"    ⚠ Vision error: {ex.Message}");
@@ -2825,6 +2847,8 @@ public sealed class MacroEngine
 
                 if (maxRetries > 0 && retryCount >= maxRetries)
                 {
+                    // Get confidence on final failure if not already tracked
+                    if (bestConfidence == 0) try { SearchAllImages(trackConfidence: true); } catch { }
                     OnLog($"    → Max retry count ({maxRetries}) reached → running ElseActions");
                     break;
                 }
@@ -2844,7 +2868,8 @@ public sealed class MacroEngine
             {
                 token.ThrowIfCancellationRequested();
 
-                try { match = SearchAllImages(); }
+                bool isLastPoll = elapsed + PollMs >= maxWait;
+                try { match = SearchAllImages(trackConfidence: isLastPoll); }
                 catch (Exception ex)
                 {
                     OnLog($"    ⚠ Vision error: {ex.Message}");
@@ -2860,6 +2885,12 @@ public sealed class MacroEngine
                 await _macroRunner.Timing.WaitAsync(wait, Math.Max(10, wait / 4), token).ConfigureAwait(false);
                 elapsed += wait;
             } while (elapsed < maxWait);
+
+            // If not found after timeout, get confidence info for diagnostics
+            if (!match.HasValue && bestConfidence == 0)
+            {
+                try { SearchAllImages(trackConfidence: true); } catch { }
+            }
 
             if (match.HasValue)
                 OnLog($"    → FOUND \"{Path.GetFileName(matchedImagePath)}\" [#{matchedIndex + 1}] at ({match.Value.X}, {match.Value.Y}) after {elapsed}ms");
@@ -2983,7 +3014,10 @@ public sealed class MacroEngine
         }
         else
         {
-            OnLog($"    → NOT FOUND → running ElseActions");
+            string confInfo = bestConfidence > 0
+                ? $" (best: {bestConfidence * 100:F0}% on \"{bestConfidenceImage}\", need ≥{ifImage.Threshold * 100:F0}%)"
+                : "";
+            OnLog($"    → NOT FOUND{confInfo} → running ElseActions");
 
             if (ifImage.ElseActions.Count > 0)
             {

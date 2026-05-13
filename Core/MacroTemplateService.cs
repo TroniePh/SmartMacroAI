@@ -102,7 +102,7 @@ public static class MacroTemplateService
                         {
                             DisplayName = LanguageManager.GetString("ui_Tmpl_IfImageFound"),
                             ImagePath = "{{image_path}}",
-                            Threshold = 0.8f,
+                            Threshold = 0.7f,
                             TimeoutMs = 5000,
                             ClickOnFound = true,
                             RandomOffset = 5,
