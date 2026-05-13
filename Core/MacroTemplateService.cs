@@ -239,6 +239,94 @@ public static class MacroTemplateService
         },
         new MacroTemplate
         {
+            Name = "⚔️ Path of Exile — Ultimatum Auto",
+            Description = "Auto farm PoE: Vision AI tìm icon Ultimatum, auto flask, skill rotation. Dùng Raw/Hardware mode (game cần foreground cho Vision).",
+            Category = "Game",
+            TargetWindowTitle = "Path of Exile",
+            Actions = new List<MacroAction>
+            {
+                // Variables init
+                new SetVariableAction { DisplayName = "⚙️ Init flask_timer", VarName = "flask_timer", Value = "0", Operation = "Set" },
+
+                new RepeatAction
+                {
+                    DisplayName = "🔄 Main Loop (infinite)",
+                    RepeatCount = 0,
+                    IntervalMs = 300,
+                    LoopActions = new List<MacroAction>
+                    {
+                        // ═══ FLASK MANAGEMENT ═══
+                        // Increment flask timer
+                        new SetVariableAction { DisplayName = "flask_timer++", VarName = "flask_timer", Value = "1", Operation = "Increment" },
+
+                        // Every 15 loops (~5s) → press all flasks
+                        new IfVariableAction
+                        {
+                            DisplayName = "🧪 IF flask_timer >= 15 → Use Flasks",
+                            VarName = "flask_timer",
+                            CompareOp = ">=",
+                            Value = "15",
+                            ThenActions = new List<MacroAction>
+                            {
+                                new KeyPressAction { DisplayName = "Flask 1", KeyName = "D1", VirtualKeyCode = 0x31, HoldDurationMs = 30, InputMode = KeyInputMode.RawInput },
+                                new WaitAction { DisplayName = "delay", DelayMin = 50, DelayMax = 80 },
+                                new KeyPressAction { DisplayName = "Flask 2", KeyName = "D2", VirtualKeyCode = 0x32, HoldDurationMs = 30, InputMode = KeyInputMode.RawInput },
+                                new WaitAction { DisplayName = "delay", DelayMin = 50, DelayMax = 80 },
+                                new KeyPressAction { DisplayName = "Flask 3", KeyName = "D3", VirtualKeyCode = 0x33, HoldDurationMs = 30, InputMode = KeyInputMode.RawInput },
+                                new WaitAction { DisplayName = "delay", DelayMin = 50, DelayMax = 80 },
+                                new KeyPressAction { DisplayName = "Flask 4", KeyName = "D4", VirtualKeyCode = 0x34, HoldDurationMs = 30, InputMode = KeyInputMode.RawInput },
+                                new WaitAction { DisplayName = "delay", DelayMin = 50, DelayMax = 80 },
+                                new KeyPressAction { DisplayName = "Flask 5", KeyName = "D5", VirtualKeyCode = 0x35, HoldDurationMs = 30, InputMode = KeyInputMode.RawInput },
+                                new WaitAction { DisplayName = "delay", DelayMin = 30, DelayMax = 60 },
+                                new SetVariableAction { DisplayName = "Reset flask_timer", VarName = "flask_timer", Value = "0", Operation = "Set" },
+                            },
+                            ElseActions = new List<MacroAction>()
+                        },
+
+                        // ═══ ULTIMATUM ICON DETECTION ═══
+                        // Multi-image search: add your Ultimatum option icons here
+                        new IfImageAction
+                        {
+                            DisplayName = "👁️ Scan Ultimatum Icons",
+                            ImagePath = "",
+                            ImagePaths = new List<string>(), // User adds their icon screenshots here
+                            Threshold = 0.70,
+                            TimeoutMs = 1000,
+                            RetryUntilFound = false,
+                            ClickOnFound = true,
+                            ClickMode = ClickMode.Raw,
+                            RandomOffset = 5,
+                            ThenActions = new List<MacroAction>
+                            {
+                                new LogAction { DisplayName = "📝 Log found", Message = "Found Ultimatum icon: {{foundImageName}} at ({{image_x}}, {{image_y}})" },
+                                new WaitAction { DisplayName = "Wait after click", DelayMin = 300, DelayMax = 600 },
+                            },
+                            ElseActions = new List<MacroAction>
+                            {
+                                // Not in Ultimatum — continue normal farming
+                            }
+                        },
+
+                        // ═══ SKILL ROTATION ═══
+                        // Right-click (main skill) — hold for channeling builds
+                        new ClickAction
+                        {
+                            DisplayName = "⚔️ Main Skill (Right Click center)",
+                            X = 960, Y = 540,
+                            Button = MouseButton.Right,
+                            Mode = ClickMode.Raw,
+                        },
+                        new WaitAction { DisplayName = "Skill delay", DelayMin = 100, DelayMax = 200 },
+
+                        // Movement skill (optional — user configures key)
+                        new KeyPressAction { DisplayName = "🏃 Move Skill (W)", KeyName = "W", VirtualKeyCode = 0x57, HoldDurationMs = 50, InputMode = KeyInputMode.RawInput },
+                        new WaitAction { DisplayName = "Move delay", DelayMin = 200, DelayMax = 400 },
+                    }
+                }
+            }
+        },
+        new MacroTemplate
+        {
             Name = LanguageManager.GetString("ui_Tmpl_NameBlank"),
             Description = LanguageManager.GetString("ui_Tmpl_BlankDesc"),
             Category = "General",
