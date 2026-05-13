@@ -470,6 +470,9 @@ public static class Win32Api
     public const uint SWP_NOZORDER = 0x0004;
     public const uint SWP_NOACTIVATE = 0x0010;
     public const uint SWP_FRAMECHANGED = 0x0020;
+    public const uint SWP_NOMOVE = 0x0002;
+    public const uint SWP_NOSIZE = 0x0001;
+    public const uint SWP_SHOWWINDOW = 0x0040;
 
     private const int GWL_EXSTYLE = -20;
     private const long WS_EX_TOOLWINDOW = 0x00000080L;
@@ -816,6 +819,36 @@ public static class Win32Api
             g.ReleaseHdc(hdcDest);
             ReleaseDC(hwnd, hdcSrc);
         }
+
+        return bmp;
+    }
+
+    /// <summary>
+    /// Captures the screen region where the target window is located using CopyFromScreen.
+    /// Works with DirectX/Vulkan/OpenGL games that don't support PrintWindow.
+    /// The window must be visible on screen (not minimized or fully occluded).
+    /// Returns bitmap in client coordinates (same as CaptureHiddenWindow).
+    /// </summary>
+    public static Bitmap? CaptureWindowFromScreen(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !IsWindow(hwnd)) return null;
+        if (IsIconic(hwnd)) return null;
+
+        if (!GetWindowRect(hwnd, out RECT winRect)) return null;
+        if (!GetClientRect(hwnd, out RECT clientRect)) return null;
+
+        int clientW = clientRect.Right - clientRect.Left;
+        int clientH = clientRect.Bottom - clientRect.Top;
+        if (clientW <= 0 || clientH <= 0) return null;
+
+        // Get client area origin in screen coordinates
+        var clientOrigin = new POINT { X = 0, Y = 0 };
+        ClientToScreen(hwnd, ref clientOrigin);
+
+        var bmp = new Bitmap(clientW, clientH, PixelFormat.Format32bppArgb);
+        using var g = Graphics.FromImage(bmp);
+        g.CopyFromScreen(clientOrigin.X, clientOrigin.Y, 0, 0,
+            new Size(clientW, clientH), CopyPixelOperation.SourceCopy);
 
         return bmp;
     }

@@ -112,15 +112,69 @@ public static class VisionEngine
     /// <summary>
     /// Captures a background window client area into a <see cref="Bitmap"/> via
     /// <see cref="Win32Api.CaptureHiddenWindow"/>.
+    /// Falls back to screen capture (CopyFromScreen) for DirectX/Vulkan games
+    /// where PrintWindow and BitBlt both return black frames.
+    /// For DirectX games: briefly brings window to foreground if needed.
     /// </summary>
     public static Bitmap CaptureHiddenWindow(IntPtr hwnd)
     {
         Bitmap? bmp = Win32Api.CaptureHiddenWindow(hwnd);
+
+        // If PrintWindow+BitBlt returned a black frame (DirectX/Vulkan game),
+        // fall back to screen capture (requires window to be visible on screen)
+        if (bmp != null && IsLikelyBlackFrame(bmp))
+        {
+            // For DirectX games: ensure window is visible before screen capture
+            bool wasMinimized = Win32Api.IsIconic(hwnd);
+            if (wasMinimized)
+            {
+                Win32Api.ShowWindow(hwnd, Win32Api.SW_RESTORE);
+                Thread.Sleep(100);
+            }
+
+            // Briefly bring to top without stealing focus (SWP_NOACTIVATE)
+            Win32Api.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+                Win32Api.SWP_NOMOVE | Win32Api.SWP_NOSIZE | Win32Api.SWP_NOACTIVATE | Win32Api.SWP_SHOWWINDOW);
+            Thread.Sleep(50);
+
+            var screenBmp = Win32Api.CaptureWindowFromScreen(hwnd);
+            if (screenBmp != null && !IsLikelyBlackFrame(screenBmp))
+            {
+                bmp.Dispose();
+                return screenBmp;
+            }
+            screenBmp?.Dispose();
+            // Keep original bmp if screen capture also failed
+        }
+
         if (bmp is null)
-            throw new InvalidOperationException(
-                $"Failed to capture window (HWND=0x{hwnd:X}). " +
-                "The handle may be invalid or the window may have zero size.");
+        {
+            bmp = Win32Api.CaptureWindowFromScreen(hwnd);
+            if (bmp is null)
+                throw new InvalidOperationException(
+                    $"Failed to capture window (HWND=0x{hwnd:X}). " +
+                    "The handle may be invalid or the window may have zero size.");
+        }
         return bmp;
+    }
+
+    /// <summary>
+    /// Quick check if a bitmap is mostly black (DirectX capture failure indicator).
+    /// Samples 15 random pixels — if all are near-black, likely a failed capture.
+    /// </summary>
+    private static bool IsLikelyBlackFrame(Bitmap bmp)
+    {
+        if (bmp.Width <= 0 || bmp.Height <= 0) return true;
+        var rng = new Random(42); // deterministic for consistency
+        for (int i = 0; i < 15; i++)
+        {
+            int x = rng.Next(bmp.Width);
+            int y = rng.Next(bmp.Height);
+            var pixel = bmp.GetPixel(x, y);
+            if (pixel.R > 10 || pixel.G > 10 || pixel.B > 10)
+                return false;
+        }
+        return true;
     }
 
     // ═══════════════════════════════════════════════════
