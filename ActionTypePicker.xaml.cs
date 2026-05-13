@@ -52,7 +52,7 @@ public partial class ActionTypePicker : Window
         if (LstTypes.SelectedValue is string key)
         {
             SelectedType = key;
-            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
+            try { DialogResult = true; } catch { Close(); }
         }
     }
 }

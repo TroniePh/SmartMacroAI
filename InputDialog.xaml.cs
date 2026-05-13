@@ -69,7 +69,7 @@ public sealed class InputDialog : Window
             BorderThickness = new Thickness(0),
             Cursor = System.Windows.Input.Cursors.Hand,
         };
-        btnCancel.Click += (_, _) => { if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close(); };
+        btnCancel.Click += (_, _) => { try { DialogResult = false; } catch { Close(); } };
 
         var btnOk = new Button
         {
@@ -83,7 +83,7 @@ public sealed class InputDialog : Window
         btnOk.Click += (_, _) =>
         {
             InputText = _inputBox.Text.Trim();
-            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
+            try { DialogResult = true; } catch { Close(); }
         };
 
         btnPanel.Children.Add(btnCancel);

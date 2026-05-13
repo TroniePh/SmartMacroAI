@@ -1713,7 +1713,7 @@ public partial class ActionEditDialog : Window
                     dr.Mode = GetClickModeValue("ClickMode");
                     break;
             }
-            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
+            try { DialogResult = true; } catch { Close(); }
         }
         catch (Exception ex)
         {
@@ -1724,6 +1724,6 @@ public partial class ActionEditDialog : Window
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
-        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
+        try { DialogResult = false; } catch { Close(); }
     }
 }

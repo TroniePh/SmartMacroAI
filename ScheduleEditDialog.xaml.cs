@@ -98,11 +98,11 @@ public partial class ScheduleEditDialog : Window
             RunOnStartup = mode == "OnStartup",
         };
 
-        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true; else Close();
+        try { DialogResult = true; } catch { Close(); }
     }
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
-        if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = false; else Close();
+        try { DialogResult = false; } catch { Close(); }
     }
 }
