@@ -131,7 +131,6 @@ public partial class CoordinatePickerWindow : Window
                     {
                         PickedPoint = new System.Drawing.Point(pt.X, pt.Y);
                     }
-                    // else: keep screen coords (click outside target window)
                 }
                 else
                 {
@@ -140,7 +139,6 @@ public partial class CoordinatePickerWindow : Window
             }
         }
 
-        // Always set DialogResult = true to signal successful pick
         try { DialogResult = true; } catch { Close(); }
     }
 

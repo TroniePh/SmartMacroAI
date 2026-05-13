@@ -201,7 +201,7 @@
     <system:String x:Key="ui_MouseSettings_PreviewTitle">Path preview</system:String>
     <system:String x:Key="ui_Toast_MouseSettingsSaved">Mouse settings saved.</system:String>
 
-    <system:String x:Key="ui_About_Tagline">v1.5.9 — RPA Automation Tool</system:String>
+    <system:String x:Key="ui_About_Tagline">v1.6.0 — RPA Automation Tool</system:String>
     <system:String x:Key="ui_About_Description">Non-invasive automation for Windows 10/11. Uses Win32 API to send clicks and keystrokes directly to background windows without hijacking your physical mouse or keyboard.</system:String>
     <system:String x:Key="ui_About_TechStack">Technology Stack</system:String>
     <system:String x:Key="ui_About_TechLine">.NET 8.0  |  WPF  |  Win32 API  |  Emgu.CV (OpenCV)  |  Tesseract OCR</system:String>
@@ -209,7 +209,7 @@
     <system:String x:Key="ui_About_Contact">Support contact</system:String>
     <system:String x:Key="ui_About_CheckUpdates">🔄 Check for updates</system:String>
     <system:String x:Key="ui_About_UpdatesTitle">Software updates</system:String>
-    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.5.9</system:String>
+    <system:String x:Key="ui_About_CurrentVersion">Current version: v1.6.0</system:String>
     <system:String x:Key="ui_Coffee_Title">☕ Buy me a coffee</system:String>
     <system:String x:Key="ui_Coffee_Blurb">Treat the author to a coffee if this app helps you!</system:String>
     <system:String x:Key="ui_Bank_Line">MB Bank — PHAM QUOC DUY — 379997999</system:String>
@@ -233,7 +233,7 @@ MB Bank — PHAM QUOC DUY — 379997999</system:String>
     <system:String x:Key="ui_LogConsole">LOG CONSOLE</system:String>
     <system:String x:Key="ui_Log_Clear">Clear</system:String>
 
-    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.5.9</system:String>
+    <system:String x:Key="ui_Footer_Runtime">SmartMacroAI v1.6.0</system:String>
     <system:String x:Key="ui_Footer_DotNet">.NET 8.0</system:String>
     <system:String x:Key="ui_Footer_Sep"> | </system:String>
     <system:String x:Key="ui_Footer_Credit">Created by Phạm Duy - Giải pháp tự động hóa thông minh.</system:String>

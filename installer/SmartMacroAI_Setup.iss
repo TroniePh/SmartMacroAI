@@ -1,11 +1,11 @@
-; SmartMacroAI v1.5.7 — Inno Setup 6
+; SmartMacroAI v1.6.0 — Inno Setup 6
 ; Created by Phạm Duy – Giải pháp tự động hóa thông minh.
 ;
 ; Build:   dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish\SmartMacroAI
 ; Compile: ISCC.exe installer\SmartMacroAI_Setup.iss
 
 #ifndef MyAppVersion
-#define MyAppVersion "1.5.7"
+#define MyAppVersion "1.6.0"
 #endif
 
 #define MyAppName "SmartMacroAI"

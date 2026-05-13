@@ -16,9 +16,9 @@
     <Product>SmartMacroAI</Product>
     <Company>Pham Duy</Company>
     <Copyright>Created by Pham Duy - Giai phap tu dong hoa thong minh.</Copyright>
-    <Version>1.5.9</Version>
-    <AssemblyVersion>1.5.9.0</AssemblyVersion>
-    <FileVersion>1.5.9.0</FileVersion>
+    <Version>1.6.0</Version>
+    <AssemblyVersion>1.6.0.0</AssemblyVersion>
+    <FileVersion>1.6.0.0</FileVersion>
     <Description>SmartMacroAI - RPA Automation Tool for Windows. Non-invasive macro automation with Image and OCR recognition.</Description>
   </PropertyGroup>
 

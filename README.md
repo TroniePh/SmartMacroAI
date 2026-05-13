@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"><img src="https://img.shields.io/badge/version-1.5.8-0078D4?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/TroniePh/SmartMacroAI/releases/latest"><img src="https://img.shields.io/badge/version-1.6.0-0078D4?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2B-0078D4?style=flat-square&logo=windows" alt="Platform">
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet" alt=".NET">
   <img src="https://img.shields.io/badge/language-VI%20%7C%20EN-F7931E?style=flat-square" alt="Language">
@@ -90,9 +90,9 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 
 | File | Description |
 |------|-------------|
-| [**SmartMacroAI-v1.5.8-Setup.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Windows installer (recommended) |
-| [**SmartMacroAI-v1.5.8-win-x64.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable standalone — run directly |
-| [**SmartMacroAI-v1.5.8-win-x64.zip**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable — extract and run |
+| [**SmartMacroAI-v1.6.0-Setup.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Windows installer (recommended) |
+| [**SmartMacroAI-v1.6.0-win-x64.exe**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable standalone — run directly |
+| [**SmartMacroAI-v1.6.0-win-x64.zip**](https://github.com/TroniePh/SmartMacroAI/releases/latest) | Portable — extract and run |
 
 ---
 
@@ -111,7 +111,7 @@ SmartMacroAI is a professional-grade Windows macro automation tool with AI integ
 ## Quick Start
 
 1. Download the latest installer from [Releases](https://github.com/TroniePh/SmartMacroAI/releases/latest)
-2. Run `SmartMacroAI-v1.5.8-Setup.exe` as Administrator
+2. Run `SmartMacroAI-v1.6.0-Setup.exe` as Administrator
 3. Launch SmartMacroAI
 4. Click **+ New Macro** — choose a template or start blank
 5. Select your target window → add actions → press **Run** (F5)
@@ -158,6 +158,18 @@ dotnet run
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+### v1.6.0 (2026-05-13)
+- **Critical Fix:** Coordinate picker returning (0,0) — root cause: `Hide()` on modal dialog corrupts WPF state
+- **Critical Fix:** Dialog `DialogResult` throwing InvalidOperationException across all 11 dialog files
+- **Critical Fix:** CoordinatePickerWindow `MouseLeftButtonDown` not firing → changed to `PreviewMouseLeftButtonDown`
+- **New:** Multi-Image Search — add up to 20 images per IfImage action, first match wins
+- **New:** Pixel Color Detection action with Scan Region mode
+- **New:** Scroll action (record & playback mouse wheel)
+- **New:** Drag action (mouse down → move → up with interpolation)
+- **Improved:** Driver Level mode — SetForegroundWindow before every input, auto-retry Initialize()
+- **Improved:** IfImageAction click handler now supports Driver Level mode
+- **Improved:** Emulator support (LDPlayer/Nox/BlueStacks) auto-detects render child window
 
 ### v1.5.8 (2026-05-12)
 - **New:** Scroll action (record & playback mouse wheel)

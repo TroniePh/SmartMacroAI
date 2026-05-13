@@ -742,7 +742,8 @@ public partial class ActionEditDialog : Window
             await Task.Delay(300);
         }
 
-        Hide();
+        var prevState = WindowState;
+        WindowState = WindowState.Minimized;
         await Task.Delay(200);
 
         var picker = new CoordinatePickerWindow(_targetHwnd);
@@ -772,7 +773,7 @@ public partial class ActionEditDialog : Window
             }
         }
 
-        Show();
+        WindowState = prevState;
     }
 
     private void AddFieldPassword(string fieldKey, string value, string? displayCaption = null)

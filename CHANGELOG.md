@@ -5,6 +5,29 @@ All notable changes to SmartMacroAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-05-13
+
+### Added
+- Multi-Image Search — add up to 20 images per IfImage action, first match wins with priority ordering
+- Pixel Color Detection action (`IfPixelColorAction`) with Scan Region mode for area-based color search
+- Scroll action — record and playback mouse wheel events
+- Drag action — mouse down → Bézier move → up with configurable duration
+- MapleStory macro template for Driver Level mode
+- ROI Picker button for IfImage search region (visual drag-select on screen)
+
+### Fixed
+- **Critical:** Coordinate picker returning (0,0) — root cause: `Hide()` on modal dialog corrupts WPF internal state, replaced with `WindowState.Minimized`
+- **Critical:** `DialogResult = true` throwing InvalidOperationException — replaced all 11 dialog files with try/catch pattern
+- **Critical:** `MouseLeftButtonDown` on transparent Window unreliable — changed to `PreviewMouseLeftButtonDown` in CoordinatePickerWindow
+- Driver Level mode now calls `SetForegroundWindow` before every input operation
+- Driver Level `Initialize()` auto-retries on failure
+- IfImageAction click handler now supports Driver Level click mode
+- Emulator support (LDPlayer/Nox/BlueStacks) auto-detects render child window for accurate targeting
+
+### Changed
+- Version bumped to 1.6.0 across all assemblies and UI strings
+- Removed debug log statements from production code
+
 ## [1.5.7] - 2026-05-08
 
 ### Added
